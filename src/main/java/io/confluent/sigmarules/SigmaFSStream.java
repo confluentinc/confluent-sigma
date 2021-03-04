@@ -7,22 +7,24 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Produced;
 
-import io.confluent.sigmarules.models.SigmaFSConnector;
 import io.confluent.sigmarules.models.SigmaRule;
 
-public class SigmaRawStream {
+public class SigmaFSStream {
     private Properties config; 
     private KafkaStreams streams;
     private SigmaRulesManager sigmaRulesManager;
 
-    public SigmaRawStream(SigmaRulesManager sigmaRulesManager) {
+    public SigmaFSStream(SigmaRulesManager sigmaRulesManager) {
         this.config = new Properties();
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "sigma-rules-app");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
@@ -37,11 +39,11 @@ public class SigmaRawStream {
 
     private StreamsBuilder createBuilder() {
         StreamsBuilder builder = new StreamsBuilder();
-        KStream<String, String> sigmaRulesRaw = builder.stream("sigma_rules_raw");
-        KStream<String, SigmaRule> sigmaRule = sigmaRulesRaw.mapValues(v -> {
-            return createSigmaRule(v);
+        KStream<String, String> sigmaRulesRaw = builder.stream("sigma_rules_fs");
+        KStream<String, String> sigmaRule = sigmaRulesRaw.map((k, v) -> {
+             return createSigmaRule(v);
         });
-        // sigmaRule.to("sigma_rule", Produced.with(Serdes.String(), Serdes.String()));
+        sigmaRule.to("sigma_rules", Produced.with(Serdes.String(), Serdes.String()));
 
         return builder;
     }
@@ -56,30 +58,43 @@ public class SigmaRawStream {
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
     }
 
-    private SigmaRule createSigmaRule(String rule) {
+    private KeyValue<String, String> createSigmaRule(String rule) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        String key = null;
+        String value = parseFSConnectorYaml(rule);
         SigmaRule sigmaRule = null;
+
         try {
-            SigmaFSConnector sigmaFSConnector = mapper.readValue(rule, SigmaFSConnector.class);
-            sigmaRule = sigmaFSConnector.getPayload();
+            sigmaRule = mapper.readValue(value, SigmaRule.class);
             System.out.println("title: " + sigmaRule.getTitle());
 
+            key = sigmaRule.getTitle();
             // add the rule to the cache
-            sigmaRulesManager.addRule(sigmaRule.getTitle(), rule);
+            //sigmaRulesManager.addRule(sigmaRule.getTitle(), parsedYaml);
 
         } catch (JsonMappingException e) {
+            System.out.println(value);
             e.printStackTrace();
         } catch (JsonProcessingException e) {
+            System.out.println(value);
             e.printStackTrace();
         }
 
-        return sigmaRule;
+        return new KeyValue<String, String>(key, value);
+    }
+
+    private String parseFSConnectorYaml(String fsConnectYaml) {
+        // find the payload
+        String ruleYaml = StringUtils.substringAfter(fsConnectYaml, "\"payload\":");
+        // remove closing bracket
+        ruleYaml = StringUtils.removeEnd(ruleYaml, "}");
+        return ruleYaml;
     }
 
 
     public static void main(String[] args) {
         // TODO: add config as arguments
-        SigmaRawStream sigma = new SigmaRawStream(new SigmaRulesManager("127.0.0.1:9092"));
+        SigmaFSStream sigma = new SigmaFSStream(new SigmaRulesManager("127.0.0.1:9092"));
         sigma.startStream();
 
         while (true) {

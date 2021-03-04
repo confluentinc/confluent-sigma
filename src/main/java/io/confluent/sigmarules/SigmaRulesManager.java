@@ -10,7 +10,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import org.apache.kafka.common.serialization.Serdes;
 
-import io.confluent.sigmarules.models.SigmaFSConnector;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.kcache.Cache;
 import io.kcache.KafkaCache;
@@ -22,14 +21,9 @@ public class SigmaRulesManager {
     public SigmaRulesManager(String bootStrapServers) {
         Properties props = new Properties();
         props.setProperty("kafkacache.bootstrap.servers", bootStrapServers);
-        props.setProperty("kafkacache.topic", "sigma_rules_cache");
+        props.setProperty("kafkacache.topic", "sigma_rules");
         sigmaRulesCache = new KafkaCache<>(new KafkaCacheConfig(props), Serdes.String(), Serdes.String());
         sigmaRulesCache.init();
-    }
-
-    public void createSigmaRuleStream() {
-        SigmaRawStream sigmaStream = new SigmaRawStream(this);
-        sigmaStream.startStream();
     }
 
     public void addRule(String ruleName, String rule) {
@@ -55,8 +49,7 @@ public class SigmaRulesManager {
         try {
             String rule = getRuleAsYaml(ruleName);
             if (rule != null) {
-                SigmaFSConnector sigmaFSConnector = mapper.readValue(rule, SigmaFSConnector.class);
-                sigmaRule = sigmaFSConnector.getPayload();
+                sigmaRule = mapper.readValue(rule, SigmaRule.class);
             }
         } catch (JsonMappingException e) {
             e.printStackTrace();
@@ -70,16 +63,21 @@ public class SigmaRulesManager {
     public static void main(String[] args) {
         // TODO: add config as arguments
         SigmaRulesManager rulesManager = new SigmaRulesManager("127.0.0.1:9092");
-        rulesManager.createSigmaRuleStream();
 
+        boolean outputPrinted = false;
         while (true) {
             try {
                 System.out.println("Number of rules: " + rulesManager.getRuleNames().size());
 
-                String ruleName = "Executable from Webdav";
-                if (rulesManager.getRule("Executable from Webdav") != null) {
-                    System.out.println("Rule as YAML: " + rulesManager.getRuleAsYaml(ruleName));
-                    System.out.println("Rule as POJO: title: " + rulesManager.getRule(ruleName).getTitle());
+                if (outputPrinted == false) {
+                    String ruleName = "Sigma Rule Test";
+                    if (rulesManager.getRule(ruleName) != null) {
+                        String yaml = rulesManager.getRuleAsYaml(ruleName);
+                        System.out.println("Rule as YAML: " + rulesManager.getRuleAsYaml(ruleName));
+                        System.out.println("Rule as POJO: title: " + rulesManager.getRule(ruleName).getTitle());
+                        
+                        outputPrinted = true;
+                    }
                 }
 
                 Thread.sleep(1000);
