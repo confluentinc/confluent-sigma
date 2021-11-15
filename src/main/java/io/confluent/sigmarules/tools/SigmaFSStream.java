@@ -1,12 +1,11 @@
-package io.confluent.sigmarules;
-
-import java.util.Properties;
+package io.confluent.sigmarules.tools;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
+import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.rules.SigmaRulesStore;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
@@ -17,14 +16,14 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 
-import io.confluent.sigmarules.models.SigmaRule;
+import java.util.Properties;
 
 public class SigmaFSStream {
     private Properties config; 
     private KafkaStreams streams;
-    private SigmaRulesManager sigmaRulesManager;
+    private SigmaRulesStore sigmaRulesManager;
 
-    public SigmaFSStream(SigmaRulesManager sigmaRulesManager) {
+    public SigmaFSStream(SigmaRulesStore sigmaRulesManager) {
         this.config = new Properties();
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "sigma-rules-app");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
@@ -90,22 +89,4 @@ public class SigmaFSStream {
         ruleYaml = StringUtils.removeEnd(ruleYaml, "}");
         return ruleYaml;
     }
-
-
-    public static void main(String[] args) {
-        // TODO: add config as arguments
-        SigmaFSStream sigma = new SigmaFSStream(new SigmaRulesManager("127.0.0.1:9092"));
-        sigma.startStream();
-
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
-
-    }
-
-
 }
