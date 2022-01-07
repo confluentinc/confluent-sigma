@@ -1,0 +1,47 @@
+title: Response from External Facing Service (Overview Query)
+description: 'This rule is to be used as an overview of external facing service/IP has responded to a connection. Determine if these are documented external facing services to help discover new or existing services on your network. This will help you learn about the infrastructure that your oganization hosts which inventory is a large part in defending an organization (ie: you can not protect what you do not know exists). Also, it will help you find when undocumented services are exposed to the internet that should not be. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.t1133
+- attack.persistence
+- attack.initial_access
+id: 0DXnfAfjvHGb
+references:
+- https://tdm.socprime.com/tdm/info/0DXnfAfjvHGb
+- https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs
+logsource:
+  product: zeek
+  service: conn
+detection:
+  selection:
+    id.orig_h: '*'
+    history|startswith: 'Sh'
+  from_external:
+    local_orig: 'false'
+    local_resp: 'true'
+  condition: from_external AND selection
+falsepositive:
+- 'You must add known public facing services/IPs to an exclusion filter.'
+- 'Differentiating between external and internal is done using the Zeek fields local_orig and local_resp. Therefore, make sure you have those configured properly in your Zeek or Corelight appliance to match the subnets that are internal to your organization.'
+level: low
+fields:
+- ts
+- id.orig_h
+- id.orig_p
+- id.resp_h
+- id.resp_p
+- proto
+- community_id
+- duration
+- conn_state
+- history
+- orig_pkts
+- resp_pkts
+- orig_bytes
+- resp_bytes
+- service
+- orig_ip_bytes
+- resp_ip_bytes
+- local_orig
+- local_resp
+- uid

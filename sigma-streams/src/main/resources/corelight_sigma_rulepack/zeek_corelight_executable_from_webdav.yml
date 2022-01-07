@@ -1,0 +1,40 @@
+title: Executable from Webdav
+status: stable
+description: 'Detects a download from Webdav service which could be used as a way to transfer tools internally. Determine if this is a) Legitimate server b) legitimate binary/file'
+author: SOC Prime Team, Open Threat Research (OTR)
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection_webdav:
+    - c-useragent: '*python*'
+    - uri: '*bert*'
+  selection_executable:
+    - resp_mime_types: '*text*'
+    - uri: '*bert*'
+  condition: selection_webdav AND selection_executable
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - host
+  - method
+  - version
+  - user_agent
+  - status_code
+  - status_msg
+  - uri
+  - referrer
+  - request_body_len
+  - response_body_len
+  - orig_mime_types
+  - resp_mime_types
+  - proxied
+  - origin
+  - orig_fuids
+  - resp_fuids
+  - uid 
+falsepositive:
+  - 'Legitimate internal WebDAV'

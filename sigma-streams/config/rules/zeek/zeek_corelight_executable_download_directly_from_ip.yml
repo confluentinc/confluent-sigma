@@ -1,0 +1,114 @@
+title: Executable Download Directly From IP
+description: 'A download directly from an IP address is not typical of web traffic.. in addition, this was an executable file. Determine if this is legitimate infrastructure and if this is a legitimate file. Usually this means somewhere in a scripting logic is a hard coded IP address. You can also look into whether there was a referrer and look at the user agent to determine more context'
+author: SOC Prime Team
+tags:
+  - attack.t1133
+  - attack.persistence
+  - attack.initial_access
+references:
+  - https://tdm.socprime.com/tdm/info/0DXnfAfjvHGb
+  - https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs 
+logsource:
+ product: zeek
+ service: http
+detection:
+  ip_v4_end:
+    host|endswith: 
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    - '5'
+    - '6'
+    - '7'
+    - '8'
+    - '9'
+    - '0'
+  ip_v4_dot:
+    host|contains: 
+      - '.'
+  ip_v6:
+    host|contains: ':'
+  selection:
+    uri|endswith:
+    - '.apm'
+    - '.app'
+    - '.appref-ms'
+    - '.bas'
+    - '.bat'
+    - '.chi'
+    - '.chm'
+    - '.chq'
+    - '.chw'
+    - '.dll'
+    - '.exe'
+    - '.gadget'
+    - '.hta'
+    - '.inf'
+    - '.jar'
+    - '.jnlp'
+    - '.jse'
+    - '.lnk'
+    - '.mde'
+    - '.mht'
+    - '.msi'
+    - '.msix'
+    - '.msixbundle'
+    - '.pif'
+    - '.pkg'
+    - '.pl'
+    - '.ps1'
+    - '.ps1xml'
+    - '.ps2'
+    - '.ps2xml'
+    - '.psc1'
+    - '.psc2'
+    - '.psd1'
+    - '.psd1'
+    - '.psdm1'
+    - '.psm1'
+    - '.py'
+    - '.pyc'
+    - '.pyo'
+    - '.pyw'
+    - '.pyz'
+    - '.reg'
+    - '.scr'
+    - '.sct'
+    - '.vbe'
+    - '.vbs'
+    - '.ws'
+    - '.wsb'
+    - '.wsc'
+    - '.wsf'
+    - '.xpi'
+    - '.xz'
+    - '.z'
+    - '.zip'
+    - '.zipx'
+  condition: ( ip_v4_end and ip_v4_dot) or ip_v6 AND selection
+level: medium
+falsepositive: 'Rare software that is has a hard coded IP address for its update'
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - host
+  - method
+  # - version
+  - user_agent
+  - status_code
+  # - status_msg
+  - uri
+  - referrer
+  - request_body_len
+  - response_body_len
+  - orig_mime_types
+  - resp_mime_types
+  - proxied
+  - origin
+  - orig_fuids
+  - resp_fuids
+  - uid

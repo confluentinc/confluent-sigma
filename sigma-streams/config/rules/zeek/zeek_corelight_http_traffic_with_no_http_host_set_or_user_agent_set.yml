@@ -1,0 +1,32 @@
+title: HTTP Traffic with No HTTP Host Set or User Agent Set
+description: 'Client is making a request mimicking a legitimate browser but is possibly powershell or other programming library that would not normally have that Browser User Agent'
+author: SOC Prime Team
+tags:
+  - attack.t1571
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection1:
+    client_header_names: 'USER-AGENT'
+  filter1:
+    client_header_names: 'HOST'
+  selection2:
+    client_header_names: 'HOST'
+  filter2:
+    client_header_names: 'USER-AGENT' 
+  condition: selection1 AND NOT filter1 OR selection2 AND filter2
+fields:
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - uri
+  - referrer
+  - user_agent
+  - request_body_len
+  - response_body_len
+  - status_code
+  - uid
+falsepositive:
+- 'Outdated or incorrect programmed software yet is not malicious'

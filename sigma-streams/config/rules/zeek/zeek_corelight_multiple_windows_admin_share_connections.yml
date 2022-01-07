@@ -1,0 +1,29 @@
+title: Multiple Windows Admin Share Connections
+status: stable
+description: 'Detects multiple connections to Windows Admin share. Although this may legitimately happen, it should be rare for this to be done on multiple remote computers. If the threshold of more than 3 computers is too low, you change the 3 within the condition to a number such as 5 or 10 or whatever fits your needs. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.lateral_movement
+- attack.t1021
+- attack.t1021.002
+logsource:
+  product: zeek
+  service: smb_mapping
+detection:
+  selection:
+    path|endswith: 'ADMIN$'
+  timeframe: 15m
+  condition: selection | count (dst_ip) by id_orig_h > 3
+falsepositive:
+- 'Unknown'
+fields:
+- ts
+- id.orig_h
+- id.orig_p
+- id.resp_h
+- id.resp_p
+- native_file_system
+- path
+- service
+- share_type
+- uid

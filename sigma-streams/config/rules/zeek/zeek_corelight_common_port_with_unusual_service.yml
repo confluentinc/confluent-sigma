@@ -1,0 +1,23 @@
+title: Common Port with Unusual Service
+status: stable
+description: 'Identifies services using a NON ephemeral port for a service that normally should be using a source port greater than 1024. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.t1571
+  - attack.command_and_control
+logsource:
+  product: zeek
+  service: conn
+detection:
+  selection:
+    src_port|less_than: 1024
+    service:
+      - http
+      - ssl
+      - rdp
+      - ssh
+  from_internal:
+    local_orig: 'true'
+    local_resp: 'false'
+  condition: selection AND from_internal
+level: low

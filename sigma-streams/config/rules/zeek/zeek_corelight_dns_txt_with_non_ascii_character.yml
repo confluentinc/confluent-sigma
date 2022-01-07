@@ -1,0 +1,20 @@
+title: DNS TXT With Non ASCII Character 
+description: 'Advesaries can use DNS TXT requests/responses for C2. Sometimes they may include binary data in the response. Since DNS text should be human readable, this is unusual. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags: 
+  - attack.t1094
+  - attack.t1043
+  - attack.command_and_control
+logsource:
+  product: zeek
+  service: dns
+detection:
+  selection:
+    answers|re: '.*[^\x00-\x7F].*'
+    qtype_name:
+      - 'TXT'
+      - 'txt'
+  condition: selection
+falsepositive: 
+  - 'Unlikely'
+level: medium

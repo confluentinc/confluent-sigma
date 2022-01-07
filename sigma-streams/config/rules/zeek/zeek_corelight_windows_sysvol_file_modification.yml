@@ -1,0 +1,37 @@
+title: Windows Sysvol File Modification
+description: 'Sysvol is the path in which a domain controller uses to share group policies and other important active directory files. This detects a scenario where one of those files on that share are changed or created. Although this may legitimately happen, determine if the source is authorized or should be making these types of changes. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+ - attack.lateral_movement
+ - attack.t1021
+ - attack.t1021.002
+falsepositive:
+  - 'Legitimate scenario where an admnistrator may be editing sysvol files remotely over SMB.'
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    path|endswith:
+      - 'Sysvol' 
+      - 'SYSVOL' 
+      - 'sysvol' 
+  filter:
+    action: 'SMB::FILE_OPEN'
+  condition: selection AND NOT filter
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - name
+  - path
+  - prev_name
+  - size
+  - times_accessed
+  - times_changed
+  - times_created
+  - times_modified
+  - fuid
+  - uid

@@ -1,0 +1,44 @@
+title: Potential Webdav Forced Authentication
+status: stable
+description: 'Identifies internet bound webdav requests which could be forced authentication. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.t1187
+  - attack.credential_access
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection:
+    user_agent|contains: 'webdav'
+  privatev4:
+    dst_ip|startswith:
+      - '10.' #10.0.0.0/8
+      - '192.168.' #192.168.0.0/16
+      - '172.16.' #172.16.0.0/12
+      - '172.17.'
+      - '172.18.'
+      - '172.19.'
+      - '172.20.'
+      - '172.21.'
+      - '172.22.'
+      - '172.23.'
+      - '172.24.'
+      - '172.25.'
+      - '172.26.'
+      - '172.27.'
+      - '172.28.'
+      - '172.29.'
+      - '172.30.'
+      - '172.31.'
+      - '127.' #127.0.0.0/8
+      - '169.254.' #169.254.0.0/16
+  privatev6:
+    - dst_ip: '::1'
+    - dst_ip|startswith:
+      - 'fe80::' #link-local
+      - 'fc00::' #unique local
+  condition: selection AND NOT (privatev4 OR privatev6)
+falsepositive:
+  - 'Webdav in the cloud'
+level: medium

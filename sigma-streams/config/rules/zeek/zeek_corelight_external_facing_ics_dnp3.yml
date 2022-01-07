@@ -1,0 +1,42 @@
+title: External Facing ICS DNP3
+description: 'An external facing ICS DNP3 device is responding to external public facing connections. Verify if this is allowed device. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.initial_access
+  - attack.t1133 # Initial Access: External Remote Services
+logsource:
+ product: zeek
+ service: dnp3
+detection:
+  selection: 
+    fc_request: '*'
+  filter_private_ipv4:
+    id.orig_h|startswith:
+    - '10.' 
+    - '192.168.' 
+    - '172.16.' 
+    - '172.17.'
+    - '172.18.'
+    - '172.19.'
+    - '172.20.'
+    - '172.21.'
+    - '172.22.'
+    - '172.23.'
+    - '172.24.'
+    - '172.25.'
+    - '172.26.'
+    - '172.27.'
+    - '172.28.'
+    - '172.29.'
+    - '172.30.'
+    - '172.31.'
+    - '127.' 
+    - '169.254.' 
+  filter_private_ipv6:
+    - id.orig_h: '::1' 
+    - id.orig_h|startswith:
+      - 'fe80::' 
+      - 'fc00::'
+  condition: selection AND NOT (filter_private_ipv4 OR filter_private_ipv6)
+falsepositive: 'ICS/Scada systems that are allowed to be exposed to the internet. Regardless if malicious or not, should always be investigated/learned as to why. Some times legitimate business reasons. But as a defender this is important to know.'
+level: medium

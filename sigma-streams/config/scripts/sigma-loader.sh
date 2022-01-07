@@ -1,0 +1,1 @@
+java -cp target/kafka-sigma-streams-1.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader -b 127.0.0.1:9092 -t sigma-rules $1 $2

@@ -1,0 +1,50 @@
+title: Possible Windows Executable Download Without Matching Mime Type
+description: 'A download of an executable where the mime type (https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) does not match the extension of the file downloaded. This is one way to hide the type of file downloaded. Determine if the filter was just a mistake based on a new mime type for executables that was not known at the time or more likely determine if the domain and the file downloaded are legitimate.'
+logsource:
+ product: zeek
+ service: http
+author: SOC Prime Team
+tags:
+- attack.t1133
+- attack.initial_access
+- attack.ta0001
+- attack.t1189
+detection:
+ filter:
+  uri|endswith:
+    - '.exe'
+    - '.dll'
+    - '.msi'
+ executable_mime_types:
+  resp_mime_types:
+    - 'application/java-archive'
+    - 'application/mshelp'
+    - 'application/chrome-ext'
+    - 'application/x-object'
+    - 'application/x-executable'
+    - 'application/x-dosexec'
+    - 'application/x-msdownload'
+    - 'application/vnd.microsoft.portable-executable '
+ condition: executable_mime_types AND NOT filter
+falsepositive: 'Misconfigured software in the mime type request, yet is still legitimate.'
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - host
+  - method
+  - user_agent
+  - status_code
+  - uri
+  - referrer
+  - request_body_len
+  - response_body_len
+  - orig_mime_types
+  - resp_mime_types
+  - proxied
+  - origin
+  - orig_fuids
+  - resp_fuids
+  - uid

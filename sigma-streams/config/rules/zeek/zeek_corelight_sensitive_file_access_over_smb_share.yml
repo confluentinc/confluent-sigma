@@ -1,0 +1,55 @@
+title: Sensitive File Access Over SMB Share
+description: 'During collection advesaries may access windows hosts via their exposed shares to collect sensitive files. Determine if multiple of these files were accessed in a short period of time to further enhance the possibility of seeing if this was a one off or the possibility of larger sensitive file gathering. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+references:
+  - https://github.com/eth0izzle/shhgit/blob/f07be707b39ffd36603ac02edfda0dba23f6e5b6/config.yaml
+author: SOC Prime Team
+tags:
+  - attack.collection
+  - attack.t1039
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    name|endswith:
+    - '.rsa'
+    - '.pem'
+    - '.dsa'
+    - '.dit'
+    - '.ecdsa'
+    - '.ocsp'
+    - '.ed25519'
+    - '.p12'
+    - '.pfx'
+    - '.kdbx'
+    - 'keychain'
+    - 'keystore'
+    - 'keyring'
+    - 'pass.txt'
+    - 'password.txt'
+    - 'passwords.txt'
+    - '.bek'
+    - 'passwd'
+    - 'shadow'
+    - 'salesforce.js'
+    - '.psafe3'
+    - 'credentials.xml'
+    - 'localsettings.php'
+    - '.mimi'
+    - '.dmp'
+    - '.dump'
+    - 'hiberfil.sys'
+    - '1.txt'
+    - '.kirbi'
+    - '.ost'
+    - '.pst'
+    - 'groups.xml'
+    - '.bak'
+    - '.ovpn'
+    - '.sqlite'
+    - '.sqlite3'
+    - '.sqldump'
+  condition: selection
+level: medium
+falsepositive:
+  - 'Backups'
