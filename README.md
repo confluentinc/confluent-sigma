@@ -30,28 +30,27 @@ Rules can be loaded into Kafka by using the SigmaRuleLoader application or via c
 
 Example: 
 
-sigma-rule-loader -bootStrapServer localhost:9092 -topic sigma-rules -file zeek_sigma_rule.yml
+`sigma-rule-loader -bootStrapServer localhost:9092 -topic sigma-rules -file zeek_sigma_rule.yml`
 
 or
 
-sigma-rule-loader -bootStrapServer localhost:9092 -topic sigma-rules -dir zeek_sigma_rules
+`sigma-rule-loader -bootStrapServer localhost:9092 -topic sigma-rules -dir zeek_sigma_rules`
 
 ### Command Line
-Sigma Rules are persisted in a log compacted topic. Ensure the topic is created prior to adding sigma rules.
+Sigma Rules are persisted in a log compacted topic. Ensure the topic is created prior to adding sigma rules.  Here is an example topic creation command but note that in production scenarios you will want a minimum replication-factor of 3.  Number of required partiions are likley to remain one or very low since rules are will be relatively low (compared to real event data)
 
-### kcache topic creation
-kafka-topics --bootstrap-server localhost:9092 --topic sigma_rules --replication-factor 1 --partitions 1 
---config cleanup.policy=compact --create
+`kafka-topics --bootstrap-server localhost:9092 --topic sigma_rules --replication-factor 1 --partitions 1 
+--config cleanup.policy=compact --create`
 
 ### Adding/Updating Sigma Rules via CLI
-kafka-console-producer --bootstrap-server localhost:9092 --topic <topic-name> --property "parse.key=true" 
---property "key.separator=:"
+`kafka-console-producer --bootstrap-server localhost:9092 --topic <topic-name> --property "parse.key=true" 
+--property "key.separator=:"`
 
-{"title":Sigma Rule Test,"id":"123456789","status":"experimental","description":"This is just a test.", 
+`{"title":Sigma Rule Test,"id":"123456789","status":"experimental","description":"This is just a test.", 
 "author":"Test", "date":"1970/01/01","references":["https://confluent.io/"],"tags":["test.test"],"logsource": 
 {"category":"process_creation","product":"windows"},"detection":{"selection":{"CommandLine|contains|all":
 [" /vss "," /y "]},"condition":"selection"},"fields":["CommandLine","ParentCommandLine"],"falsepositives":
-["Administrative activity"],"level":"high"}
+["Administrative activity"],"level":"high"}`
 
 
 ### Sigma Streams Application
@@ -59,4 +58,4 @@ kafka-console-producer --bootstrap-server localhost:9092 --topic <topic-name> --
 
 Example:
 
-sigma-streams-app -c properties-file
+`sigma-streams-app -c properties-file`
