@@ -24,8 +24,9 @@ Sigma rules are published to a Kafka topic that the Sigma Stream processory is s
 
 ### Sigma Rule Loading
 Sigma Rules are persisted to a user-defined topic or topics. The key is the title of the rule and the value is a
-stringified version of the YAML file.
+stringified version of the YAML file.  Newly published sigma rules WILL be picked up by the running Sigma Streams processor.  If a rule with the same name as a previous rule is published it will replace it.
 
+### Sigma Rule Topic
 Ensure the sigma topic is created prior to adding sigma rules.  Here is an example topic creation command but note that in production scenarios you will want a minimum replication-factor of 3.  Number of required partiions are unlikely to need to be more than 1 since rules are will be relatively low (compared to real event data)
 
 `kafka-topics --bootstrap-server localhost:9092 --topic sigma_rules --replication-factor 1 --partitions 1 
