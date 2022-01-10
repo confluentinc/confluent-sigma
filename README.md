@@ -19,6 +19,9 @@ https://github.com/SigmaHQ/sigma
 ![alt text](images/sigma_rule.png "Sigma Rule")
 
 ## Getting Started
+
+Sigma rules are published to a Kafka topic that the Sigma Stream processory is subscribed to.  These rules are then appied to a stream of data in another topic that the Sigma Streams is also subscribed to.  Matching records are then published to a new topic.  All three topics are provided in the configuration. 
+
 ### Sigma Rule Loading
 Sigma Rules are persisted to a user-defined topic or topics. The key is the title of the rule and the value is a
 stringified version of the YAML file.
@@ -43,14 +46,17 @@ Sigma Rules are persisted in a log compacted topic. Ensure the topic is created 
 --config cleanup.policy=compact --create`
 
 ### Adding/Updating Sigma Rules via CLI
-`kafka-console-producer --bootstrap-server localhost:9092 --topic <topic-name> --property "parse.key=true" 
---property "key.separator=:"`
+You can also use any standard kafka publisher to load rules.  Here is an examples of sending a record using the kafka-console-producer
 
-`{"title":Sigma Rule Test,"id":"123456789","status":"experimental","description":"This is just a test.", 
+```kafka-console-producer --bootstrap-server localhost:9092 --topic <topic-name> --property "parse.key=true" 
+--property "key.separator=:"
+
+{"title":Sigma Rule Test,"id":"123456789","status":"experimental","description":"This is just a test.", 
 "author":"Test", "date":"1970/01/01","references":["https://confluent.io/"],"tags":["test.test"],"logsource": 
 {"category":"process_creation","product":"windows"},"detection":{"selection":{"CommandLine|contains|all":
 [" /vss "," /y "]},"condition":"selection"},"fields":["CommandLine","ParentCommandLine"],"falsepositives":
-["Administrative activity"],"level":"high"}`
+["Administrative activity"],"level":"high"}
+```
 
 
 ### Sigma Streams Application
