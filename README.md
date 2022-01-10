@@ -26,6 +26,11 @@ Sigma rules are published to a Kafka topic that the Sigma Stream processory is s
 Sigma Rules are persisted to a user-defined topic or topics. The key is the title of the rule and the value is a
 stringified version of the YAML file.
 
+Ensure the sigma topic is created prior to adding sigma rules.  Here is an example topic creation command but note that in production scenarios you will want a minimum replication-factor of 3.  Number of required partiions are unlikely to need to be more than 1 since rules are will be relatively low (compared to real event data)
+
+`kafka-topics --bootstrap-server localhost:9092 --topic sigma_rules --replication-factor 1 --partitions 1 
+--config cleanup.policy=compact --create`
+
 Rules can be loaded into Kafka by using the SigmaRuleLoader application or via command line using kafka-console-producer.
 
 ### Sigma Rule Loader Application
@@ -39,11 +44,6 @@ or
 
 `sigma-rule-loader -bootStrapServer localhost:9092 -topic sigma-rules -dir zeek_sigma_rules`
 
-### Command Line
-Sigma Rules are persisted in a log compacted topic. Ensure the topic is created prior to adding sigma rules.  Here is an example topic creation command but note that in production scenarios you will want a minimum replication-factor of 3.  Number of required partiions are likley to remain one or very low since rules are will be relatively low (compared to real event data)
-
-`kafka-topics --bootstrap-server localhost:9092 --topic sigma_rules --replication-factor 1 --partitions 1 
---config cleanup.policy=compact --create`
 
 ### Adding/Updating Sigma Rules via CLI
 You can also use any standard kafka publisher to load rules.  Here is an examples of sending a record using the kafka-console-producer
@@ -57,7 +57,6 @@ You can also use any standard kafka publisher to load rules.  Here is an example
 [" /vss "," /y "]},"condition":"selection"},"fields":["CommandLine","ParentCommandLine"],"falsepositives":
 ["Administrative activity"],"level":"high"}
 ```
-
 
 ### Sigma Streams Application
 ![alt text](images/streams_app.png "Sigma Streams App")
