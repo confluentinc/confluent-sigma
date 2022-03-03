@@ -1,0 +1,44 @@
+title: Client transferring large amount of data over HTTP
+status: stable
+description: 'Client sending over 5GBs via HTTP. It is uncommon for a client to send this much traffic to a server over HTTP. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.exfiltration
+- attack.t1560
+- attack.t1030
+logsource:
+  product: zeek
+  service: http
+detection:
+  pre_filter:
+    request_body_len: 0
+  selectlargerthan:
+    request_body_len|greater_than: 10000000
+  timeframe: 15m
+  condition: pre_filter AND selectlargerthan
+fields:
+- ts
+- id.orig_h
+- id.orig_p
+- id.resp_h
+- id.resp_p
+- host
+- method
+- user_agent
+- status_code
+- status_msg
+- uri
+- referrer
+- request_body_len
+- response_body_len
+- orig_mime_types
+- resp_mime_types
+- proxied
+- origin
+- orig_fuids
+- resp_fuids
+- uid
+level: medium
+falsepositive:
+- 'File hosting sites that are allowed, although they probably will not occur over HTTP.'
+- 'Backup internally that are not encrypted'

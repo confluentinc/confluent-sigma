@@ -1,0 +1,30 @@
+title: Multiple Abnormal non conforming HTTP Requests
+description: 'Detects when multiple HTTP requests are made with non conforming standard. Usually can be an indication that an alternative HTTP implemention is in place. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.command_and_control
+  - attack.webservice
+  - attack.t1102
+  - attack.t1071.001 # Command And Control Application Layer Protocol: Web Protocols
+logsource:
+  product: zeek
+  service: weird
+detection:
+  selection:
+    name: 'bad_HTTP_request'
+  timeframe: 10m
+  condition: selection | count(id_orig_h) by id_resp_p > 10
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - name
+  - notice
+  - addl
+  - conn
+  - id
+  - uid
+falsepositive:
+  - 'A site that is poorly configured or outdated but is not malicious.'

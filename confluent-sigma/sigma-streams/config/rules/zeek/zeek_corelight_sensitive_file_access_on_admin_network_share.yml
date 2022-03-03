@@ -1,0 +1,24 @@
+title: Sensitive File Access On Admin Network Share
+description: 'This rule identifies sensitive files being accessed via SMB over the Windows Admin$ network share. Determine if these files should a) be accessible and b) accessed by that client. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+tags:
+  - attack.t1039
+  - attack.collection
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    path|contains: 'ADMIN$'
+    name|contains:
+      - '\mimidrv'
+      - '\lsass'
+      - '\windows\minidump\'
+      - '\hiberfil'
+      - '\sqldmpr'
+      - '\sam'
+      - '\ntds.dit'
+      - '\security'
+  condition: selection
+falsepositive:
+  - 'Legitimate administrative activity'
+level: high

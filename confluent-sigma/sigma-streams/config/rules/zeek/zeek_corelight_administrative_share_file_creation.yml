@@ -1,0 +1,22 @@
+title: Administrative Share File Creation
+description: 'Advesaries may use adminstrative shares to place files used for lateral movement remotely. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.lateral_movement
+  - attack.t1021
+  - attack.t1021.002
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    path|contains:
+      - 'admin$'
+      - 'print$'
+      - 'fax$'
+  selection2:
+    path|re: '.*[^A-Za-z][A-Za-z]$.*'
+  selection3: 
+    action: 'SMB::FILE_WRITE'
+  condition: (selection OR selection2) AND selection3
+level: low

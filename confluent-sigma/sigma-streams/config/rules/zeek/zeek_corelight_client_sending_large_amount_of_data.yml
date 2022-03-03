@@ -1,0 +1,30 @@
+title: Client Sending Large Amount of Data 
+description: 'Client is sending a large amount of data to another host. Verify if the destination is a known host for transfering files/data too. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+logsource:
+  product: zeek
+  service: conn
+tags:
+  - attack.t1039
+  - attack.collection 
+detection:
+  selection:
+    orig_bytes|less_than: 1000000000 # 1GB
+    resp_bytes|greater_than: 100000000 # 100MB
+  condition: selection
+fields:
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - orig_bytes
+  - resp_bytes
+  - service
+  - duration
+  - orig_pkts
+  - orig_ip_bytes
+  - resp_pkts
+  - resp_ip_bytes
+falsepositive:
+  - 'Backup servers such as for VMs, cloud file backups, etc.'
+  - 'One time file sync/transfer that is non malicious'

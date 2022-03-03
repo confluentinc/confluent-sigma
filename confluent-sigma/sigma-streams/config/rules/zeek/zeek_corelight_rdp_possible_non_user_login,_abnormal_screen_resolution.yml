@@ -1,0 +1,22 @@
+title: RDP Possible Non User Login, Abnormal Screen Resolution
+description: 'RDP small screen resolution can be an indication that the connection was made via an automated script (unusual for RDP) or via a port forwarding scenario using RDP. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.lateral_movement
+- attack.t1021 # Lateral Movement: Remote Services
+logsource:
+  product: zeek
+  service: rdp
+detection:
+  selection:
+    desktop_height|less_than: 600
+    desktop_width|less_than: 600
+  condition: selection
+fields:
+- id.orig_h
+- id.resp_h
+- id.resp_p
+- cookie
+- keyboard_layout
+falsepositive:
+- 'Unlikely, but could happen with an odd or older network environment'

@@ -1,0 +1,41 @@
+title: Multiple Kerberos Tickets Used from Single Client
+description: 'A single client should rarely use multiple kerberos tickets. This rule looks for this scenario which could be an indication that multiple kerberos tickets have been stolen or used that belong to other computer or service accounts and or users. This is a supported version of research done within the Open Threat Research (OTR) community.'
+author: 'Nate Guagenti (@neu5ron), Open Threat Research (OTR), SOC Prime Team'
+references:
+- "https://github.com/OTRF/detection-hackathon-apt29/issues/48#issuecomment-623217460"
+- "https://github.com/OTRF/detection-hackathon-apt29"
+tags:
+- attack.lateral_movement
+- attack.t1021 # Lateral Movement: Remote Services
+logsource:
+  product: zeek
+  service: kerberos
+detection:
+  is_sucessful:
+    successful: 'true'
+  is_tgs_client:
+    request_type: 'TGS'
+  client_exists:
+    client: '*'
+  till_exists:
+    till: '*'
+  timeframe: 1m
+  condition: is_sucessful AND is_tgs_client AND client_exists AND till_exists | count(client) by id_orig_h > 5
+level: medium
+fields:
+- ts
+- id.orig_h
+- id.orig_p
+- id.resp_h
+- id.resp_p
+- request_type
+- client_cert_subject
+- service
+- server_cert_subject
+- renewable
+- auth_ticket
+- from
+- till
+falsepositive:
+- 'When a single client or user uses multiple different accounts from a single source in a short amount of time.'
+- 'Performance monitoring or scanning type systems that have a large amount of access. Verify if this is supposed to be the case.'

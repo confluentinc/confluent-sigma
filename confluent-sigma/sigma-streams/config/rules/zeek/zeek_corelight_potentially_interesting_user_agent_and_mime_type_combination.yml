@@ -1,0 +1,75 @@
+title: Potentially Interesting user agent and mime type combination
+status: stable
+description: 'This rule looks for Internal interesting and default user agents and matches them with interesting mime types. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: Corelight
+tags:
+  - attack.command_and_control
+  - attack.lateral_movement
+  - attack.t1105
+logsource:
+  product: zeek
+  service: http
+detection:
+  privatev4:
+    src_ip|startswith:
+    - '10.'
+    - '192.168.'
+    - '172.16.'
+    - '172.17.'
+    - '172.18.'
+    - '172.19.'
+    - '172.20.'
+    - '172.21.'
+    - '172.22.'
+    - '172.23.'
+    - '172.24.'
+    - '172.25.'
+    - '172.26.'
+    - '172.27.'
+    - '172.28.'
+    - '172.29.'
+    - '172.30.'
+    - '172.31.'
+    - '127.'
+    - '169.254.'
+  privatev6:
+    - src_ip: ::1
+    - src_ip|startswith:
+      - 'fe80::'
+      - 'fc00::'
+  selection:
+    resp_mime_types:
+      - application/java-archive
+      - application/mshelp
+      - application/chrome-ext
+      - application/x-object
+      - application/x-executable
+      - application/x-sharedlib
+      - application/x-mach-o-executable
+      - application/x-dosexec
+      - application/x-java-applet
+      - application/x-java-jnlp-file
+      - text/x-php
+      - text/x-perl
+      - text/x-ruby
+      - text/x-python
+      - text/x-awk
+      - text/x-tcl
+      - text/x-lua
+      - text/x-msdos-batch
+    user_agent|contains:
+      - certutil
+      - powershell
+      - microsoft
+      - python
+      - libwww-perl
+      - go-http
+      - java/
+      - lua-resty-http
+      - winhttp
+      - vb project
+      - ruby
+  condition: selection AND (privatev4 OR privatev6)
+falsepositive:
+  - legitimate downloads
+level: medium

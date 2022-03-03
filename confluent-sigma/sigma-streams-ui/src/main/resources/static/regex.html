@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <link rel="stylesheet" href="css/dropdown.css" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script>
+        $(function(){
+            $("#header").load("header.html");
+        });
+    </script>
+</head>
+
+<style>
+    .floated {
+        float:left;
+        margin-right:5px;
+    }
+    .upload-btn-wrapper {
+        position: sticky;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+    .btn {
+        border: 2px solid gray;
+        color: gray;
+        background-color: white;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: 'PT Sans', sans-serif;
+        font-weight: bold;
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+        /* Scaling button to 0.98 to its original size */
+        box-shadow: 3px 2px 22px 1px rgba(0, 0, 0, 0.24);
+        /* Lowering the shadow */
+    }
+
+    .btn:disabled {
+        color: white;
+        background-color: lightgrey;
+    }
+
+    .upload-btn-wrapper input[type=file] {
+        font-size: 100px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+    }
+
+    .action_container > * {
+        float:left;
+        margin-right:5px;
+        display: inline-block;
+    }
+
+    .a {
+        display:table-cell;;
+    }
+    .b {
+        display:table-cell; width:100%; padding:20px;
+    }
+    .b1 {
+        display:table-cell; width:50%; padding:20px;
+    }
+
+    .c {width:100%;}
+</style>
+
+<body>
+<div id="header"></div>
+
+<div class="container_16 admin-panel background"><!-- main panel container -->
+     <div class="module-box grid_16 alpha"><!-- admin module box -->
+        <div class="module-box-inner"><!-- admin module spacing -->
+            <div class="container">
+                <div class="regex">
+                    <div class="regex-sources">
+                        <label>Current RegEx Source Types:</label>
+                        <select id="regex-list" size="40" onclick="handleRegExSelect()" multiple>
+                        </select>
+                    </div>
+
+                    <div class="regex-inputs">
+                        <label for="sourcetype">Source Type:</label>
+                        <input type="text" id="sourcetype" name="fname" onkeyup="verifySubmit()">
+
+                        <label for="regex">Regular Expression:</label>
+                        <input type="text" id="regex" name="fname" onkeyup="verifySubmit()">
+
+                        <label for="rtopic">Output Topic:</label>
+                        <input type="text" id="rtopic" name="fname" onkeyup="verifySubmit()">
+
+                        <label id="custom-label">Custom Fields:</label>
+                        <div id="custom-fields">
+                        </div>
+
+                        <div>
+                            <button class="btn" id="submitRegex" onclick="submitRegEx()">Submit</button>
+                            <button class="btn" id="deleteRegex" onclick="deleteRegEx()">Delete</button>
+                            <button class="btn" id="clearRegex" onclick="clearRegEx()">Clear</button>
+                            <button class="btn" id="createCustomFields" onclick="createCustomFields()">Add Custom Fields</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/regex.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+title: Multiple Compressed Files Transferred Outbound
+status: stable
+description: 'Advesaries may use compressed archives to transfer data. Make sure your zeek or coreligth device has local_orig and local_resp variables filled out correctly matching your organizations subnets. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+references:
+  - "https://github.com/zeek/zeek/blob/002109973dbb2b86cf9b0be0a85797c5feba5a4e/scripts/base/frameworks/files/magic/archive.sig"
+author: SOC Prime Team
+tags:
+  - attack.ta0010
+  - attack.t1560
+  - attack.data_compressed
+  - attack.automated_exfiltration
+logsource:
+  product: zeek
+  service: files
+detection:
+  outbound:
+    local_orig: true
+  pre_filter:
+    total_bytes: 0
+  selection:
+    mime_type:
+      - 'application/vnd.ms-cab-compressed'
+      - 'application/warc'
+      - 'application/x-7z-compressed'
+      - 'application/x-ace'
+      - 'application/x-arc'
+      - 'application/x-archive'
+      - 'application/x-arj'
+      - 'application/x-compress'
+      - 'application/x-cpio'
+      - 'application/x-dmg'
+      - 'application/x-eet'
+      - 'application/x-gzip'
+      - 'application/x-lha'
+      - 'application/x-lrzip'
+      - 'application/x-lz4'
+      - 'application/x-lzma'
+      - 'application/x-lzh'
+      - 'application/x-lzip'
+      - 'application/x-rar'
+      - 'application/x-rpm'
+      - 'application/x-stuffit'
+      - 'application/x-tar'
+      - 'application/x-xz'
+      - 'application/x-zoo'
+      - 'application/zip'
+  referrer_exists:
+    referrer: '*'
+  timeframe: 5m
+  condition: not pre_filter and selection | count(sha1) by tx_hosts > 25
+fields:
+  - filename
+  - mime_type
+  - extracted
+  - total_bytes
+  - sha1
+  - md5
+  - sha256
+  - rx_hosts
+  - local_orig
+  - is_orig
+  - tx_hosts
+level: low
+falsepositive:
+  - 'Unknown'
