@@ -1,0 +1,33 @@
+title: Custom Cryptographic inference determined by Corelight
+status: stable
+description: 'Corelight appliance made an inference/determination that the connection was possibly made using a custom cryptographic implementation. Verify if this is a legitimate request, it will be helpful to pivot to the ssl.log or x509.log to get more context about the request. Only available on Corelight and requires Encryption Detection package to be enabled. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.command_and_control
+- attack.defense_evasion
+- attack.t1573 # Command and Control: Encrypted Channel
+falsepositive:
+- 'Unknown'
+logsource:
+  product: zeek
+  service: notice
+  definition: 'Requires Corelight version of Zeek. This additional log information is not within the standard Zeek implementation.'
+detection:
+  selection:
+    note: 'Viz::CustomCrypto'
+  condition: selection
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p 
+  - proto 
+  - p
+  - src
+  - dst
+  - actions
+  - msg
+  - note
+  - fuid
+  - uid

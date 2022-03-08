@@ -1,0 +1,30 @@
+title: Network Share Discovery
+description: 'Host is scanning for network shares. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.discovery
+  - attack.t1135
+logsource:
+  product: zeek
+  service: dce_rpc
+detection:
+  selection: 
+    endpoint: 'srvsvc'
+  selection2:
+    operation:
+      - 'NetshareEnumAll'
+      - 'NetShareEnum'
+  timeframe: 1m
+  condition: (selection OR selection2) | count(id_resp_h) by id_orig_h > 3
+falsepositive: unknown
+level: low
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - endpoint
+  - named_pipe
+  - operation
+  - uid

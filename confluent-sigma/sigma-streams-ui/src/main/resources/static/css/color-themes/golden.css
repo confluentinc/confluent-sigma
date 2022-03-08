@@ -1,0 +1,75 @@
+/* `Gold color theme
+----------------------------------------------------------------------------------------------------*/
+
+h1, h2, h3, h4, h5, h6 {
+	color: #363000
+}
+
+a, a:visited { color: #977f00; }
+
+
+.options-panel {
+	box-shadow: 0px 0px 12px #000
+}
+
+body {
+	background-color:#a78d00
+}
+
+.background {
+	background-color:#584a00;
+	background-image:url(../../images/glow.png);
+	background-repeat:repeat-x;
+	background-position:top center
+}
+
+#logo {
+	text-shadow:1px 1px 1px #555
+}
+
+#logo h1 {
+	color: #fff
+}
+
+#logo span {
+	color: #fff
+}
+
+.login-form form, .register-form form {
+	background-color:#eee;
+	box-shadow:0px 0px 12px #111
+}
+
+.login-form #logo h1, .register-form #logo h1 {
+	color: #0d1d2c;
+	text-shadow:1px 1px 1px #fff
+}
+
+.login-form #logo span, .register-form #logo span  {
+	color: #666;
+	text-shadow:1px 1px 1px #fff
+}
+
+#footer a {
+	color:#fff
+}
+
+.module-box {
+	background-color:#fff
+}
+
+#logout {
+	color:#fff
+}
+
+#logout a {
+	color:#ddd
+}
+
+.close-icon {
+	background-image: url(../../images/icons/arrow_medium_up-golden.png);
+}
+
+.open-icon {
+	background-image: url(../../images/icons/arrow_medium_down-golden.png)!important;
+}

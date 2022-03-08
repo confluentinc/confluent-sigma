@@ -1,0 +1,29 @@
+title: Multiple Remote SMB Connections from single client
+description: 'Detects when a single source is connecting to many different SMB or file shares. This indicate the device is scanning the network for open file shares or is connecting and exploiting multiple file shares. Determine if this is normal activity for this source IP. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.discovery
+  - attack.t1135
+logsource:
+  product: zeek
+  service: smb_mapping
+detection:
+  path_exists:
+    path: '*'
+  share_name_exists:
+    share_name: '*'
+  timeframe: 30s
+  condition: path_exists AND share_name_exists | count(share_name) by id_orig_h > 20
+falsepositive:
+  - 'Scenarios where a client rarely but legimiately connects to many remote file shares.'
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - native_file_system
+  - path
+  - service
+  - share_type
+  - uid

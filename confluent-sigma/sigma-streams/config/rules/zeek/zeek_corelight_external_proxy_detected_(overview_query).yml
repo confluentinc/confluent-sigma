@@ -1,0 +1,50 @@
+title: External Proxy Detected (Overview Query)
+description: 'This should be used as a guide to filter for known and unknown proxies on your network being used.  This rule detects external proxies using Corelight and Zeek http log. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.t1090 # Proxy
+  - attack.t1090.002 # Proxy: External Proxy
+  - attack.command_and_control
+  - attack.defense_evasion
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection:
+    proxied: '*'
+  privatev4:
+    src_ip|startswith:
+      - '10.'
+      - '192.168.'
+      - '172.16.'
+      - '172.17.'
+      - '172.18.'
+      - '172.19.'
+      - '172.20.'
+      - '172.21.'
+      - '172.22.'
+      - '172.23.'
+      - '172.24.'
+      - '172.25.'
+      - '172.26.'
+      - '172.27.'
+      - '172.28.'
+      - '172.29.'
+      - '172.30.'
+      - '172.31.'
+      - '127.'
+      - '169.254.'
+  privatev6:
+    - src_ip: '::1' #loopback 
+    - src_ip|startswith:
+        - 'fe80::' #link-local
+        - 'fc00::' #unique local
+  condition: selection and not (privatev4 or privatev6)
+fields:
+  - host
+  - id.orig_h
+  - id.resp_h
+  - proxied
+falsepositive:
+  - 'Additional filtering of internal IP space may be required'
+level: low

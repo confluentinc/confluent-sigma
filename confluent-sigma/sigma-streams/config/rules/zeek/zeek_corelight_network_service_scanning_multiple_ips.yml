@@ -1,0 +1,34 @@
+title: Network Service Scanning Multiple IPs
+description: 'Identify scanning of services that may be available on the internal network. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+logsource:
+  product: zeek
+  service: conn
+tags:
+  - attack.discovery
+detection:
+ selection:
+  local_orig: 'true'
+  local_resp: 'true'
+  conn_state:
+    - 'S0'
+    - 'REJ'
+ exclude_history_payload:
+  history|contains: 'D'
+ timeframe: 1m
+ condition: selection AND NOT exclude_history_payload | count(id_resp_p) by id_orig_h > 25
+fields:
+ - id.orig_h
+ - id,id.orig_p
+ - id.resp_h
+ - id.resp_p
+ - conn_state
+ - history
+ - orig_pkts
+ - resp_pkts
+ - orig_bytes
+ - resp_bytes
+ - service
+level: low
+falsepositive:
+  - 'Internal scanner.'

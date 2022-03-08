@@ -1,0 +1,11 @@
+title: Simple Unit Test Rule 1
+status: stable
+description: 'Detects a download from Webdav service which could be used as a way to transfer tools internally. Determine if this is a) Legitimate server b) legitimate binary/file'
+author: Will & Mike, unit test dynamic duo
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection_uri:
+    - uri: '*test*'
+  condition: selection_uri

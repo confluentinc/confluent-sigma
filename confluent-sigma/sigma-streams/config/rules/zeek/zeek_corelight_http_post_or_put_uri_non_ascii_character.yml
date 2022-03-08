@@ -1,0 +1,22 @@
+title: HTTP POST or PUT URI Non ASCII Character
+description: 'Make sure to apply this for inbound traffic. Traffic that is going to your web servers or public accessible infrastructure. A request with NON ASCII characters within the URL is possible indication of various techniques to bypass WAF and or to logical errors in the severs backend code. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.persistence
+  - attack.t1100
+  - attack.t1505.003
+logsource:
+  product: zeek
+  service: http
+detection:
+  pre_selection:
+    method:
+    - 'POST'
+    - 'PUT'
+  selection:
+    uri|re: '^.*[^\x00-\x7F].*$'
+  condition: pre_selection AND selection
+falsepositive:
+- 'Filter for to make sure this is inbound traffic to your webservers or other public accesible infrastructure'
+- 'Odd yet non malicious internet traffic. On large scale there is bound to be non conforming traffic yet may not be malicious.'
+level: low

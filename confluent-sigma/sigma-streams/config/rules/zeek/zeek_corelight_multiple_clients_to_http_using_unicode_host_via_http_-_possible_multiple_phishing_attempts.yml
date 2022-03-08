@@ -1,0 +1,25 @@
+title: Multiple Clients to HTTP Using Unicode Host via HTTP - Possible Multiple Phishing Attempts
+status: stable
+description: 'Detects when multiple HTTP requests were made to a single domain that has non-ascii characters(unicode/punycode) and a POST or PUT method was used. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.initial_access
+  - attack.t1566 # Initial Access: Phishing
+falsepositive:
+  - 'Unknown'
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection:
+    host|contains: "xn--"
+  referrer_exists:
+    referrer: '*'
+  base_uri:
+    uri: '/'
+  http_methods:
+    method:
+      - 'POST'
+      - 'PUT'
+  timeframe: 1h
+  condition: http_methods AND NOT referrer_exists AND NOT base_uri AND selection | count(uri) by id_orig_h > 10

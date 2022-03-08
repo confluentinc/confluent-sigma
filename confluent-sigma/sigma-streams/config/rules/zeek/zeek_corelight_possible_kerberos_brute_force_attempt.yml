@@ -1,0 +1,37 @@
+title: Possible Kerberos Brute Force Attempt
+description: 'Detects when hundreds of Kerberos requests are made by a single client. Determine if this is a) normal client and b) normal pattern for that client. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.credential_access
+- attack.t1110
+- attack.t1110.001
+logsource:
+  product: zeek
+  service: kerberos
+detection:
+  pre_filter:
+    client: '*'
+  timeframe: 30m
+  condition: pre_filter | count(id_orig_h) by id_resp_h > 100
+fields:
+- ts
+- id.orig_h
+- id.orig_p
+- id.resp_h
+- id.resp_p
+- request_type
+- cipher
+- client
+- client_cert_subject
+- service
+- server_cert_subject
+- renewable
+- auth_ticket
+- from
+- till
+- success
+- error_code
+- error_msg
+- uid
+falsepositive:
+- 'Repetive group policy script or file share that has incorrect credentials. This happens sometimes when an accounts password reset is not propogated or user has a static file share mapping and something changes and their device is not updated.'

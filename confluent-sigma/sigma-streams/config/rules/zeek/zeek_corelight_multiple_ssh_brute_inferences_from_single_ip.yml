@@ -1,0 +1,17 @@
+title: Multiple SSH Brute Inferences from Single IP
+description: 'Only available on Corelight and requires SSH Inferences package to be enabled. Verify if these were legitimate connections and that the source normally logs into multiple destinations in a short amount of time. Only available on Corelight and requires SSH Inferences package to be enabled. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.credential_access
+  - attack.t1110
+  - attack.t1110.001
+logsource:
+  product: zeek
+  service: ssh
+detection:
+  selection:
+    inference: 'BFS Client Brute Force'
+  timeframe: 5m
+  condition: selection | count(id_resp_h) by id_orig_h > 3
+falsepositive:
+  - "Multiple failed logins via a legitimate adminstrator making a mistake."
