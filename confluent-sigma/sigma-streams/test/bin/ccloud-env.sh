@@ -1,0 +1,3 @@
+export CCLOUD_BOOTSTRAP_SERVER=pkc-2396y.us-east-1.aws.confluent.cloud:9092
+export CCLOUD_API_KEY=D4GGM7XXX2QLZ3XD
+export CCLOUD_API_SECRET=/jm9DG6xzRfhRzsNrkQlX8V/7hdCBqs/Ed5fUhWL+Kbp9fJQ+EUvQd9SJxq4+o0w
