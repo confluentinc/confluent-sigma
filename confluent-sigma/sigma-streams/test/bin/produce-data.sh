@@ -2,13 +2,14 @@
 
 source test/bin/ccloud-env.sh
 
-kafka-topics \
-   --bootstrap-server `grep "^\s*bootstrap.server" $HOME/.confluent/java.config | tail -1` \
-   --command-config $HOME/.confluent/java.config \
-   --topic test \
-   --create \
-   --replication-factor 3 \
-   --partitions $2
+docker run -v $(pwd)/test/config:/mnt/config --rm --network=host confluentinc/cp-server:latest \
+  kafka-topics \
+  --bootstrap-server ${CCLOUD_BOOTSTRAP_SERVER} \
+  --command-config /mnt/config/java.config \
+  --topic test \
+  --create \
+  --replication-factor 3 \
+  --partitions $2
 
 
 docker run -v $(pwd)/test/data:/mnt/data --rm --network=host edenhill/kafkacat:1.5.0  \
