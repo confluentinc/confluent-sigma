@@ -27,8 +27,8 @@ docker run -v $(pwd)/test/config:/mnt/config --rm --network=host confluentinc/cp
 while true
 do
   docker run -v $(pwd)/test/data:/mnt/data --rm --network=host edenhill/kafkacat:1.5.0  \
-    kafkacat -b ${CCLOUD_BOOTSTRAP_SERVER} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
-    -X sasl.username=${CCLOUD_API_KEY} -X sasl.password=${CCLOUD_API_SECRET} -t test -l /mnt/data/$1
+    kafkacat -b ${BOOTSTRAP_SERVER} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
+    -X sasl.username=${KAFKA_SASL_USERNAME} -X sasl.password=${KAFKA_SASL_PASSWORD} -t test -l /mnt/data/$1
 done
 
 
