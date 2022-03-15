@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
+import java.util.Properties;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -33,12 +34,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
+// SigmaRuleLoader will load all rules in a directory or a specific file and add the rule(s)
+// to the Sigma Rules Store (kafka backed cache)
 public class SigmaRuleLoader {
     private SigmaRulesStore sigmaRulesStore;
     private ObjectMapper mapper;
 
-    public SigmaRuleLoader(String bootStrapServer, String rulesTopic) {
-        //sigmaRulesStore = new SigmaRulesStore(bootStrapServer, rulesTopic);
+    public SigmaRuleLoader(Properties properties) {
+        sigmaRulesStore = new SigmaRulesStore(properties);
         mapper = new ObjectMapper(new YAMLFactory());
     }
 
@@ -51,7 +55,7 @@ public class SigmaRuleLoader {
 
             System.out.println("Adding sigma rule: " + key);
             System.out.println(sigmaRule.toString());
-            //sigmaRulesStore.addRule(key, rule);
+            sigmaRulesStore.addRule(key, rule);
         } catch (IOException e) {
             System.out.println("Failed to load: " + filename);
 
@@ -86,6 +90,15 @@ public class SigmaRuleLoader {
         Options options = new Options();
         setOptions(options);
 
+        Properties testProperties = new Properties();
+        testProperties.setProperty("bootstrap.server", "localhost:9092");
+        testProperties.setProperty("sigma.rules.topic", "rules");
+        testProperties.setProperty("schema.registry", "localhost:8888");
+        testProperties.setProperty("sigma.rule.filter.title", "External Facing ICS Modbus");
+        SigmaRuleLoader sigma = new SigmaRuleLoader(testProperties);
+        sigma.loadSigmaFile("config/rules/zeek/zeek_corelight_external_facing_ics_modbus.yml");
+
+        /*
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine cmd = parser.parse(options, args);
@@ -111,5 +124,7 @@ public class SigmaRuleLoader {
         }
 
         System.exit(0);
+
+         */
     }
 }

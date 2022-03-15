@@ -23,14 +23,23 @@ import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.OperatorType;
 import io.confluent.sigmarules.models.SigmaDetection;
+import io.confluent.sigmarules.models.SigmaDetectionList;
+import io.confluent.sigmarules.rules.DetectionsManager;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DetectionParser {
+    final static Logger logger = LogManager.getLogger(DetectionParser.class);
+
     static final String OPEN_BRACKET = "{";
     static final String CLOSE_BRACKET = "}";
     static final String OPEN_ARRAY = "[";
@@ -49,16 +58,96 @@ public class DetectionParser {
         this.fieldMapper = fieldMapper;
     }
 
-    public SigmaDetection parseDetection(String detection) throws InvalidSigmaRuleException {
-        SigmaDetection detectionModel = new SigmaDetection();
+    public SigmaDetectionList parseDetections(Object searchIdentifiers) throws InvalidSigmaRuleException {
+        SigmaDetectionList parsedDetections = new SigmaDetectionList();
 
-        parseName(detectionModel, detection);
-        parseValues(detectionModel, detection);
-        
-        return detectionModel;
+        // check if the search identifier is a list or a map
+        if (searchIdentifiers instanceof LinkedHashMap) {
+            LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>) searchIdentifiers;
+            for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
+                if (searchId.getValue() instanceof ArrayList) {
+                    SigmaDetection detectionModel = new SigmaDetection();
+                    parseName(detectionModel, searchId.getKey());
+
+                    List<String> searchIdValues = (ArrayList<String>) searchId.getValue();
+                    for (String v : searchIdValues) {
+                        parseValue(detectionModel, v);
+                    }
+
+                    parsedDetections.addDetection(detectionModel);
+                } else if (searchId.getValue() instanceof LinkedHashMap) {
+                    LinkedHashMap<String, Object> searchIdInnerMap = (LinkedHashMap<String, Object>) searchId.getValue();
+                    for (Map.Entry<String, Object> searchIdInner : searchIdInnerMap.entrySet()) {
+                        SigmaDetection detectionModel = new SigmaDetection();
+                        parseName(detectionModel, searchIdInner.getKey());
+
+                        if (searchIdInner.getValue() instanceof ArrayList) {
+                            List<String> searchIdValues = (ArrayList<String>) searchIdInner.getValue();
+                            for (String v : searchIdValues) {
+                                parseValue(detectionModel, v);
+                            }
+                        } else {
+                            parseValue(detectionModel, searchIdInner.getValue().toString());
+                        }
+
+                        parsedDetections.addDetection(detectionModel);
+                    }
+                } else { // key is the detection name
+                    SigmaDetection detectionModel = new SigmaDetection();
+                    parseName(detectionModel, searchId.getKey());
+                    parseValue(detectionModel, searchId.getValue().toString());
+
+                    parsedDetections.addDetection(detectionModel);
+                }
+            }
+        } else {
+            logger.error("unknown type: " + searchIdentifiers.getClass() + " value: " + searchIdentifiers);
+        }
+        return parsedDetections;
     }
 
     private void parseName(SigmaDetection detectionModel, String name) {
+        String parsedName = StringUtils.substringBefore(name, SEPERATOR);
+
+        detectionModel.setSigmaName(parsedName);
+        detectionModel.setName(parsedName);
+
+        // override name with mapped name
+        if (fieldMapper != null) {
+            // TODO: mapped fields can be an array - only taking first value for now
+            List<String> mappedField = fieldMapper.getSigmaFields().getSigmaField(parsedName);
+            if (mappedField.isEmpty() == false) {
+                System.out.println("mappedField: " + mappedField.get(0));
+                detectionModel.setName(mappedField.get(0));
+            }
+        }
+
+        // handles the case where the operator is piped with the name (ex. field|endswith)
+        if (StringUtils.contains(name, SEPERATOR))
+            detectionModel.setOperator(OperatorType.getEnum(StringUtils.substringAfter(name, SEPERATOR)));
+    }
+
+
+    private void parseValue(SigmaDetection detectionModel, String value) throws InvalidSigmaRuleException {
+        if (detectionModel.getOperator() != null) {
+            detectionModel.addValue(buildStringWithOperator(value, detectionModel.getOperator()));
+        }
+        else {
+            detectionModel.addValue(value);
+        }
+    }
+
+
+    public SigmaDetection parseDetection(String detection) throws InvalidSigmaRuleException {
+        SigmaDetection detectionModel = new SigmaDetection();
+
+        parseName2(detectionModel, detection);
+        parseValues2(detectionModel, detection);
+
+        return detectionModel;
+    }
+
+    private void parseName2(SigmaDetection detectionModel, String name) {
         String parsedString = StringUtils.substringBetween(name, OPEN_BRACKET, EQUALS);
         String parsedName = StringUtils.substringBefore(parsedString, SEPERATOR);
 
@@ -80,8 +169,10 @@ public class DetectionParser {
             detectionModel.setOperator(OperatorType.getEnum(StringUtils.substringAfter(parsedString, SEPERATOR)));
     }
 
-    private void parseValues(SigmaDetection detectionModel, String values) throws InvalidSigmaRuleException {
+    private void parseValues2(SigmaDetection detectionModel, String values) throws InvalidSigmaRuleException {
         String parsedValueString = StringUtils.substringAfter(values, EQUALS);
+        logger.info("parsedValueString: " + parsedValueString);
+
         parsedValueString = parsedValueString.substring(0,parsedValueString.length()-1);
 
         // Values can be an array or a single value.  If the operation is a regular expression we will assume this is

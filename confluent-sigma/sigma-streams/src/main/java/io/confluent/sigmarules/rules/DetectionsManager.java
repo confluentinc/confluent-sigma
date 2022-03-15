@@ -20,20 +20,20 @@
 package io.confluent.sigmarules.rules;
 
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
-import io.confluent.sigmarules.models.SigmaDetectionList;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
+import io.confluent.sigmarules.models.SigmaDetection;
+import io.confluent.sigmarules.models.SigmaDetectionList;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.DetectionParser;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DetectionsManager {
     final static Logger logger = LogManager.getLogger(DetectionsManager.class);
@@ -41,13 +41,18 @@ public class DetectionsManager {
     private Map<String, SigmaDetectionList> detections = new HashMap<>();
     private FieldMapper fieldMapper = null;
     private Long windowTimeMS = 0L;
+    private DetectionParser parser;
 
     public DetectionsManager() {
+        parser = new DetectionParser(fieldMapper);
     }
 
     public DetectionsManager(String fieldMapFile) throws IOException {
-        if (fieldMapFile != null)
+        if (fieldMapFile != null) {
             fieldMapper = new FieldMapper(fieldMapFile);
+        }
+
+        parser = new DetectionParser(fieldMapper);
     }
 
     public void addDetections(String detectionName, SigmaDetectionList detectionList) {
@@ -62,30 +67,43 @@ public class DetectionsManager {
         return detections;
     }
 
-    public void loadSigmaDetections(SigmaRule sigmaRule, ConditionsManager conditions) throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser(fieldMapper);
+    public void printDetectionsAndConditions() {
+        System.out.println("detection: ");
+        for (Map.Entry<String, SigmaDetectionList> detection : detections.entrySet()) {
+            System.out.printf("\t%s:\n", detection.getKey());
 
-        for (Map.Entry<String, Object> entry : sigmaRule.getDetection().entrySet()) {
-            String k = entry.getKey();
-            Object v = entry.getValue();
-            if (k.equals("condition") || k.equals("timeframe") || k.equals("fields")) {
-                // handle separately
-            } else {
-                SigmaDetectionList parsedDetections = new SigmaDetectionList();
+            SigmaDetectionList searchIdentifier = detection.getValue();
+            for (SigmaDetection sigmaDetection : searchIdentifier.getDetections()) {
+                System.out.printf("\t\t%s:", sigmaDetection.getName());
+                if (sigmaDetection.getOperator() != null) {
+                    System.out.printf("|%s:", sigmaDetection.getOperator());
+                }
 
-                if (v instanceof ArrayList) {
-                    List<Object> detectionList = (ArrayList) v;
-                    for (Object d : detectionList) {
-                        parsedDetections.addDetection(parser.parseDetection(d.toString()));
+                if (sigmaDetection.getValues().size() > 1) {
+                    System.out.printf("\n");
+                    for (String detectionValue : sigmaDetection.getValues()) {
+                        System.out.println("\t\t\t" + detectionValue);
                     }
                 } else {
-                    logger.info("detection value: " + v.toString());
-                    // TODO We really should not be stringifying the map only to then parse it again.  Also since the
-                    // list above can contain more maps we should probably extract a seperate function or do recursion
-                    // or something like this.
-                    parsedDetections.addDetection(parser.parseDetection(v.toString()));
+                    System.out.printf("%s\n", sigmaDetection.getValues().get(0));
                 }
-                this.addDetections(k, parsedDetections);
+            }
+        }
+    }
+
+    public void loadSigmaDetections(SigmaRule sigmaRule, ConditionsManager conditions) throws InvalidSigmaRuleException {
+        // loop through list of detections - search identifier are the keys
+        // the values can be either lists or maps (key / value pairs)
+        // See https://github.com/SigmaHQ/sigma/wiki/Specification#detection
+        for (Map.Entry<String, Object> entry : sigmaRule.getDetection().entrySet()) {
+            String detectionName = entry.getKey();
+            Object searchIdentifiers = entry.getValue();
+
+            if (detectionName.equals("condition") || detectionName.equals("timeframe") ||
+                detectionName.equals("fields")) {
+                // handle separately
+            } else {
+                this.addDetections(detectionName, parser.parseDetections(searchIdentifiers));
             }
         }
 
