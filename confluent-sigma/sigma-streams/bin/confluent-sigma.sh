@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script for launching the sigma rules loader
+# Script for launching the sigma streams app.  For testing purposes see the sample sigma streams configuration
+# properties at config/sigma-dns.properties which can be passed in with -c
 
-java -cp target/kafka-sigma-streams-1.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp \
-   -c config/sigma-dns.properties
+
+java -cp target/sigma-streams-1.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp $*
