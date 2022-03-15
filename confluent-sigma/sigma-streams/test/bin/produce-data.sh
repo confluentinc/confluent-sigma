@@ -5,7 +5,14 @@
 # Parameter 1 the data file to send
 # Parameter 2 the number of paritions for the test topic
 
-source test/bin/ccloud-env.sh
+if [ -f /tmp/ccloud-env.sh ] ; then
+  source /tmp/ccloud-env.sh
+elif [ -f ~/tmp/ccloud-env.sh ] ; then
+    source  ~/tmp/ccloud-env.sh
+else
+  echo "ccloud-env not found"
+  exit
+fi 
 
 docker run -v $(pwd)/test/config:/mnt/config --rm --network=host confluentinc/cp-server:latest \
   kafka-topics \
