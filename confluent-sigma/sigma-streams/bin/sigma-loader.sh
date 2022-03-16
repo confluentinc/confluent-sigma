@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -17,4 +18,4 @@
 # Script for launching the sigma rules loader
 
 java -cp target/kafka-sigma-streams-1.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader \
-  -b 127.0.0.1:9092 -t sigma-rules $1 $2
+  -b BOOTSTRAP_SERVER -t sigma-rules $1 $2
