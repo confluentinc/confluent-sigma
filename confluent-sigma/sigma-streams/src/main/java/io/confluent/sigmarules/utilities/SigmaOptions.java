@@ -19,7 +19,6 @@
 
 package io.confluent.sigmarules.utilities;
 
-import io.confluent.sigmarules.SigmaStreamsApp;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,16 +29,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class SigmaProperties {
-    final static Logger logger = LogManager.getLogger(SigmaProperties.class);
+public class SigmaOptions {
+    final static Logger logger = LogManager.getLogger(SigmaOptions.class);
 
     private Properties properties = new Properties();
 
-    public SigmaProperties() {
+    public SigmaOptions() {
 
     }
 
-    public SigmaProperties(String[] args) {
+    public SigmaOptions(String[] args) {
         Options options = new Options();
         setOptions(options);
 

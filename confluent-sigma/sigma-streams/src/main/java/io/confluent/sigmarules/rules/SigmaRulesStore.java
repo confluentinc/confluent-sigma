@@ -21,6 +21,7 @@ package io.confluent.sigmarules.rules;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import io.confluent.sigmarules.SigmaProperties;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.utilities.YamlUtils;
 import io.kcache.Cache;
@@ -36,7 +37,12 @@ import java.util.Properties;
 import java.util.Set;
 
 public class SigmaRulesStore implements CacheUpdateHandler<String, SigmaRule> {
+
     final static Logger logger = LogManager.getLogger(SigmaRulesStore.class);
+
+    public static final String KEY_CONVERTER_SCHEMA_REGISTRY_URL = "key.converter.schema.registry.url";
+    public static final String VALUE_CONVERTER_SCHEMA_REGISTRY_URL = "value.converter.schema.registry.url";
+
     private Cache<String, SigmaRule> sigmaRulesCache;
     private SigmaRuleObserver observer = null;
 
@@ -45,12 +51,23 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, SigmaRule> {
     }
 
     public void initialize(Properties properties) {
-        Properties props = new Properties();
-        props.setProperty("kafkacache.bootstrap.servers", properties.getProperty("bootstrap.server"));
-        props.setProperty("kafkacache.topic", properties.getProperty("sigma.rules.topic"));
-        props.setProperty("key.converter.schema.registry.url", properties.getProperty("schema.registry"));
-        props.setProperty("value.converter.schema.registry.url", properties.getProperty("schema.registry"));
-        sigmaRulesCache = new KafkaCache<>(new KafkaCacheConfig(props), Serdes.String(), SigmaRule.getJsonSerde(),
+        Properties kcacheProps = new Properties(properties);
+        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
+                properties.getProperty(SigmaProperties.BOOTSTRAP_SERVER.toString()));
+        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG,
+                properties.getProperty(SigmaProperties.SIGMA_RULES_TOPIC.toString()));
+        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SECURITY_PROTOCOL_CONFIG,
+                properties.getProperty(SigmaProperties.SECURITY_PROTOCOL.toString()));
+        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SASL_MECHANISM_CONFIG,
+                properties.getProperty(SigmaProperties.SASL_MECHANISM.toString()));
+        kcacheProps.setProperty("kafkacache.sasl.jaas.config", properties.getProperty("sasl.jaas.config"));
+
+        kcacheProps.setProperty(KEY_CONVERTER_SCHEMA_REGISTRY_URL,
+                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+        kcacheProps.setProperty(VALUE_CONVERTER_SCHEMA_REGISTRY_URL,
+                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+
+        sigmaRulesCache = new KafkaCache<>(new KafkaCacheConfig(kcacheProps), Serdes.String(), SigmaRule.getJsonSerde(),
                 this, null);
         sigmaRulesCache.init();
     }
