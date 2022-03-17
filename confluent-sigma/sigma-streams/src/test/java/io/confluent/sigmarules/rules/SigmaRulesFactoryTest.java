@@ -20,6 +20,7 @@
 package io.confluent.sigmarules.rules;
 
 import io.confluent.sigmarules.tools.SigmaRuleLoader;
+import io.confluent.sigmarules.utilities.SigmaOptions;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -65,7 +66,10 @@ public class SigmaRulesFactoryTest  {
      * Load the test rules for this unit test
      */
     private void loadTestRules() {
-        SigmaRuleLoader sigma = new SigmaRuleLoader(kafka.getBootstrapServers(), "rules");
+        SigmaOptions options = new SigmaOptions();
+        options.setProperties(testProperties);
+
+        SigmaRuleLoader sigma = new SigmaRuleLoader(options);
         sigma.loadSigmaDirectory("config/rules");
     }
 

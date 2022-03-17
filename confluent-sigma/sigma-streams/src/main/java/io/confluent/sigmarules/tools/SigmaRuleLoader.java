@@ -21,8 +21,13 @@ package io.confluent.sigmarules.tools;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.confluent.sigmarules.SigmaStreamsApp;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
+import io.confluent.sigmarules.utilities.SigmaOptions;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -37,13 +42,12 @@ public class SigmaRuleLoader {
     private SigmaRulesStore sigmaRulesStore;
     private ObjectMapper mapper;
 
-    public SigmaRuleLoader(String bootStrapServer, String rulesTopic) {
-        //sigmaRulesStore = new SigmaRulesStore(bootStrapServer, rulesTopic);
+    public SigmaRuleLoader(SigmaOptions options) {
+        sigmaRulesStore = new SigmaRulesStore(options.getProperties());
         mapper = new ObjectMapper(new YAMLFactory());
     }
 
     public void loadSigmaFile(String filename) {
-
         try {
             String rule = Files.readString(Path.of(filename));
             SigmaRule sigmaRule = mapper.readValue(rule, SigmaRule.class);
@@ -51,13 +55,12 @@ public class SigmaRuleLoader {
 
             System.out.println("Adding sigma rule: " + key);
             System.out.println(sigmaRule.toString());
-            //sigmaRulesStore.addRule(key, rule);
+            sigmaRulesStore.addRule(key, rule);
         } catch (IOException e) {
             System.out.println("Failed to load: " + filename);
 
             e.printStackTrace();
         }
-
     }
 
     public void loadSigmaDirectory(String dirName) {
@@ -76,10 +79,9 @@ public class SigmaRuleLoader {
     }
 
     public static void setOptions(Options options) {
-        options.addOption("b", "bootStrapServer", true, "Bootstrap Servers.");
-        options.addOption("t", "topicName", true, "Sigma Rule Topic Name.");
         options.addOption("f", "file", true, "Path to sigma rule file.");
         options.addOption("d", "dir", true, "Path to directory contain sigma rules.");
+        options.addOption("c", "config", true, "Path to properties file");
     }
 
     public static void main(String[] args) {
@@ -88,14 +90,17 @@ public class SigmaRuleLoader {
 
         CommandLineParser parser = new DefaultParser();
         try {
-            CommandLine cmd = parser.parse(options, args);
+            CommandLine cmd = parser.parse(options, args, false);
 
-            if(cmd.hasOption("b") && cmd.hasOption("t") &&
-                    (cmd.hasOption("f") || cmd.hasOption("d"))) {
-                String broker = cmd.getOptionValue("b");
-                String topic = cmd.getOptionValue("t");
+            if((cmd.hasOption("c")) && (cmd.hasOption("f") || cmd.hasOption("d"))) {
+                InputStream input = new FileInputStream(cmd.getOptionValue("c"));
+                Properties properties = new Properties();
+                properties.load(input);
 
-                SigmaRuleLoader sigma = new SigmaRuleLoader(broker, topic);
+                SigmaOptions sigmaOptions = new SigmaOptions();
+                sigmaOptions.setProperties(properties);
+
+                SigmaRuleLoader sigma = new SigmaRuleLoader(sigmaOptions);
                 if(cmd.hasOption("f")) {
                     sigma.loadSigmaFile(cmd.getOptionValue("f"));
                 }
@@ -103,9 +108,13 @@ public class SigmaRuleLoader {
                 if(cmd.hasOption("d")) {
                     sigma.loadSigmaDirectory(cmd.getOptionValue("d"));
                 }
-            }
+            } else {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp("sigmal_rule_loader", options, true);
 
-        } catch (ParseException e) {
+                System.exit(0);
+            }
+        } catch (ParseException | IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

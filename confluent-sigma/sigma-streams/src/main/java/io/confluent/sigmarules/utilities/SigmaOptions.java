@@ -47,6 +47,8 @@ public class SigmaOptions {
 
     private void setOptions(Options options) {
         options.addOption("c", "config", true, "Path to properties file");
+        options.addOption("f", "file", true, "Path to sigma rule file.");
+        options.addOption("d", "dir", true, "Path to directory contain sigma rules.");
     }
 
     public void parseArgs(String[] args) {
@@ -74,6 +76,10 @@ public class SigmaOptions {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     public Properties getProperties() {
