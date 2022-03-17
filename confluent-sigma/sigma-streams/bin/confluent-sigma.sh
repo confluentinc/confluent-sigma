@@ -14,8 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script for launching the sigma streams app.  For testing purposes see the sample sigma streams configuration
-# properties at config/sigma-dns.properties which can be passed in with -c
+# Script for launching the sigma streams app.
 
+PROPS=
 
-java -cp target/sigma-streams-1.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp $*
+if [ -f ~/.config/sigma.properties ] ; then
+  PROPS=~/.config/sigma.properties
+elif [ -f ~/.confluent/sigma.properties ] ; then
+  PROPS=~/.confluent/sigma.properties
+elif [ -f ~/tmp/sigma.properties ] ; then
+  PROPS=~/tmp/sigma.properties
+fi
+
+java -cp target/sigma-streams-1.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp $* -c $PROPS

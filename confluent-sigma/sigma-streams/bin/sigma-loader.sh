@@ -17,5 +17,16 @@
 
 # Script for launching the sigma rules loader
 
-java -cp target/kafka-sigma-streams-1.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader \
-  -b BOOTSTRAP_SERVER -t sigma-rules $1 $2
+# first check the default locations for sigma.properties.
+
+PROPS=
+
+if [ -f ~/.config/sigma.properties ] ; then
+  PROPS=~/.config/sigma.properties
+elif [ -f ~/.confluent/sigma.properties ] ; then
+  PROPS=~/.confluent/sigma.properties
+elif [ -f ~/tmp/sigma.properties ] ; then
+  PROPS=~/tmp/sigma.properties
+fi
+
+java -cp target/sigma-streams-1.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $* -c $PROPS
