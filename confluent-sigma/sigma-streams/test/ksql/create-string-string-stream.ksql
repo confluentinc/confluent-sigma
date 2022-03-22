@@ -1,0 +1,8 @@
+CREATE STREAM test (
+  val VARCHAR
+)  WITH (
+  KAFKA_TOPIC = 'test',
+  KEY_FORMAT = 'NONE',
+  VALUE_FORMAT = 'KAFKA',
+  WRAP_SINGLE_VALUE=false
+);
