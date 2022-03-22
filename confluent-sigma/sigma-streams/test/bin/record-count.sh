@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [ -f /tmp/ccloud-env.sh ] ; then
   source /tmp/ccloud-env.sh
 elif [ -f ~/tmp/ccloud-env.sh ] ; then
@@ -28,7 +30,7 @@ docker run --rm --network=host edenhill/kcat:1.7.1  \
 
 docker run -v ${PROPS}:/mnt/config --rm --network=host confluentinc/cp-server:latest \
   kafka-consumer-groups --describe --group $CGROUP --bootstrap-server ${BOOTSTRAP_SERVER} \
-  --command-config /mnt/config/sigma.properties     
+  --command-config /mnt/config/sigma.properties
 
 
-    
+
