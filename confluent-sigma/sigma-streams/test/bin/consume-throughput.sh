@@ -24,6 +24,9 @@ fi
 
 CGROUP="CONSUMER-PERF-$1-$RANDOM"
 
-docker run -v ${PROPS}:/mnt/config --rm --network=host confluentinc/cp-server:latest \
-  kafka-consumer-perf-test --bootstrap-server ${BOOTSTRAP_SERVER} \
-  --consumer.config /mnt/config/sigma.properties --topic $1 -- threads $2 --print-metrics
+for i in `seq $2`
+do	
+  docker run -v ${PROPS}:/mnt/config --rm --network=host confluentinc/cp-server:latest \
+       kafka-consumer-perf-test --bootstrap-server ${BOOTSTRAP_SERVER} \
+       --messages 20000000 --consumer.config /mnt/config/sigma.properties --topic $1 --print-metrics --group $CGROUP > res$i.txt &
+done
