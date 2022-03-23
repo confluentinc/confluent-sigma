@@ -1,6 +1,6 @@
-title: Possible DNS exfiltration
+title: Single Regex length match
 status: test
-description: 'This rule identifies possible data exfiltration through DNS'
+description: 'Single Regex length match'
 author: Will LaForest
 logsource:
   product: zeek

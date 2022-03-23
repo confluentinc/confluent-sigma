@@ -1,6 +1,6 @@
-title: Possible DNS exfiltration
+title: Single Field Match Test
 status: test
-description: 'This rule identifies possible data exfiltration through DNS'
+description: 'Single Field Match Test'
 author: Will LaForest
 logsource:
   product: zeek
