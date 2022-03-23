@@ -1,26 +1,6 @@
 #!/bin/bash
 
-if [ -f /tmp/ccloud-env.sh ] ; then
-  source /tmp/ccloud-env.sh
-elif [ -f ~/tmp/ccloud-env.sh ] ; then
-    source  ~/tmp/ccloud-env.sh
-else
-  echo "ccloud-env not found"
-  exit
-fi
-
-PROPS=
-
-if [ -f ~/.config/sigma.properties ] ; then
-  export PROPS=~/.config/
-elif [ -f ~/.confluent/sigma.properties ] ; then
-  export PROPS=~/.confluent/
-elif [ -f ~/tmp/sigma.properties ] ; then
-  export PROPS=~/tmp/
-else
-  echo "sigma properties not found"
-  exit
-fi
+source bin/auto-configure.sh
 
 CGROUP="COUNT-$1-$RANDOM"
 
