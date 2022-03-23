@@ -20,8 +20,8 @@
 package io.confluent.sigmarules.rules;
 
 import io.confluent.sigmarules.tools.SigmaRuleLoader;
-import io.confluent.sigmarules.utilities.SigmaOptions;
 import org.junit.ClassRule;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -35,7 +35,6 @@ import static org.junit.Assert.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SigmaRulesFactoryTest  {
-    private Properties testProperties = new Properties();
 
     @ClassRule
     //public static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.1.1"));
@@ -44,32 +43,23 @@ public class SigmaRulesFactoryTest  {
     @BeforeAll
     void setUp() {
         kafka.start();
+        loadTestRules();
+    }
 
+    Properties getProperties() {
+        Properties testProperties = new Properties();
         testProperties.setProperty("bootstrap.server", kafka.getBootstrapServers());
         testProperties.setProperty("sigma.rules.topic", "rules");
         testProperties.setProperty("schema.registry", "localhost:8888");
 
-        //Currently the SigmaRuleFactor usesde the ApplicationSettings singleton to pull bootsreap servers and the topic
-        //but does not pull the filter product and service.  It should probabyl get all or none of its configuration
-        //from there.  For the time being leaving it for a future task
-
-        //testProperties.setProperty("sigma.rule.filter.product", "zeek");
-        //testProperties.setProperty("sigma.rule.filter.service", "http");
-
-        //sigma.rule.filter.title=Simple Http
-        //ApplicationSettings.getInstance().setConfig(testProperties);
-
-        loadTestRules();
+        return testProperties;
     }
 
     /**
      * Load the test rules for this unit test
      */
     private void loadTestRules() {
-        SigmaOptions options = new SigmaOptions();
-        options.setProperties(testProperties);
-
-        SigmaRuleLoader sigma = new SigmaRuleLoader(options);
+        SigmaRuleLoader sigma = new SigmaRuleLoader(getProperties());
         sigma.loadSigmaDirectory("config/rules");
     }
 
@@ -78,29 +68,54 @@ public class SigmaRulesFactoryTest  {
         kafka.stop();
     }
 
-    //@Test
-    public void testIsFilteredRuleByProductAndServiceOnly() {
+    @Test
+    public void testIsFilteredRuleByProductOnly() {
+        Properties testProperties = getProperties();
+        testProperties.setProperty("sigma.rule.filter.product", "zeek");
+
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
-        srf.setProductAndService("zeek", "http");
         assertFalse("Should be false", srf.isFilteredRule("Simple Http"));
     }
 
-    //@Test
-    public void testIsFilteredRuleByProductAndServiceAndNotFilterList() {
+    @Test
+    public void testIsFilteredRuleByServiceOnly() {
+        Properties testProperties = getProperties();
+        testProperties.setProperty("sigma.rule.filter.service", "http");
+
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
-        srf.addTitleToFilterList("foobar");
-        srf.addTitleToFilterList("anotherFoobar");
-        srf.setProductAndService("zeek", "http");
+        assertFalse("Should be false", srf.isFilteredRule("Simple Http"));
+    }
+
+    @Test
+    public void testIsFilteredRuleByProductAndServiceOnly() {
+        Properties testProperties = getProperties();
+        testProperties.setProperty("sigma.rule.filter.product", "zeek");
+        testProperties.setProperty("sigma.rule.filter.service", "http");
+
+        SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
+        assertFalse("Should be false", srf.isFilteredRule("Simple Http"));
+    }
+
+    @Test
+    public void testIsFilteredRuleByProductAndServiceAndNotFilterList() {
+        Properties testProperties = getProperties();
+        testProperties.setProperty("sigma.rule.filter.product", "zeek");
+        testProperties.setProperty("sigma.rule.filter.service", "http");
+        testProperties.setProperty("sigma.rule.filter.title", "foobar");
+
+        SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
         assertTrue("Should be true because it does not match product and service",
                 srf.isFilteredRule("Simple Http"));
     }
 
-    //@Test
+    @Test
     public void testIsFilteredRuleByProductAndServiceAndFilterList() {
+        Properties testProperties = getProperties();
+        testProperties.setProperty("sigma.rule.filter.product", "zeek");
+        testProperties.setProperty("sigma.rule.filter.service", "http");
+        testProperties.setProperty("sigma.rule.filter.title", "Simple Http");
+
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
-        srf.addTitleToFilterList("Simple Http");
-        srf.addTitleToFilterList("anotherFoobar");
-        srf.setProductAndService("zeek", "http");
         assertFalse("Should be false because is in the filter list",
                 srf.isFilteredRule("Simple Http"));
     }

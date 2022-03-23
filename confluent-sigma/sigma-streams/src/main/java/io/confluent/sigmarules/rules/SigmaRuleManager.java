@@ -36,9 +36,9 @@ import java.util.Map;
 public class SigmaRuleManager {
     final static Logger logger = LogManager.getLogger(SigmaRuleManager.class);
 
+    private String ruleTitle;
     private DetectionsManager detections;
     private ConditionsManager conditions;
-    private String ruleTitle;
 
     public SigmaRuleManager() {
         conditions = new ConditionsManager();
@@ -65,6 +65,15 @@ public class SigmaRuleManager {
         SigmaRule sigmaRule = yamlMapper.readValue(rule, SigmaRule.class);
         this.ruleTitle = sigmaRule.getTitle();
         detections.loadSigmaDetections(sigmaRule, conditions);
+
+        printSigmaRule();
+    }
+
+    public void printSigmaRule() {
+        System.out.println("\n*********");
+        System.out.println("title: " + this.ruleTitle + "\n");
+        detections.printDetectionsAndConditions();
+        System.out.println("*********\n");
     }
 
     public Boolean filterDetections(JsonNode data) {

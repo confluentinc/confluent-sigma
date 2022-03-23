@@ -112,7 +112,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         }
     }
 
-    public void loadRules() {
+    private void loadRules() {
         this.sigmaRulesStore.getRules().forEach((title, rule) -> {
            try {
                 loadSigmaRule(title, rule.toString());
@@ -195,8 +195,13 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * Filtered titles should be added prior to rules being loaded.
      * @param title title of rule to add to the filter list
      */
-    public void addTitleToFilterList(String title) {
+    private void addTitleToFilterList(String title) {
         filterList.add(title);
+    }
+
+    private void setProductAndService(String product, String service) {
+        this.product = product;
+        this.service = service;
     }
 
     @Override
@@ -218,10 +223,6 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         return this.sigmaRulesStore.getRuleAsYaml(title);
     }
 
-    public void setProductAndService(String product, String service) {
-        this.product = product;
-        this.service = service;
-    }
 
     /**
      * Check to see whether there is a product and service specified and if there is whether the SigmaRule matches.

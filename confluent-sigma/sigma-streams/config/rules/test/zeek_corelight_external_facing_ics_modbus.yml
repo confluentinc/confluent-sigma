@@ -34,10 +34,11 @@ detection:
       - '169.254.' 
   filter_private_ipv6:
     src_ip: '::1'
-  test:
     src_ip|startswith:
       - 'fe80::'
       - 'fc00::'
+  selection_uri:
+    uri: '*bert*'
   condition: selection AND NOT (filter_private_ipv4 OR filter_private_ipv6)
 falsepositives: 'ICS/Scada systems that are allowed to be exposed to the internet. Regardless if malicious or not, should always be investigated/learned as to why. Some times legitimate business reasons. But as a defender this is important to know.'
 level: medium
