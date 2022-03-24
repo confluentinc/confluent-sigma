@@ -19,7 +19,6 @@
 
 package io.confluent.sigmarules.streams;
 
-import io.confluent.sigmarules.utilities.SigmaProperties;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

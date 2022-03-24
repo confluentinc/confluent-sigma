@@ -25,7 +25,7 @@ import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.AggregateStreamsFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import io.confluent.sigmarules.streams.StreamManager;
-import io.confluent.sigmarules.utilities.SigmaProperties;
+import io.confluent.sigmarules.utilities.SigmaOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,8 +40,8 @@ public class SigmaStreamsApp extends StreamManager {
     private SigmaStream sigmaStream;
     private AggregateStreamsFactory aggregateStreams;
 
-    public SigmaStreamsApp(SigmaProperties properties) {
-        super(properties.getProperties());
+    public SigmaStreamsApp(SigmaOptions options) {
+        super(options.getProperties());
 
         createSigmaRules();
         createAggregateStreams();
@@ -71,7 +71,6 @@ public class SigmaStreamsApp extends StreamManager {
     private void createSigmaStream() {
         // initialize and start the main sigma stream
         this.sigmaStream = new SigmaStream(this.properties, this.ruleFactory);
-        sigmaStream.startStream(predicates);
     }
 
     private void initializePredicates() {
@@ -116,8 +115,14 @@ public class SigmaStreamsApp extends StreamManager {
         //                }
     }
 
+    protected void start()
+    {
+        sigmaStream.startStream(predicates);
+    }
+
     public static void main(String[] args) {
-        SigmaStreamsApp sigma = new SigmaStreamsApp(new SigmaProperties(args));
+        SigmaStreamsApp sigma = new SigmaStreamsApp(new SigmaOptions(args));
+        sigma.start();
 
         while (true) {
             try {

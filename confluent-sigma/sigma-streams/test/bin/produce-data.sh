@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# This script creates a topic called test and then loops infinitely sending data from a specified file
+#
+# Parameter 1 the data file to send
+# Parameter 2 the number of paritions for the test topic
+
+if [ -f /tmp/ccloud-env.sh ] ; then
+  source /tmp/ccloud-env.sh
+elif [ -f ~/tmp/ccloud-env.sh ] ; then
+    source  ~/tmp/ccloud-env.sh
+else
+  echo "ccloud-env not found"
+  exit
+fi 
+
+docker run -v $(pwd)/test/config:/mnt/config --rm --network=host confluentinc/cp-server:latest \
+  kafka-topics \
+  --bootstrap-server ${CCLOUD_BOOTSTRAP_SERVER} \
+  --command-config /mnt/config/java.config \
+  --topic test \
+  --create \
+  --replication-factor 3 \
+  --partitions $2
+
+
+while true
+do
+  docker run -v $(pwd)/test/data:/mnt/data --rm --network=host edenhill/kafkacat:1.5.0  \
+    kafkacat -b ${BOOTSTRAP_SERVER} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
+    -X sasl.username=${KAFKA_SASL_USERNAME} -X sasl.password=${KAFKA_SASL_PASSWORD} -t test -l /mnt/data/$1
+done
+
+
+
+

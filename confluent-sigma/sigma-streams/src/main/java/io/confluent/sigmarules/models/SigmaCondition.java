@@ -109,7 +109,7 @@ public class SigmaCondition {
 
                     if (sourceValues.isArray()) {
                         for (final JsonNode sourceValue : sourceValues) {
-                            if (!checkValue(d, sourceValue.toString())) {
+                            if (!checkValue(d, sourceValue.asText())) {
                                 return false;
                             } else {
                                 validDetections = true;
@@ -117,7 +117,7 @@ public class SigmaCondition {
                         }
                     } else {
                         // this is a string
-                        String sourceValue = sourceValues.toString();
+                        String sourceValue = sourceValues.asText();
                         if (!checkValue(d, sourceValue)) {
                             return false;
                         } else {

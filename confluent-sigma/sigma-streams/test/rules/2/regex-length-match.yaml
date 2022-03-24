@@ -1,0 +1,11 @@
+title: Single Regex length match
+status: test
+description: 'Single Regex length match'
+author: Will LaForest
+logsource:
+  product: zeek
+  service: dns
+detection:
+  query_length:
+    query|re: ^.{50}.*$
+  condition: query_length

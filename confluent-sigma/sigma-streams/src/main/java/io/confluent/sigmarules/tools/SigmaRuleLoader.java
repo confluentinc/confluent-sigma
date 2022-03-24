@@ -21,8 +21,12 @@ package io.confluent.sigmarules.tools;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.confluent.sigmarules.SigmaStreamsApp;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
+import io.confluent.sigmarules.utilities.SigmaOptions;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Properties;
 import org.apache.commons.cli.*;
 
@@ -34,20 +38,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
-// SigmaRuleLoader will load all rules in a directory or a specific file and add the rule(s)
-// to the Sigma Rules Store (kafka backed cache)
 public class SigmaRuleLoader {
     private SigmaRulesStore sigmaRulesStore;
     private ObjectMapper mapper;
 
-    public SigmaRuleLoader(Properties properties) {
-        sigmaRulesStore = new SigmaRulesStore(properties);
+    public SigmaRuleLoader(SigmaOptions options) {
+        sigmaRulesStore = new SigmaRulesStore(options.getProperties());
         mapper = new ObjectMapper(new YAMLFactory());
     }
 
     public void loadSigmaFile(String filename) {
-
         try {
             String rule = Files.readString(Path.of(filename));
             SigmaRule sigmaRule = mapper.readValue(rule, SigmaRule.class);
@@ -61,7 +61,6 @@ public class SigmaRuleLoader {
 
             e.printStackTrace();
         }
-
     }
 
     public void loadSigmaDirectory(String dirName) {
@@ -80,35 +79,28 @@ public class SigmaRuleLoader {
     }
 
     public static void setOptions(Options options) {
-        options.addOption("b", "bootStrapServer", true, "Bootstrap Servers.");
-        options.addOption("t", "topicName", true, "Sigma Rule Topic Name.");
         options.addOption("f", "file", true, "Path to sigma rule file.");
         options.addOption("d", "dir", true, "Path to directory contain sigma rules.");
+        options.addOption("c", "config", true, "Path to properties file");
     }
 
     public static void main(String[] args) {
         Options options = new Options();
         setOptions(options);
 
-        Properties testProperties = new Properties();
-        testProperties.setProperty("bootstrap.server", "localhost:9092");
-        testProperties.setProperty("sigma.rules.topic", "rules");
-        testProperties.setProperty("schema.registry", "localhost:8888");
-        testProperties.setProperty("sigma.rule.filter.title", "External Facing ICS Modbus");
-        SigmaRuleLoader sigma = new SigmaRuleLoader(testProperties);
-        sigma.loadSigmaFile("config/rules/zeek/zeek_corelight_external_facing_ics_modbus.yml");
-
-        /*
         CommandLineParser parser = new DefaultParser();
         try {
-            CommandLine cmd = parser.parse(options, args);
+            CommandLine cmd = parser.parse(options, args, false);
 
-            if(cmd.hasOption("b") && cmd.hasOption("t") &&
-                    (cmd.hasOption("f") || cmd.hasOption("d"))) {
-                String broker = cmd.getOptionValue("b");
-                String topic = cmd.getOptionValue("t");
+            if((cmd.hasOption("c")) && (cmd.hasOption("f") || cmd.hasOption("d"))) {
+                InputStream input = new FileInputStream(cmd.getOptionValue("c"));
+                Properties properties = new Properties();
+                properties.load(input);
 
-                SigmaRuleLoader sigma = new SigmaRuleLoader(broker, topic);
+                SigmaOptions sigmaOptions = new SigmaOptions();
+                sigmaOptions.setProperties(properties);
+
+                SigmaRuleLoader sigma = new SigmaRuleLoader(sigmaOptions);
                 if(cmd.hasOption("f")) {
                     sigma.loadSigmaFile(cmd.getOptionValue("f"));
                 }
@@ -116,15 +108,17 @@ public class SigmaRuleLoader {
                 if(cmd.hasOption("d")) {
                     sigma.loadSigmaDirectory(cmd.getOptionValue("d"));
                 }
-            }
+            } else {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp("sigmal_rule_loader", options, true);
 
-        } catch (ParseException e) {
+                System.exit(0);
+            }
+        } catch (ParseException | IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
         System.exit(0);
-
-         */
     }
 }

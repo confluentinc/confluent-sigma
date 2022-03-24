@@ -1,0 +1,11 @@
+title: test 16
+status: test
+description: 'Single Field Match Test'
+author: Will LaForest
+logsource:
+  product: zeek
+  service: dns
+detection:
+  single:
+    - uid: xxxxxxxxxxxxx
+  condition: single

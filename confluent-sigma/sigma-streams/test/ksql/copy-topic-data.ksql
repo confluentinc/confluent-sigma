@@ -1,0 +1,21 @@
+CREATE STREAM test (
+  val VARCHAR
+)  WITH (
+  KAFKA_TOPIC = 'test',
+  KEY_FORMAT = 'NONE',
+  VALUE_FORMAT = 'KAFKA',
+  WRAP_SINGLE_VALUE=false
+);
+
+CREATE STREAM test2 WITH (
+  KAFKA_TOPIC = 'test2',
+  KEY_FORMAT = 'NONE',
+  VALUE_FORMAT = 'KAFKA',
+  WRAP_SINGLE_VALUE=false,
+  PARTITIONS=50
+  )
+AS
+  SELECT
+    val
+  FROM test
+  EMIT CHANGES;
