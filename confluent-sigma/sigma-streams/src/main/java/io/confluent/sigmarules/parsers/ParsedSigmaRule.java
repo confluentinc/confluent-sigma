@@ -17,16 +17,14 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.models;
+package io.confluent.sigmarules.parsers;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
-import io.confluent.sigmarules.parsers.ParsedSigmaRule;
-import io.confluent.sigmarules.rules.ConditionsManager;
-import io.confluent.sigmarules.rules.DetectionsManager;
-import java.util.ArrayList;
+import io.confluent.sigmarules.models.LogSource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,15 +33,15 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
-public class SigmaRule {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ParsedSigmaRule {
     private String title;
     private String description;
     private String id;
     private String author;
-    private List<String> references = new ArrayList<>();
+    private List<String> references;
     private LogSource logsource;
-    private DetectionsManager detections;
-    private ConditionsManager conditions;
+    private Map<String, Object> detection;
 
     public String getTitle() {
         return title;
@@ -84,21 +82,12 @@ public class SigmaRule {
     public void setReferences(List<String> references) {
         this.references = references;
     }
-
-    public DetectionsManager getDetections() {
-        return detections;
+    public Map<String, Object> getDetection() {
+        return detection;
     }
 
-    public void setDetection(DetectionsManager detection) {
-        this.detections = detections;
-    }
-
-    public ConditionsManager getConditions() {
-        return conditions;
-    }
-
-    public void setConditions(ConditionsManager conditions) {
-        this.conditions = conditions;
+    public void setDetection(Map<String, Object> detection) {
+        this.detection = detection;
     }
 
     public LogSource getLogsource() {
@@ -121,31 +110,15 @@ public class SigmaRule {
         return null;
     }
 
-    public static Serde<SigmaRule> getJsonSerde() {
+    public static Serde<ParsedSigmaRule> getJsonSerde() {
         Map<String, Object> serdeProps = new HashMap<>();
-        serdeProps.put("json.value.type", SigmaRule.class);
-        final Serializer<SigmaRule> sigmaRuleSer = new KafkaJsonSerializer<>();
+        serdeProps.put("json.value.type", ParsedSigmaRule.class);
+        final Serializer<ParsedSigmaRule> sigmaRuleSer = new KafkaJsonSerializer<>();
         sigmaRuleSer.configure(serdeProps, false);
 
-        final Deserializer<SigmaRule> sigmaRuleDes = new KafkaJsonDeserializer<>();
+        final Deserializer<ParsedSigmaRule> sigmaRuleDes = new KafkaJsonDeserializer<>();
         sigmaRuleDes.configure(serdeProps, false);
         return Serdes.serdeFrom(sigmaRuleSer, sigmaRuleDes);
-    }
-
-    public void printSigmaRule() {
-        System.out.println("\n*********");
-        System.out.println("title: " + title + "\n");
-        detections.printDetectionsAndConditions();
-        System.out.println("*********\n");
-    }
-
-    public void copyParsedSigmaRule(ParsedSigmaRule parsedSigmaRule) {
-        this.title = parsedSigmaRule.getTitle();
-        this.description = parsedSigmaRule.getDescription();
-        this.id = parsedSigmaRule.getId();
-        this.author = parsedSigmaRule.getAuthor();
-        this.references = parsedSigmaRule.getReferences();
-        this.logsource = parsedSigmaRule.getLogsource();
     }
 
 }

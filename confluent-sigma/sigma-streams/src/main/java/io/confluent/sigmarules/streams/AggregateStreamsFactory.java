@@ -20,7 +20,7 @@
 package io.confluent.sigmarules.streams;
 
 import io.confluent.sigmarules.models.AggregateInfo;
-import io.confluent.sigmarules.rules.SigmaRuleManager;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class AggregateStreamsFactory {
         this.properties = properties;
     }
 
-    public void createAggregateStream(String streamName, SigmaRuleManager ruleManager) {
+    public void createAggregateStream(String streamName, SigmaRuleParser ruleManager) {
         if(streams.containsKey(streamName) == false) {
             String inputTopic = properties.getProperty("data.topic");
             String outputTopic = properties.getProperty("output.topic");

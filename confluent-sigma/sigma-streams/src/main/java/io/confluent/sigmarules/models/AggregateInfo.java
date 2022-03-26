@@ -19,11 +19,11 @@
 
 package io.confluent.sigmarules.models;
 
-import io.confluent.sigmarules.rules.SigmaRuleManager;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 
 public class AggregateInfo {
     private String streamName;
-    private SigmaRuleManager ruleManager;
+    private SigmaRuleParser ruleManager;
     private String conditionStatement;
     private String inputTopic;
     private String outputTopic;
@@ -37,11 +37,11 @@ public class AggregateInfo {
         this.streamName = streamName;
     }
 
-    public SigmaRuleManager getRuleManager() {
+    public SigmaRuleParser getRuleManager() {
         return ruleManager;
     }
 
-    public void setRuleManager(SigmaRuleManager ruleManager) {
+    public void setRuleManager(SigmaRuleParser ruleManager) {
         this.ruleManager = ruleManager;
     }
 

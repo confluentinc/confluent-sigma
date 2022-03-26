@@ -19,16 +19,16 @@
 
 package io.confluent.sigmarules.models;
 
-import io.confluent.sigmarules.rules.SigmaRuleManager;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 
 public class SigmaRulePredicate {
-    private SigmaRuleManager rule = null;
+    private SigmaRuleParser rule = null;
 
-    public SigmaRuleManager getRule() {
+    public SigmaRuleParser getRule() {
         return rule;
     }
 
-    public void setRule(SigmaRuleManager rule) {
+    public void setRule(SigmaRuleParser rule) {
         this.rule = rule;
     }
 }

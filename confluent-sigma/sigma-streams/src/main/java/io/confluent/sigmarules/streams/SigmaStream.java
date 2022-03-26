@@ -25,12 +25,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.models.SigmaRulePredicate;
-import io.confluent.sigmarules.rules.SigmaRuleManager;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
@@ -62,11 +63,11 @@ public class SigmaStream extends StreamManager {
     public void startStream(SigmaRulePredicate[] predicates) {
         createTopic(inputTopic);
 
-        StreamsBuilder builder = createBuilder(predicates);
-        this.streams = new KafkaStreams(builder.build(), getStreamProperties());
+        Topology topology = createTopology(predicates);
+        streams = new KafkaStreams(topology, getStreamProperties());
 
-        this.streams.cleanUp();
-        this.streams.start();
+        streams.cleanUp();
+        streams.start();
 
         // shutdown hook to correctly close the streams application
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
@@ -76,7 +77,7 @@ public class SigmaStream extends StreamManager {
         this.streams.close();
     }
 
-    private StreamsBuilder createBuilder(SigmaRulePredicate[] predicates) {
+    public Topology createTopology(SigmaRulePredicate[] predicates) {
         StreamsBuilder builder = new StreamsBuilder();
 
         KStream<String, JsonNode> sigmaData = builder.stream(inputTopic,
@@ -88,10 +89,19 @@ public class SigmaStream extends StreamManager {
                     .to(detectionTopicNameExtractor, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
         }
 
-        return builder;
+        return builder.build();
     }
 
-    private Boolean doFiltering(SigmaRuleManager rule, JsonNode sourceData) {
+    public Topology retainWordsLongerThan5Letters() {
+        StreamsBuilder builder = new StreamsBuilder();
+
+        KStream<String, String> stream = builder.stream("input-topic");
+        stream.filter((k, v) -> v.length() > 5).to("output-topic");
+
+        return builder.build();
+    }
+
+    private Boolean doFiltering(SigmaRuleParser rule, JsonNode sourceData) {
          if (rule != null) {
             if (rule.filterDetections(sourceData) == true) {
                 matchedDetection = rule.getRuleTitle();
@@ -125,8 +135,8 @@ public class SigmaStream extends StreamManager {
 
     final TopicNameExtractor<String, DetectionResults> detectionTopicNameExtractor = (key, results, recordContext) -> {
         String oTopic = outputTopic;
-        SigmaRuleManager ruleManager = this.ruleFactory.getSigmaRuleManager(results.getSigmaMetaData().getTitle());
-        if (ruleManager.getConditions().hasAggregateConditon()) {
+        SigmaRuleParser ruleManager = this.ruleFactory.getSigmaRuleManager(results.getSigmaMetaData().getTitle());
+        if (ruleManager.getConditions().hasAggregateCondition()) {
             oTopic = inputTopic + "-agg-" + results.getSigmaMetaData().getTitle().hashCode();
             logger.info("***** Sending to an aggregator stream:" + results.toJSON());
         }

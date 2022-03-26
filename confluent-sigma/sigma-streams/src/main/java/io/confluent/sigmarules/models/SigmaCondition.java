@@ -24,10 +24,6 @@ import io.confluent.sigmarules.rules.DetectionsManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 public class SigmaCondition {
     final static Logger logger = LogManager.getLogger(SigmaCondition.class);
 
@@ -99,7 +95,7 @@ public class SigmaCondition {
     private Boolean checkMyConditions(DetectionsManager detections, JsonNode sourceData) {
         // detections grouped together are combined for a status
         Boolean validDetections = false;
-        SigmaDetectionList myDetections = detections.getDetectionsByName(conditionName);
+        SigmaDetections myDetections = detections.getDetectionsByName(conditionName);
 
         if (myDetections != null) {
             for (SigmaDetection d : myDetections.getDetections()) {

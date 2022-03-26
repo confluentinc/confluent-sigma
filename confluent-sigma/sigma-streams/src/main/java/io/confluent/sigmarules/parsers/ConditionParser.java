@@ -20,6 +20,7 @@
 package io.confluent.sigmarules.parsers;
 
 import io.confluent.sigmarules.models.SigmaCondition;
+import io.confluent.sigmarules.rules.ConditionsManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,8 +46,10 @@ public class ConditionParser {
     private String tempString = "";
     private SigmaCondition currentCondition = null;;
 
-    public List<SigmaCondition> parseCondition(String condition) {
-        List<SigmaCondition> conditions = new ArrayList<>();
+    public ConditionsManager parseCondition(String condition) {
+        ConditionsManager conditionsManager = new ConditionsManager();
+
+        List<SigmaCondition> conditions = conditionsManager.getConditions();
         CharacterIterator it = new StringCharacterIterator(condition);
 
         Boolean doneParsing = false;
@@ -85,7 +88,7 @@ public class ConditionParser {
 
         evaluateString(conditions, tempString);
 
-        return conditions;
+        return conditionsManager;
     }
 
     private void evaluateString(List<SigmaCondition> conditions, String eval) {
@@ -133,18 +136,6 @@ public class ConditionParser {
             }
             tempString = "";
         }
-    }
-
-    public static void main(String[] args) {
-        String theString = "pre_selection AND selection";
-
-        ConditionParser parser = new ConditionParser();
-        List<SigmaCondition> conditions = parser.parseCondition(theString);
-
-        for (SigmaCondition condition : conditions) {
-            System.out.println("condition: " + condition.toString());
-        }
-        
     }
 
 }

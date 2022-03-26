@@ -20,7 +20,7 @@
 package io.confluent.sigmarules;
 
 import io.confluent.sigmarules.models.SigmaRulePredicate;
-import io.confluent.sigmarules.rules.SigmaRuleManager;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.AggregateStreamsFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
@@ -50,6 +50,35 @@ public class SigmaStreamsApp extends StreamManager {
         this.ruleFactory.addObserver((rule -> handleNewRule(rule)) , true);
     }
 
+    private void handleNewRule(SigmaRuleParser newRule) {
+        // not the most elegant solution but stop the stream to add a new rule filter
+        // need to recreate the stream with the added filter
+        // probably a much better way to do this
+        // second option is to have a preset list of rules and add to that dynamically
+        logger.info("Adding a new stream filter for: " + newRule.getRuleTitle());
+
+        for (int i = 0; i < predicates.length; i++) {
+            SigmaRulePredicate predicate = predicates[i];
+            if (predicate.getRule() == null) {
+                predicate.setRule(newRule);
+
+                if (newRule.getConditions().hasAggregateCondition()) {
+                    logger.info("Creating aggregate stream");
+                    aggregateStreams.createAggregateStream(newRule.getRuleTitle(), newRule);
+                }
+
+                break;
+            }
+        }
+
+        // if we run out of filter predicates, we need to increase the array size
+        // and rebuild the topology
+        //                if (streams != null && (currentSigmaRuleCount % INITIAL_NUMBER_SIGMA_RULES == 0)) {
+        //                    streams.close();
+        //                    startStream();
+        //                }
+    }
+
     private void createSigmaRules() {
         this.initializePredicates();
         this.ruleFactory = new SigmaRulesFactory(this.properties);
@@ -58,10 +87,10 @@ public class SigmaStreamsApp extends StreamManager {
     private void createAggregateStreams() {
         aggregateStreams = new AggregateStreamsFactory(this.properties);
 
-        for (Map.Entry<String, SigmaRuleManager> sigmaRule : ruleFactory.getSigmaRules().entrySet()) {
+        for (Map.Entry<String, SigmaRuleParser> sigmaRule : ruleFactory.getSigmaRules().entrySet()) {
             String title = sigmaRule.getKey();
-            SigmaRuleManager ruleManager = sigmaRule.getValue();
-            if (ruleManager.getConditions().hasAggregateConditon()) {
+            SigmaRuleParser ruleManager = sigmaRule.getValue();
+            if (ruleManager.getConditions().hasAggregateCondition()) {
                 logger.info("Creating aggregate stream");
                 aggregateStreams.createAggregateStream(title, ruleManager);
             }
@@ -84,35 +113,6 @@ public class SigmaStreamsApp extends StreamManager {
         for (int i = 0; i < predicates.length; i++) {
             predicates[i] = new SigmaRulePredicate();
         }
-    }
-
-    private void handleNewRule(SigmaRuleManager newRule) {
-        // not the most elegant solution but stop the stream to add a new rule filter
-        // need to recreate the stream with the added filter
-        // probably a much better way to do this
-        // second option is to have a preset list of rules and add to that dynamically
-        logger.info("Adding a new stream filter for: " + newRule.getRuleTitle());
-
-        for (int i = 0; i < predicates.length; i++) {
-            SigmaRulePredicate predicate = predicates[i];
-            if (predicate.getRule() == null) {
-                predicate.setRule(newRule);
-
-                if (newRule.getConditions().hasAggregateConditon()) {
-                    logger.info("Creating aggregate stream");
-                    aggregateStreams.createAggregateStream(newRule.getRuleTitle(), newRule);
-                }
-
-                break;
-            }
-        }
-
-        // if we run out of filter predicates, we need to increase the array size
-        // and rebuild the topology
-        //                if (streams != null && (currentSigmaRuleCount % INITIAL_NUMBER_SIGMA_RULES == 0)) {
-        //                    streams.close();
-        //                    startStream();
-        //                }
     }
 
     protected void start()

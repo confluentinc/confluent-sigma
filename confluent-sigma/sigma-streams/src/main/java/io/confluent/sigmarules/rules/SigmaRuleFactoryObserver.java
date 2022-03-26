@@ -19,6 +19,8 @@
 
 package io.confluent.sigmarules.rules;
 
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
+
 public interface SigmaRuleFactoryObserver {
-    void handleNewRule(SigmaRuleManager newRule);
+    void handleNewRule(SigmaRuleParser newRule);
 }
