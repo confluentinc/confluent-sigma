@@ -19,17 +19,15 @@
 
 package io.confluent.sigmarules;
 
-import io.confluent.sigmarules.models.SigmaRulePredicate;
-import io.confluent.sigmarules.parsers.SigmaRuleParser;
+import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
-import io.confluent.sigmarules.streams.AggregateStreamsFactory;
+import io.confluent.sigmarules.streams.SigmaRulePredicate;
 import io.confluent.sigmarules.streams.SigmaStream;
 import io.confluent.sigmarules.streams.StreamManager;
 import io.confluent.sigmarules.utilities.SigmaOptions;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Map;
 
 public class SigmaStreamsApp extends StreamManager {
     final static Logger logger = LogManager.getLogger(SigmaStreamsApp.class);
@@ -38,42 +36,21 @@ public class SigmaStreamsApp extends StreamManager {
     private final Integer DEFAULT_NUMBER_SIGMA_RULES = 10;
     private SigmaRulePredicate[] predicates;
     private SigmaStream sigmaStream;
-    private AggregateStreamsFactory aggregateStreams;
 
     public SigmaStreamsApp(SigmaOptions options) {
         super(options.getProperties());
 
         createSigmaRules();
-        createAggregateStreams();
         createSigmaStream();
 
-        this.ruleFactory.addObserver((rule -> handleNewRule(rule)) , true);
+        this.ruleFactory.addObserver((rule -> handleNewRule(rule)), false);
     }
 
-    private void handleNewRule(SigmaRuleParser newRule) {
-        // not the most elegant solution but stop the stream to add a new rule filter
-        // need to recreate the stream with the added filter
-        // probably a much better way to do this
-        // second option is to have a preset list of rules and add to that dynamically
-        logger.info("Adding a new stream filter for: " + newRule.getRuleTitle());
+    private void handleNewRule(SigmaRule newRule) {
+        logger.info("Received a new rule: " + newRule.getTitle());
 
-        for (int i = 0; i < predicates.length; i++) {
-            SigmaRulePredicate predicate = predicates[i];
-            if (predicate.getRule() == null) {
-                predicate.setRule(newRule);
-
-                if (newRule.getConditions().hasAggregateCondition()) {
-                    logger.info("Creating aggregate stream");
-                    aggregateStreams.createAggregateStream(newRule.getRuleTitle(), newRule);
-                }
-
-                break;
-            }
-        }
-
-        // if we run out of filter predicates, we need to increase the array size
-        // and rebuild the topology
-        //                if (streams != null && (currentSigmaRuleCount % INITIAL_NUMBER_SIGMA_RULES == 0)) {
+        // need to stop the stream and rebuild the topology
+        //                if (streams != null) {
         //                    streams.close();
         //                    startStream();
         //                }
@@ -81,37 +58,25 @@ public class SigmaStreamsApp extends StreamManager {
 
     private void createSigmaRules() {
         this.initializePredicates();
-        this.ruleFactory = new SigmaRulesFactory(this.properties);
-    }
-
-    private void createAggregateStreams() {
-        aggregateStreams = new AggregateStreamsFactory(this.properties);
-
-        for (Map.Entry<String, SigmaRuleParser> sigmaRule : ruleFactory.getSigmaRules().entrySet()) {
-            String title = sigmaRule.getKey();
-            SigmaRuleParser ruleManager = sigmaRule.getValue();
-            if (ruleManager.getConditions().hasAggregateCondition()) {
-                logger.info("Creating aggregate stream");
-                aggregateStreams.createAggregateStream(title, ruleManager);
-            }
-        }
+        this.ruleFactory = new SigmaRulesFactory(properties);
     }
 
     private void createSigmaStream() {
         // initialize and start the main sigma stream
-        this.sigmaStream = new SigmaStream(this.properties, this.ruleFactory);
+        this.sigmaStream = new SigmaStream(properties, ruleFactory);
     }
 
     private void initializePredicates() {
         // initialize the predicates
-        Integer numRules = Integer.getInteger(properties.getProperty("sigma.max.rules"));
-        if (numRules == null) {
-            numRules = DEFAULT_NUMBER_SIGMA_RULES;
-        }
+        Map<String, SigmaRule> rulesList = ruleFactory.getSigmaRules();
+        logger.info("number of rules " + rulesList.size());
 
-        predicates = new SigmaRulePredicate[numRules];
-        for (int i = 0; i < predicates.length; i++) {
+        Integer i = 0;
+        predicates = new SigmaRulePredicate[rulesList.size()];
+        for (Map.Entry<String, SigmaRule> entry : rulesList.entrySet()) {
             predicates[i] = new SigmaRulePredicate();
+            predicates[i].setRule(entry.getValue());
+            i++;
         }
     }
 

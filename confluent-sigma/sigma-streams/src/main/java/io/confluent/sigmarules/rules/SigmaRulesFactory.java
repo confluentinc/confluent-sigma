@@ -19,26 +19,30 @@
 
 package io.confluent.sigmarules.rules;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SigmaRulesFactory implements SigmaRuleObserver {
     final static Logger logger = LogManager.getLogger(SigmaRulesFactory.class.getName());
 
     private Map<String, SigmaRule> sigmaRules = new HashMap<>();
-    private String fieldMapFile = null;
     private SigmaRulesStore sigmaRulesStore;
+    private SigmaRuleParser rulesParser;
     private SigmaRuleFactoryObserver observer = null;
     private Properties properties;
 
@@ -54,11 +58,14 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     private void initialize(Properties properties) {
         this.properties = properties;
 
+        FieldMapper fieldMapFile = null;
         try {
-            fieldMapFile = properties.getProperty("field.mapping.file");
-        } catch (IllegalArgumentException e) {
+            fieldMapFile = new FieldMapper(properties.getProperty("field.mapping.file"));
+        } catch (IllegalArgumentException | IOException e) {
             logger.info("no field mapping file provided");
         }
+
+        rulesParser = new SigmaRuleParser(fieldMapFile);
 
         // create the rules cache
         sigmaRulesStore = new SigmaRulesStore(properties);
@@ -105,8 +112,8 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         this.observer = observer;
 
         if (immediateCallback) {
-            for (Map.Entry<String, SigmaRule> sigmaRule : sigmaRules.entrySet()) {
-                observer.handleNewRule(sigmaRule);
+            for (Map.Entry<String, SigmaRule> entry : sigmaRules.entrySet()) {
+                observer.handleNewRule(entry.getValue());
             }
         }
     }
@@ -159,21 +166,14 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         }
 
         Boolean newRule = false;
-        SigmaRule sigmaRule = null;
-        if (sigmaRules.containsKey(title)) {
-            logger.info("Updating Sigma Rule: " + title);
-            sigmaRule = sigmaRules.get(title);
-
-        } else {
-            logger.info("Adding Sigma Rule: " + title);
-            ruleManager = new SigmaRuleParser(this.fieldMapFile);
-            sigmaRules.put(title, ruleManager);
+        if (!sigmaRules.containsKey(title)) {
             newRule = true;
         }
-        ruleManager.loadSigmaRule(rule);
+        SigmaRule sigmaRule = rulesParser.parseRule(rule);
+        sigmaRules.put(title, sigmaRule);
 
         if (newRule && observer != null) {
-            observer.handleNewRule(ruleManager);
+            observer.handleNewRule(sigmaRule);
         }
     }
 
@@ -232,31 +232,13 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         return validProduct & validService;
     }
 
-    public Map<String, SigmaRuleParser> getSigmaRules() {
+    public Map<String, SigmaRule> getSigmaRules() {
         return sigmaRules;
     }
 
-    public String filterDetections(JsonNode data) {
-        logger.debug("Total number of rules checking: " + sigmaRules.size());
-        for (Map.Entry<String, SigmaRuleParser> sigmaRule : sigmaRules.entrySet()) {
-            logger.info("Checking rule " + sigmaRule.getKey());
-            if (sigmaRule.getValue().filterDetections(data) == true) {
-                logger.info("Found match for " + sigmaRule.getKey());
-                return sigmaRule.getKey();
-            }
-        } 
+    public SigmaRule getRule(String title) { return this.sigmaRulesStore.getRule(title); }
 
-        return null;
-    }
-    public SigmaRuleParser getSigmaRuleManager(String title) { return this.sigmaRules.get(title); }
-
-    public SigmaRule getRule(String title) {
-        return this.sigmaRulesStore.getRule(title);
-    }
-
-    public String getRuleAsYaml(String title) {
-        return this.sigmaRulesStore.getRuleAsYaml(title);
-    }
+    public String getRuleAsYaml(String title) { return this.sigmaRulesStore.getRuleAsYaml(title); }
 
     private class InvalidRulesException extends RuntimeException {
         public InvalidRulesException(String s) {

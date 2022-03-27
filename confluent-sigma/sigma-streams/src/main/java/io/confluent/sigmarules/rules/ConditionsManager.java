@@ -41,19 +41,6 @@ public class ConditionsManager {
         conditions.add(condition);
     }
 
-    public Boolean checkConditions(DetectionsManager detections, JsonNode sourceData) {
-        for (SigmaCondition c : conditions) {
-            if (!c.getAggregateCondition()) {
-                if (c.checkCondition(detections, sourceData)) {
-                    logger.debug("source data: " + sourceData.toString());
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     public Boolean hasAggregateCondition() {
         for (SigmaCondition c : conditions) {
             if (c.getAggregateCondition()) {
@@ -64,10 +51,10 @@ public class ConditionsManager {
         return false;
     }
 
-    public String getAggregateCondition() {
+    public SigmaCondition getAggregateCondition() {
         for (SigmaCondition c : conditions) {
             if (c.getAggregateCondition()) {
-                return c.getConditionName();
+                return c;
             }
         }
 

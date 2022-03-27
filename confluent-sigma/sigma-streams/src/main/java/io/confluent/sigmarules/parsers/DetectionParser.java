@@ -57,7 +57,7 @@ public class DetectionParser {
         this.fieldMapper = fieldMapper;
     }
 
-    public DetectionsManager parseDetections(ParsedSigmaRule sigmaRule, ConditionsManager conditions)
+    public DetectionsManager parseDetections(ParsedSigmaRule sigmaRule)
         throws InvalidSigmaRuleException {
         DetectionsManager detectionsManager = new DetectionsManager();
 
@@ -78,15 +78,6 @@ public class DetectionParser {
 
         if (sigmaRule.getDetection().containsKey("timeframe")) {
             detectionsManager.convertWindowTime(sigmaRule.getDetection().get("timeframe").toString());
-        }
-
-
-        // parse conditions
-        if (sigmaRule.getDetection().containsKey("condition")) {
-            String condition = sigmaRule.getDetection().get("condition").toString();
-            String window = null;
-
-            conditions.loadSigmaConditions(condition);
         }
 
         return detectionsManager;

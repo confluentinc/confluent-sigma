@@ -42,8 +42,8 @@ public class SigmaRule {
     private String author;
     private List<String> references = new ArrayList<>();
     private LogSource logsource;
-    private DetectionsManager detections;
-    private ConditionsManager conditions;
+    private DetectionsManager detectionsManager;
+    private ConditionsManager conditionsManager;
 
     public String getTitle() {
         return title;
@@ -85,21 +85,13 @@ public class SigmaRule {
         this.references = references;
     }
 
-    public DetectionsManager getDetections() {
-        return detections;
-    }
+    public DetectionsManager getDetectionsManager() { return detectionsManager; }
 
-    public void setDetection(DetectionsManager detection) {
-        this.detections = detections;
-    }
+    public void setDetection(DetectionsManager detection) { this.detectionsManager = detectionsManager; }
 
-    public ConditionsManager getConditions() {
-        return conditions;
-    }
+    public ConditionsManager getConditionsManager() { return conditionsManager; }
 
-    public void setConditions(ConditionsManager conditions) {
-        this.conditions = conditions;
-    }
+    public void setConditionsManager(ConditionsManager conditionsManager) { this.conditionsManager = conditionsManager; }
 
     public LogSource getLogsource() {
         return logsource;
@@ -135,7 +127,7 @@ public class SigmaRule {
     public void printSigmaRule() {
         System.out.println("\n*********");
         System.out.println("title: " + title + "\n");
-        detections.printDetectionsAndConditions();
+        detectionsManager.printDetectionsAndConditions();
         System.out.println("*********\n");
     }
 

@@ -17,9 +17,10 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.models;
+package io.confluent.sigmarules.streams;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
@@ -33,7 +34,7 @@ import java.util.Map;
 
 public class AggregateResults {
     private Map<String, Long> results = new HashMap<>();
-    private DetectionResults detection = new DetectionResults();
+    private JsonNode sourceData;
 
     public Map<String, Long> getResults() {
         return results;
@@ -43,12 +44,12 @@ public class AggregateResults {
         this.results = results;
     }
 
-    public DetectionResults getDetection() {
-        return detection;
+    public JsonNode getSourceData() {
+        return sourceData;
     }
 
-    public void setDetection(DetectionResults detection) {
-        this.detection = detection;
+    public void setSourceData(JsonNode sourceData) {
+        this.sourceData = sourceData;
     }
 
     public String toJSON() {

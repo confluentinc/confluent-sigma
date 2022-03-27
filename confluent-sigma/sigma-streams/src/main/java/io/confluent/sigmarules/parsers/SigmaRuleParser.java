@@ -19,20 +19,14 @@
 
 package io.confluent.sigmarules.parsers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
-import io.confluent.sigmarules.rules.ConditionsManager;
-import io.confluent.sigmarules.rules.DetectionsManager;
+import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class SigmaRuleParser {
     final static Logger logger = LogManager.getLogger(SigmaRuleParser.class);
@@ -45,7 +39,7 @@ public class SigmaRuleParser {
         conditionParser = new ConditionParser();
     }
 
-    public SigmaRuleParser(FieldMapper fieldMapperFile) throws IOException {
+    public SigmaRuleParser(FieldMapper fieldMapperFile) {
         detectionParser = new DetectionParser(fieldMapperFile);
         conditionParser = new ConditionParser();
     }
@@ -57,7 +51,9 @@ public class SigmaRuleParser {
         // NEED TO CALL PARSERS and create SigmaRule
         SigmaRule sigmaRule = new SigmaRule();
         sigmaRule.copyParsedSigmaRule(parsedSigmaRule);
-        
+
+        sigmaRule.setDetection(detectionParser.parseDetections(parsedSigmaRule));
+        sigmaRule.setConditionsManager(conditionParser.parseCondition(parsedSigmaRule));
         return sigmaRule;
     }
 

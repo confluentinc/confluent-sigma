@@ -17,24 +17,19 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.models;
+package io.confluent.sigmarules.streams;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 
-public class SigmaRulePredicateList {
-    private List<SigmaRulePredicate> predicates = new ArrayList<>();
+public class SigmaRulePredicate {
+    private SigmaRule rule = null;
 
-    public List<SigmaRulePredicate> getPredicates() {
-        return predicates;
+    public SigmaRule getRule() {
+        return rule;
     }
 
-    public void setDetections(List<SigmaRulePredicate> predicates) {
-        this.predicates = predicates;
+    public void setRule(SigmaRule rule) {
+        this.rule = rule;
     }
-
-    public void addDetection(SigmaRulePredicate predicate) {
-        this.predicates.add(predicate);
-    }
-
 }

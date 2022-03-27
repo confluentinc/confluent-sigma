@@ -34,9 +34,7 @@ public class DetectionsManager {
     final static Logger logger = LogManager.getLogger(DetectionsManager.class);
 
     private Map<String, SigmaDetections> detections = new HashMap<>();
-    private FieldMapper fieldMapper = null;
     private Long windowTimeMS = 0L;
-    private DetectionParser parser;
 
     public DetectionsManager() { }
 

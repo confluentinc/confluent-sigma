@@ -19,7 +19,7 @@
 
 package io.confluent.streams;
 
-import io.confluent.sigmarules.models.SigmaRulePredicate;
+import io.confluent.sigmarules.streams.SigmaRulePredicate;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
