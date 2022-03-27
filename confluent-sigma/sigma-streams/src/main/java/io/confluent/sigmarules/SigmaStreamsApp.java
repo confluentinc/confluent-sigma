@@ -33,7 +33,6 @@ public class SigmaStreamsApp extends StreamManager {
     final static Logger logger = LogManager.getLogger(SigmaStreamsApp.class);
 
     private SigmaRulesFactory ruleFactory;
-    private final Integer DEFAULT_NUMBER_SIGMA_RULES = 10;
     private SigmaRulePredicate[] predicates;
     private SigmaStream sigmaStream;
 

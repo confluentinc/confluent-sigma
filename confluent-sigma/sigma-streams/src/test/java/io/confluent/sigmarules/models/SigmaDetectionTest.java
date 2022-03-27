@@ -19,8 +19,17 @@
 
 package io.confluent.sigmarules.models;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.parsers.DetectionParser;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import org.junit.jupiter.api.DisplayNameGenerator.Simple;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -37,86 +46,158 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testTrailingStarNoOperator() throws InvalidSigmaRuleException {
-        // Probably need to do a better job of no relying on DetectionParse but it seems hard to test the spirit
-        // of the SigmaDetection with out using the combination of the too otherwise.
-        DetectionParser parser = new DetectionParser();
-        SigmaDetection detection = parser.parseDetection("{foo=ab*}");
+    void testTrailingStarNoOperator() throws InvalidSigmaRuleException, IOException {
+        String testRule = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo: 'ab*'\n"
+            + "  condition: test";
+
+        SigmaRuleParser ruleParser = new SigmaRuleParser();
+        SigmaRule sigmaRule = ruleParser.parseRule(testRule);
+
+        SigmaDetections detections = sigmaRule.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection = detections.getDetections().get(0);
         assertTrue(detection.matches("abcXXXXX", false));
         assertFalse(detection.matches("fooabfoo", false));
         assertFalse(detection.matches("YYYYY", false));
     }
 
     @Test
-    void testRegex() throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser();
-        SigmaDetection detection = parser.parseDetection("{foo|re=ab*}");
-        assertTrue(detection.matches("abbb", false));
-        assertTrue(detection.matches("a", false));
-        assertTrue(detection.matches("ab", false));
-        assertFalse(detection.matches("abc", false));
+    void testRegex() throws InvalidSigmaRuleException, IOException {
+        SigmaRuleParser ruleParser = new SigmaRuleParser();
 
-        detection = parser.parseDetection("{foo|re=ab*c}");
-        assertFalse(detection.matches("abbb", false));
-        assertTrue(detection.matches("abbbc", false));
-        assertTrue(detection.matches("ac", false));
-        assertFalse(detection.matches("abbbcL", false));
+        String testRule = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|re: 'ab*'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule = ruleParser.parseRule(testRule);
+
+        SigmaDetections detections = sigmaRule.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection = detections.getDetections().get(0);
+        assertTrue(detection.matches("abbb", false));
+        assertFalse(detection.matches("a", false));
+        assertTrue(detection.matches("ab", false));
+        assertTrue(detection.matches("abc", false));
+
+        String testRule2 = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|re: 'ab*c'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule2 = ruleParser.parseRule(testRule2);
+
+        SigmaDetections detections2 = sigmaRule2.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection2 = detections2.getDetections().get(0);
+        assertFalse(detection2.matches("abbb", false));
+        assertTrue(detection2.matches("abbbc", false));
+        assertFalse(detection2.matches("ac", false));
+        assertFalse(detection2.matches("abbbcL", false));
     }
 
     @Test
-    void testRegexBrackets() throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser();
+    void testRegexBrackets() throws InvalidSigmaRuleException, IOException {
+        SigmaRuleParser ruleParser = new SigmaRuleParser();
 
-        SigmaDetection detection = parser.parseDetection("{foo|re=a[xy]c}");
+        String testRule = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|re: 'a[xy]c'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule = ruleParser.parseRule(testRule);
+
+        SigmaDetections detections = sigmaRule.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection = detections.getDetections().get(0);
         assertTrue(detection.matches("ayc", false));
         assertTrue(detection.matches("axc", false));
         assertFalse(detection.matches("abc", false));
     }
 
     @Test
-    void testRegexCurlyBraces() throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser();
-        SigmaDetection detection = parser.parseDetection("{foo|re=a{2}b}");
+    void testRegexCurlyBraces() throws InvalidSigmaRuleException, IOException {
+        SigmaRuleParser ruleParser = new SigmaRuleParser();
+
+        String testRule = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|re: 'a{2}b'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule = ruleParser.parseRule(testRule);
+
+        SigmaDetections detections = sigmaRule.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection = detections.getDetections().get(0);
         assertTrue(detection.matches("aab", false));
         assertFalse(detection.matches("ab", false));
     }
 
     @Test
-    void testRegexSpecial() throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser();
-        SigmaDetection detection = parser.parseDetection("{foo|re=a.b}");
+    void testRegexSpecial() throws InvalidSigmaRuleException, IOException {
+        SigmaRuleParser ruleParser = new SigmaRuleParser();
+
+        String testRule = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|re: 'a.b'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule = ruleParser.parseRule(testRule);
+        SigmaDetections detections = sigmaRule.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection = detections.getDetections().get(0);
         assertTrue(detection.matches("aXb", false));
         assertFalse(detection.matches("ab", false));
 
-        detection = parser.parseDetection("{foo|re=^a.b$}");
-        assertTrue(detection.matches("aXb", false));
-        assertFalse(detection.matches("ab", false));
+        String testRule2 = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|re: '^a.b$'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule2 = ruleParser.parseRule(testRule2);
+        SigmaDetections detections2 = sigmaRule2.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection2 = detections2.getDetections().get(0);
+        assertTrue(detection2.matches("aXb", false));
+        assertFalse(detection2.matches("ab", false));
     }
 
     @Test
-    void testStartsWith() throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser();
-        SigmaDetection detection = parser.parseDetection("{foo|startswith=a}");
+    void testStartsWith() throws InvalidSigmaRuleException, IOException {
+        SigmaRuleParser ruleParser = new SigmaRuleParser();
+
+        String testRule = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|startswith: 'a'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule = ruleParser.parseRule(testRule);
+        SigmaDetections detections = sigmaRule.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection = detections.getDetections().get(0);
         assertTrue(detection.matches("aXb", false));
         assertTrue(detection.matches("a", false));
         assertFalse(detection.matches("bx", false));
     }
 
     @Test
-    void testEndsith() throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser();
-        SigmaDetection detection = parser.parseDetection("{foo|endswith=b}");
+    void testEndsWith() throws InvalidSigmaRuleException, IOException {
+        SigmaRuleParser ruleParser = new SigmaRuleParser();
+
+        String testRule = "title: Simple Http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo|endswith: 'b'\n"
+            + "  condition: test";
+
+        SigmaRule sigmaRule = ruleParser.parseRule(testRule);
+        SigmaDetections detections = sigmaRule.getDetectionsManager().getDetectionsByName("test");
+        SigmaDetection detection = detections.getDetections().get(0);
         assertTrue(detection.matches("ab", false));
         assertTrue(detection.matches("b", false));
         assertFalse(detection.matches("aa", false));
     }
 
-    @Test
-    void testGreater() throws InvalidSigmaRuleException {
-        DetectionParser parser = new DetectionParser();
-        SigmaDetection detection = parser.parseDetection("{foo|endswith=b}");
-        assertTrue(detection.matches("ab", false));
-        assertTrue(detection.matches("b", false));
-        assertFalse(detection.matches("aa", false));
-    }
-}
+ }

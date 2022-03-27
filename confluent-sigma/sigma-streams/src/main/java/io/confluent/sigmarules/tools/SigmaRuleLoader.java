@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confluent.sigmarules.SigmaStreamsApp;
 import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
 import io.confluent.sigmarules.utilities.SigmaOptions;
 import java.io.FileInputStream;
@@ -50,7 +51,7 @@ public class SigmaRuleLoader {
     public void loadSigmaFile(String filename) {
         try {
             String rule = Files.readString(Path.of(filename));
-            SigmaRule sigmaRule = mapper.readValue(rule, SigmaRule.class);
+            ParsedSigmaRule sigmaRule = mapper.readValue(rule, ParsedSigmaRule.class);
             String key = sigmaRule.getTitle();
 
             System.out.println("Adding sigma rule: " + key);

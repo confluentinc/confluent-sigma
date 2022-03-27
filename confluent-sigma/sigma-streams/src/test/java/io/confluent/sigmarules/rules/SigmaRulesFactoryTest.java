@@ -115,8 +115,8 @@ public class SigmaRulesFactoryTest  {
     @Test
     public void testIsFilteredRuleByProductAndServiceAndFilterList() {
         Properties testProperties = getProperties();
-        testProperties.setProperty("sigma.rule.filter.product", "zeek");
-        testProperties.setProperty("sigma.rule.filter.service", "http");
+        //testProperties.setProperty("sigma.rule.filter.product", "zeek");
+        //testProperties.setProperty("sigma.rule.filter.service", "http");
         testProperties.setProperty("sigma.rule.filter.title", "Simple Http");
 
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);

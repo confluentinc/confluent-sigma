@@ -125,6 +125,18 @@ public class DetectionParser {
                     parsedDetections.addDetection(detectionModel);
                 }
             }
+        } else if (searchIdentifiers instanceof ArrayList) {
+            List<String> searchArray = (ArrayList<String>)searchIdentifiers;
+            for (Object searchMap : searchArray) {
+                LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>)searchMap;
+                for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
+                    SigmaDetection detectionModel = new SigmaDetection();
+                    parseName(detectionModel, searchId.getKey());
+                    parseValue(detectionModel, searchId.getValue().toString());
+
+                    parsedDetections.addDetection(detectionModel);
+                }
+            }
         } else {
             logger.error("unknown type: " + searchIdentifiers.getClass() + " value: " + searchIdentifiers);
         }
@@ -158,7 +170,7 @@ public class DetectionParser {
             detectionModel.addValue(buildStringWithOperator(value, detectionModel.getOperator()));
         }
         else {
-            detectionModel.addValue(value);
+            detectionModel.addValue(sigmaWildcardToRegex(value));
         }
     }
 
@@ -180,7 +192,7 @@ public class DetectionParser {
                     if (!validRegex(value))
                         throw new InvalidSigmaRuleException("Regular expression operator specified " +
                                 "but pattern did not compile for value = " + value);
-                    return value;
+                    return sigmaWildcardToRegex(value);
             }
         }
 
@@ -210,7 +222,6 @@ public class DetectionParser {
             switch(c) {
                 case '*': out.append(".*"); break;
                 case '?': out.append('.'); break;
-                case '.': out.append("\\."); break;
                 case '\\': out.append("\\\\"); break;
                 default: out.append(c);
             }

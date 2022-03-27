@@ -94,44 +94,45 @@ public class SigmaStreamTest {
         td.close();
     }
 
-    @Test
-    public void shouldIncludeValueWithLengthGreaterThanFive() {
-        Properties testProperties = getProperties();
-        testProperties.setProperty("sigma.rule.filter.product", "zeek");
 
-        List<SigmaRuleParser> ruleList = new ArrayList<>();
-        SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
-        srf.addObserver((rule -> ruleList.add(rule)), true);
-        System.out.println("number of rules " + ruleList.size());
-
-        SigmaRulePredicate[] predicates = new SigmaRulePredicate[ruleList.size()];
-        for(int i = 0; i < ruleList.size(); i++) {
-            predicates[i] = new SigmaRulePredicate();
-            predicates[i].setRule(ruleList.get(i));
-        }
-
-        //testProperties.setProperty("bootstrap.server", "foo:1234");
-
-        SigmaStream stream = new SigmaStream(testProperties, srf);
-        topology = stream.createTopology(predicates);
-        //topology = stream.retainWordsLongerThan5Letters();
-        System.out.println("about to create test driver");
-        td = new TopologyTestDriver(topology, testProperties);
-
-        inputTopic = td.createInputTopic("input-topic", Serdes.String().serializer(), Serdes.String().serializer());
-        outputTopic = td.createOutputTopic("output-topic", Serdes.String().deserializer(), Serdes.String().deserializer());
-
-        //inputTopic.pipeInput("foo", "barrrrr");
-        assertTrue(outputTopic.isEmpty());
-
-        /*
-        inputTopic.pipeInput("foo", "barrrrr");
-        assertThat(outputTopic.readValue(), equalTo("barrrrr"));
-        assertThat(outputTopic.isEmpty(), is(true));
-
-        inputTopic.pipeInput("foo", "bar");
-        assertThat(outputTopic.isEmpty(), is(true));
-
-         */
-    }
+//    @Test
+//    public void shouldIncludeValueWithLengthGreaterThanFive() {
+//        Properties testProperties = getProperties();
+//        testProperties.setProperty("sigma.rule.filter.product", "zeek");
+//
+//        List<SigmaRuleParser> ruleList = new ArrayList<>();
+//        SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
+//        srf.addObserver((rule -> ruleList.add(rule)), true);
+//        System.out.println("number of rules " + ruleList.size());
+//
+//        SigmaRulePredicate[] predicates = new SigmaRulePredicate[ruleList.size()];
+//        for(int i = 0; i < ruleList.size(); i++) {
+//            predicates[i] = new SigmaRulePredicate();
+//            predicates[i].setRule(ruleList.get(i));
+//        }
+//
+//        //testProperties.setProperty("bootstrap.server", "foo:1234");
+//
+//        SigmaStream stream = new SigmaStream(testProperties, srf);
+//        topology = stream.createTopology(predicates);
+//        //topology = stream.retainWordsLongerThan5Letters();
+//        System.out.println("about to create test driver");
+//        td = new TopologyTestDriver(topology, testProperties);
+//
+//        inputTopic = td.createInputTopic("input-topic", Serdes.String().serializer(), Serdes.String().serializer());
+//        outputTopic = td.createOutputTopic("output-topic", Serdes.String().deserializer(), Serdes.String().deserializer());
+//
+//        //inputTopic.pipeInput("foo", "barrrrr");
+//        assertTrue(outputTopic.isEmpty());
+//
+//        /*
+//        inputTopic.pipeInput("foo", "barrrrr");
+//        assertThat(outputTopic.readValue(), equalTo("barrrrr"));
+//        assertThat(outputTopic.isEmpty(), is(true));
+//
+//        inputTopic.pipeInput("foo", "bar");
+//        assertThat(outputTopic.isEmpty(), is(true));
+//
+//         */
+//    }
 }

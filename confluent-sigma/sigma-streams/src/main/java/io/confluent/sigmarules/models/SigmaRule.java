@@ -87,7 +87,7 @@ public class SigmaRule {
 
     public DetectionsManager getDetectionsManager() { return detectionsManager; }
 
-    public void setDetection(DetectionsManager detection) { this.detectionsManager = detectionsManager; }
+    public void setDetection(DetectionsManager detectionsManager) { this.detectionsManager = detectionsManager; }
 
     public ConditionsManager getConditionsManager() { return conditionsManager; }
 
