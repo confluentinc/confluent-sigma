@@ -22,6 +22,7 @@ package io.confluent.sigmarules.rules;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,7 +61,8 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
 
         FieldMapper fieldMapFile = null;
         try {
-            fieldMapFile = new FieldMapper(properties.getProperty("field.mapping.file"));
+            if (properties.containsKey("field.mapping.file"))
+                fieldMapFile = new FieldMapper(properties.getProperty("field.mapping.file"));
         } catch (IllegalArgumentException | IOException e) {
             logger.info("no field mapping file provided");
         }
@@ -186,8 +188,11 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      */
     public boolean isFilteredRule(String title) {
         // verify product and service match before continuing
-        SigmaRule rule = sigmaRulesStore.getRule(title);
-        if (rule == null) throw new InvalidRulesException("Rule doesn't exist.");
+        ParsedSigmaRule parsedRule = sigmaRulesStore.getRule(title);
+        if (parsedRule == null) throw new InvalidRulesException("Rule doesn't exist.");
+
+        SigmaRule rule = new SigmaRule();
+        rule.copyParsedSigmaRule(parsedRule);
 
         if (titles.isEmpty()) {
             if (productAndServiceMatch(rule) == true) {
@@ -236,9 +241,9 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         return sigmaRules;
     }
 
-    public SigmaRule getRule(String title) { return this.sigmaRulesStore.getRule(title); }
+    public SigmaRule getRule(String title) { return sigmaRules.get(title); }
 
-    public String getRuleAsYaml(String title) { return this.sigmaRulesStore.getRuleAsYaml(title); }
+    public String getRuleAsYaml(String title) { return sigmaRulesStore.getRuleAsYaml(title); }
 
     private class InvalidRulesException extends RuntimeException {
         public InvalidRulesException(String s) {

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import io.confluent.sigmarules.SigmaProperties;
 import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.utilities.YamlUtils;
 import io.kcache.Cache;
 import io.kcache.CacheUpdateHandler;
@@ -119,13 +120,13 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
         return this.sigmaRulesCache;
     }
 
-    public SigmaRule getRule(String ruleName) {
-        SigmaRule sigmaRule = null;
+    public ParsedSigmaRule getRule(String ruleName) {
+        ParsedSigmaRule sigmaRule = null;
 
         try {
             String rule = getRuleAsYaml(ruleName);
             if (rule != null) {
-                sigmaRule = YamlUtils.getYAMLMapper().readValue(rule, SigmaRule.class);
+                sigmaRule = YamlUtils.getYAMLMapper().readValue(rule, ParsedSigmaRule.class);
             }
         } catch (JsonMappingException e) {
             e.printStackTrace();
