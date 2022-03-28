@@ -61,7 +61,7 @@ public class CombinedStreamTest {
         //TODO should be bootstrap.serverS -- use defined variable in place of string
         //testProperties.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
         testProperties.setProperty("bootstrap.server", "foo:1234");
-        testProperties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "test");
+        testProperties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "test-combined");
         testProperties.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         testProperties.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         testProperties.setProperty("sigma.rules.topic", "rules");

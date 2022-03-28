@@ -48,11 +48,6 @@ import org.junit.jupiter.api.TestInstance;
 public class AggregateStreamTest {
     final static Logger logger = LogManager.getLogger(AggregateStreamTest.class);
 
-    private TopologyTestDriver td;
-    private Topology topology;
-    private SigmaRulePredicate[] predicates;
-    private TestInputTopic<String, String> inputTopic;
-    private TestOutputTopic<String, String> outputTopic;
     private ObjectMapper objectMapper = new ObjectMapper();
 
 
@@ -61,7 +56,7 @@ public class AggregateStreamTest {
         //TODO should be bootstrap.serverS -- use defined variable in place of string
         //testProperties.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
         testProperties.setProperty("bootstrap.server", "foo:1234");
-        testProperties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "test");
+        testProperties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "test-multi");
         testProperties.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         testProperties.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         testProperties.setProperty("sigma.rules.topic", "rules");
@@ -72,18 +67,20 @@ public class AggregateStreamTest {
         return testProperties;
     }
 
-    private void initializePredicates(SigmaRulesFactory srf) {
+    private SigmaRulePredicate[] initializePredicates(SigmaRulesFactory srf) {
         // initialize the predicates
         Map<String, SigmaRule> rulesList = srf.getSigmaRules();
         logger.info("number of rules " + rulesList.size());
 
         Integer i = 0;
-        predicates = new SigmaRulePredicate[rulesList.size()];
+        SigmaRulePredicate[] predicates = new SigmaRulePredicate[rulesList.size()];
         for (Map.Entry<String, SigmaRule> entry : rulesList.entrySet()) {
             predicates[i] = new SigmaRulePredicate();
             predicates[i].setRule(entry.getValue());
             i++;
         }
+
+        return predicates;
     }
 
     @BeforeAll
@@ -92,7 +89,7 @@ public class AggregateStreamTest {
 
     @After
     public void tearDown() {
-        td.close();
+
     }
 
     @Test
@@ -112,15 +109,15 @@ public class AggregateStreamTest {
         SigmaRulesFactory srf = new SigmaRulesFactory();;
         srf.setFiltersFromProperties(getProperties());
         srf.addRule("Simple Http", testRule);
-        initializePredicates(srf);
+        SigmaRulePredicate[] predicates = initializePredicates(srf);
 
         SigmaStream stream = new SigmaStream(getProperties(), srf);
-        topology = stream.createTopology(predicates);
-        td = new TopologyTestDriver(topology, getProperties());
+        Topology topology = stream.createTopology(predicates);
+        TopologyTestDriver td = new TopologyTestDriver(topology, getProperties());
 
-        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+        TestInputTopic<String, String> inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
             Serdes.String().serializer());
-        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+        TestOutputTopic<String, String> outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
             Serdes.String().deserializer());
 
         assertTrue(outputTopic.isEmpty());
@@ -137,6 +134,8 @@ public class AggregateStreamTest {
         assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
 
         assertTrue(outputTopic.isEmpty());
+
+        td.close();
     }
 
     @Test
@@ -167,15 +166,15 @@ public class AggregateStreamTest {
         srf.setFiltersFromProperties(getProperties());
         srf.addRule("Simple Http", testRule);
         srf.addRule("Another Simple Http", testRule2);
-        initializePredicates(srf);
+        SigmaRulePredicate[] predicates = initializePredicates(srf);
 
         SigmaStream stream = new SigmaStream(getProperties(), srf);
-        topology = stream.createTopology(predicates);
-        td = new TopologyTestDriver(topology, getProperties());
+        Topology topology = stream.createTopology(predicates);
+        TopologyTestDriver td = new TopologyTestDriver(topology, getProperties());
 
-        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+        TestInputTopic<String, String> inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
             Serdes.String().serializer());
-        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+        TestOutputTopic<String, String> outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
             Serdes.String().deserializer());
 
         assertTrue(outputTopic.isEmpty());
@@ -196,18 +195,20 @@ public class AggregateStreamTest {
 
         inputTopic.pipeInput("{\"foo\" : \"abcde\"}");
         // Should be 2 matches
-        DetectionResults results2 = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results2.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results2.getSigmaMetaData().getTitle().equals("Simple Http"));
-        DetectionResults results3 = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results3.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results3.getSigmaMetaData().getTitle().equals("Simple Http"));
+        results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
+            results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
+            results.getSigmaMetaData().getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         // Should be empty
         String sampleData2 = "{\"foo\" : \"bc\"}";
         inputTopic.pipeInput(sampleData2);
         assertTrue(outputTopic.isEmpty());
+
+        td.close();
 
     }
 
