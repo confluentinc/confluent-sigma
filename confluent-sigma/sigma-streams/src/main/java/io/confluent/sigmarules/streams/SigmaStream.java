@@ -27,6 +27,7 @@ import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
+import java.util.Map;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -60,10 +61,10 @@ public class SigmaStream extends StreamManager {
         this.inputTopic = properties.getProperty("data.topic");
     }
 
-    public void startStream(SigmaRulePredicate[] predicates) {
+    public void startStream() {
         createTopic(inputTopic);
 
-        Topology topology = createTopology(predicates);
+        Topology topology = createTopology();
         streams = new KafkaStreams(topology, getStreamProperties());
 
         streams.cleanUp();
@@ -77,15 +78,15 @@ public class SigmaStream extends StreamManager {
         this.streams.close();
     }
 
-    public Topology createTopology(SigmaRulePredicate[] predicates) {
+    // iterates through each rule and publishes to output topic for
+    // each rule that is a match
+    public Topology createTopology() {
         StreamsBuilder builder = new StreamsBuilder();
 
         KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
                 Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
-        for (Integer i = 0; i < predicates.length; i++) {
-            Integer iterator = i;
-            SigmaRule rule = predicates[iterator].getRule();
-
+        for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
+            SigmaRule rule = entry.getValue();
             if (rule.getConditionsManager().hasAggregateCondition()) {
                 AggregateTopology aggregateTopology = new AggregateTopology();
                 aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic);
@@ -97,4 +98,5 @@ public class SigmaStream extends StreamManager {
 
         return builder.build();
     }
+
 }

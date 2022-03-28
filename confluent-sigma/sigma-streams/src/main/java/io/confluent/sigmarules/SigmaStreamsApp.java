@@ -21,11 +21,9 @@ package io.confluent.sigmarules;
 
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
-import io.confluent.sigmarules.streams.SigmaRulePredicate;
 import io.confluent.sigmarules.streams.SigmaStream;
 import io.confluent.sigmarules.streams.StreamManager;
 import io.confluent.sigmarules.utilities.SigmaOptions;
-import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,7 +31,6 @@ public class SigmaStreamsApp extends StreamManager {
     final static Logger logger = LogManager.getLogger(SigmaStreamsApp.class);
 
     private SigmaRulesFactory ruleFactory;
-    private SigmaRulePredicate[] predicates;
     private SigmaStream sigmaStream;
 
     public SigmaStreamsApp(SigmaOptions options) {
@@ -56,7 +53,6 @@ public class SigmaStreamsApp extends StreamManager {
     }
 
     private void createSigmaRules() {
-        this.initializePredicates();
         this.ruleFactory = new SigmaRulesFactory(properties);
     }
 
@@ -65,23 +61,9 @@ public class SigmaStreamsApp extends StreamManager {
         this.sigmaStream = new SigmaStream(properties, ruleFactory);
     }
 
-    private void initializePredicates() {
-        // initialize the predicates
-        Map<String, SigmaRule> rulesList = ruleFactory.getSigmaRules();
-        logger.info("number of rules " + rulesList.size());
-
-        Integer i = 0;
-        predicates = new SigmaRulePredicate[rulesList.size()];
-        for (Map.Entry<String, SigmaRule> entry : rulesList.entrySet()) {
-            predicates[i] = new SigmaRulePredicate();
-            predicates[i].setRule(entry.getValue());
-            i++;
-        }
-    }
-
     protected void start()
     {
-        sigmaStream.startStream(predicates);
+        sigmaStream.startStream();
     }
 
     public static void main(String[] args) {

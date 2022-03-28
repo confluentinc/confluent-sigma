@@ -67,22 +67,6 @@ public class AggregateStreamTest {
         return testProperties;
     }
 
-    private SigmaRulePredicate[] initializePredicates(SigmaRulesFactory srf) {
-        // initialize the predicates
-        Map<String, SigmaRule> rulesList = srf.getSigmaRules();
-        logger.info("number of rules " + rulesList.size());
-
-        Integer i = 0;
-        SigmaRulePredicate[] predicates = new SigmaRulePredicate[rulesList.size()];
-        for (Map.Entry<String, SigmaRule> entry : rulesList.entrySet()) {
-            predicates[i] = new SigmaRulePredicate();
-            predicates[i].setRule(entry.getValue());
-            i++;
-        }
-
-        return predicates;
-    }
-
     @BeforeAll
     void setUp() {
     }
@@ -109,10 +93,9 @@ public class AggregateStreamTest {
         SigmaRulesFactory srf = new SigmaRulesFactory();;
         srf.setFiltersFromProperties(getProperties());
         srf.addRule("Simple Http", testRule);
-        SigmaRulePredicate[] predicates = initializePredicates(srf);
 
         SigmaStream stream = new SigmaStream(getProperties(), srf);
-        Topology topology = stream.createTopology(predicates);
+        Topology topology = stream.createTopology();
         TopologyTestDriver td = new TopologyTestDriver(topology, getProperties());
 
         TestInputTopic<String, String> inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
@@ -166,10 +149,9 @@ public class AggregateStreamTest {
         srf.setFiltersFromProperties(getProperties());
         srf.addRule("Simple Http", testRule);
         srf.addRule("Another Simple Http", testRule2);
-        SigmaRulePredicate[] predicates = initializePredicates(srf);
 
         SigmaStream stream = new SigmaStream(getProperties(), srf);
-        Topology topology = stream.createTopology(predicates);
+        Topology topology = stream.createTopology();
         TopologyTestDriver td = new TopologyTestDriver(topology, getProperties());
 
         TestInputTopic<String, String> inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),

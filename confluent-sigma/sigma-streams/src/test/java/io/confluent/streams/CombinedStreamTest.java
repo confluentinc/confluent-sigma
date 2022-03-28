@@ -50,7 +50,6 @@ public class CombinedStreamTest {
 
     private TopologyTestDriver td;
     private Topology topology;
-    private SigmaRulePredicate[] predicates;
     private TestInputTopic<String, String> inputTopic;
     private TestOutputTopic<String, String> outputTopic;
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -70,20 +69,6 @@ public class CombinedStreamTest {
         testProperties.setProperty("data.topic", "test-input");
 
         return testProperties;
-    }
-
-    private void initializePredicates(SigmaRulesFactory srf) {
-        // initialize the predicates
-        Map<String, SigmaRule> rulesList = srf.getSigmaRules();
-        logger.info("number of rules " + rulesList.size());
-
-        Integer i = 0;
-        predicates = new SigmaRulePredicate[rulesList.size()];
-        for (Map.Entry<String, SigmaRule> entry : rulesList.entrySet()) {
-            predicates[i] = new SigmaRulePredicate();
-            predicates[i].setRule(entry.getValue());
-            i++;
-        }
     }
 
     @BeforeAll
@@ -122,10 +107,9 @@ public class CombinedStreamTest {
         srf.setFiltersFromProperties(getProperties());
         srf.addRule("Simple Http", testRule);
         srf.addRule("Aggregate Http", testRule2);
-        initializePredicates(srf);
 
         SigmaStream stream = new SigmaStream(getProperties(), srf);
-        topology = stream.createTopology(predicates);
+        topology = stream.createTopology();
         td = new TopologyTestDriver(topology, getProperties());
 
         inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),

@@ -50,7 +50,6 @@ public class SimpleStreamTest {
 
     private TopologyTestDriver td;
     private Topology topology;
-    private SigmaRulePredicate[] predicates;
     private TestInputTopic<String, String> inputTopic;
     private TestOutputTopic<String, String> outputTopic;
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -70,20 +69,6 @@ public class SimpleStreamTest {
         testProperties.setProperty("data.topic", "test-input");
 
         return testProperties;
-    }
-
-    private void initializePredicates(SigmaRulesFactory srf) {
-        // initialize the predicates
-        Map<String, SigmaRule> rulesList = srf.getSigmaRules();
-        logger.info("number of rules " + rulesList.size());
-
-        Integer i = 0;
-        predicates = new SigmaRulePredicate[rulesList.size()];
-        for (Map.Entry<String, SigmaRule> entry : rulesList.entrySet()) {
-            predicates[i] = new SigmaRulePredicate();
-            predicates[i].setRule(entry.getValue());
-            i++;
-        }
     }
 
     @BeforeAll
@@ -111,10 +96,9 @@ public class SimpleStreamTest {
         SigmaRulesFactory srf = new SigmaRulesFactory();;
         srf.setFiltersFromProperties(getProperties());
         srf.addRule("Simple Http", testRule);
-        initializePredicates(srf);
 
         SigmaStream stream = new SigmaStream(getProperties(), srf);
-        topology = stream.createTopology(predicates);
+        topology = stream.createTopology();
         td = new TopologyTestDriver(topology, getProperties());
 
         inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
@@ -160,10 +144,9 @@ public class SimpleStreamTest {
         srf.setFiltersFromProperties(getProperties());
         srf.addRule("Simple Http", testRule);
         srf.addRule("Another Simple Http", testRule2);
-        initializePredicates(srf);
 
         SigmaStream stream = new SigmaStream(getProperties(), srf);
-        topology = stream.createTopology(predicates);
+        topology = stream.createTopology();
         td = new TopologyTestDriver(topology, getProperties());
 
         inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
@@ -176,12 +159,14 @@ public class SimpleStreamTest {
         // Should be 2 matches (titles)
         inputTopic.pipeInput("{\"foo\" : \"abc\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        logger.info("title: " + results.getSigmaMetaData().getTitle());
         assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
             results.getSigmaMetaData().getTitle().equals("Simple Http"));
 
-        DetectionResults results2 = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results2.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results2.getSigmaMetaData().getTitle().equals("Simple Http"));
+        results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        logger.info("title: " + results.getSigmaMetaData().getTitle());
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
+            results.getSigmaMetaData().getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         // Should be empty
