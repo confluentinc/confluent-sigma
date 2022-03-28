@@ -19,11 +19,14 @@
 
 package io.confluent.sigmarules.rules;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
+import io.confluent.sigmarules.utilities.YamlUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -52,6 +55,9 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     private String product = null;
     private String service = null;
 
+    // This should only be called for testing as it does not load the rules store
+    public SigmaRulesFactory() { rulesParser = new SigmaRuleParser(); }
+
     public SigmaRulesFactory(Properties properties) {
         initialize(properties);
     }
@@ -74,13 +80,13 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         sigmaRulesStore.addObserver(this);
 
         // set the filters from the properties file
-        setFiltersFromProperties();
+        setFiltersFromProperties(properties);
 
         // load the rules that apply to this processor
         getRulesfromStore();
     }
 
-    private void setFiltersFromProperties() {
+    public void setFiltersFromProperties(Properties properties) {
         // single title
         if (properties.containsKey("sigma.rule.filter.title")) {
             titles.add(properties.getProperty("sigma.rule.filter.title"));
@@ -161,18 +167,19 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * @return
      */
     public void addRule(String title, String rule) throws IOException, InvalidSigmaRuleException {
-        if (isFilteredRule(title)) {
+        SigmaRule sigmaRule = rulesParser.parseRule(rule);
+
+        if (shouldBeFiltered(sigmaRule)) {
             logger.info(title + " will not be loaded.  It does not match the filtered rules " +
                     "condition.");
             return;
         }
 
+        sigmaRules.put(title, sigmaRule);
         Boolean newRule = false;
         if (!sigmaRules.containsKey(title)) {
             newRule = true;
         }
-        SigmaRule sigmaRule = rulesParser.parseRule(rule);
-        sigmaRules.put(title, sigmaRule);
 
         if (newRule && observer != null) {
             observer.handleNewRule(sigmaRule);
@@ -186,26 +193,23 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * @param title Of the rule to check
      * @return
      */
-    public boolean isFilteredRule(String title) {
+    public boolean shouldBeFiltered(SigmaRule sigmaRule) {
         // verify product and service match before continuing
-        ParsedSigmaRule parsedRule = sigmaRulesStore.getRule(title);
-        if (parsedRule == null) throw new InvalidRulesException("Rule doesn't exist.");
-
-        SigmaRule rule = new SigmaRule();
-        rule.copyParsedSigmaRule(parsedRule);
-
         if (titles.isEmpty()) {
-            if (productAndServiceMatch(rule) == true) {
+            if (productAndServiceMatch(sigmaRule) == true) {
                 return false;
             }
-        } else if (titles.contains(title)) {
-            if (productAndServiceMatch(rule) == true) {
+        } else if (titles.contains(sigmaRule.getTitle())) {
+            if (productAndServiceMatch(sigmaRule) == true) {
                 return false;
             }
         }
         return true;
     }
 
+    public boolean isRuleFiltered(String title) {
+      return !sigmaRules.containsKey(title);
+    }
 
     /**
      * Check to see whether there is a product and service specified and if there is whether the

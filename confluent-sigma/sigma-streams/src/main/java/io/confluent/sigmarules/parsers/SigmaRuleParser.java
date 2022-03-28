@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 public class SigmaRuleParser {
     final static Logger logger = LogManager.getLogger(SigmaRuleParser.class);
+    ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
     private DetectionParser detectionParser;
     private ConditionParser conditionParser;
@@ -45,10 +46,8 @@ public class SigmaRuleParser {
     }
 
     public SigmaRule parseRule(String rule) throws IOException, InvalidSigmaRuleException {
-        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
         ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, ParsedSigmaRule.class);
 
-        // NEED TO CALL PARSERS and create SigmaRule
         SigmaRule sigmaRule = new SigmaRule();
         sigmaRule.copyParsedSigmaRule(parsedSigmaRule);
 

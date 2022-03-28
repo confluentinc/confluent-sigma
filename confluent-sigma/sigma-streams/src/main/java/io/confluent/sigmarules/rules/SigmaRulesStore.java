@@ -120,23 +120,6 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
         return this.sigmaRulesCache;
     }
 
-    public ParsedSigmaRule getRule(String ruleName) {
-        ParsedSigmaRule sigmaRule = null;
-
-        try {
-            String rule = getRuleAsYaml(ruleName);
-            if (rule != null) {
-                sigmaRule = YamlUtils.getYAMLMapper().readValue(rule, ParsedSigmaRule.class);
-            }
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        };
-
-        return sigmaRule;
-    }
-
     @Override
     public void cacheInitialized() {
         CacheUpdateHandler.super.cacheInitialized();

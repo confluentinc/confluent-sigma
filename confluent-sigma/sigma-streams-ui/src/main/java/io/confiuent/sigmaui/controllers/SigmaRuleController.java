@@ -39,7 +39,7 @@ public class SigmaRuleController {
     @Autowired
     private SigmaRulesStore rules;
 
-    private ObjectMapper mapper = new ObjectMapper((JsonFactory)new YAMLFactory());
+    private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     @GetMapping({"/sigmaTitles"})
     public Set<String> getSigmaTitles() {

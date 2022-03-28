@@ -70,7 +70,7 @@ class SigmaDetectionTest {
         String testRule = "title: Simple Http\n"
             + "detection:\n"
             + "  test:\n"
-            + "   - foo|re: 'ab*'\n"
+            + "   - foo|re: 'ab.*'\n"
             + "  condition: test";
 
         SigmaRule sigmaRule = ruleParser.parseRule(testRule);
@@ -85,7 +85,7 @@ class SigmaDetectionTest {
         String testRule2 = "title: Simple Http\n"
             + "detection:\n"
             + "  test:\n"
-            + "   - foo|re: 'ab*c'\n"
+            + "   - foo|re: 'ab.*c'\n"
             + "  condition: test";
 
         SigmaRule sigmaRule2 = ruleParser.parseRule(testRule2);

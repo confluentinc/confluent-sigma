@@ -192,7 +192,7 @@ public class DetectionParser {
                     if (!validRegex(value))
                         throw new InvalidSigmaRuleException("Regular expression operator specified " +
                                 "but pattern did not compile for value = " + value);
-                    return sigmaWildcardToRegex(value);
+                    return value;
             }
         }
 
@@ -222,6 +222,7 @@ public class DetectionParser {
             switch(c) {
                 case '*': out.append(".*"); break;
                 case '?': out.append('.'); break;
+                case '.': out.append("\\."); break;
                 case '\\': out.append("\\\\"); break;
                 default: out.append(c);
             }
