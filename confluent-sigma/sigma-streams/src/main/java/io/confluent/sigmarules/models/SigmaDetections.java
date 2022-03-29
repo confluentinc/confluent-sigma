@@ -19,8 +19,6 @@
 
 package io.confluent.sigmarules.models;
 
-import io.confluent.sigmarules.models.SigmaDetection;
-
 import java.util.ArrayList;
 import java.util.List;
 

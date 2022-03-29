@@ -19,20 +19,19 @@
 
 package io.confluent.sigmarules.rules;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import io.confluent.sigmarules.tools.SigmaRuleLoader;
 import io.confluent.sigmarules.utilities.SigmaOptions;
+import java.util.Properties;
 import org.junit.ClassRule;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
-
-import java.util.Properties;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SigmaRulesFactoryTest  {

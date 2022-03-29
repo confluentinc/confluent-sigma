@@ -24,14 +24,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
-import io.confluent.sigmarules.models.DetectionResults;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class JsonUtils {
     private static ObjectMapper mapper = new ObjectMapper();

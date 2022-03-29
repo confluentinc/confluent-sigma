@@ -19,14 +19,10 @@
 
 package io.confluent.sigmarules.rules;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
-import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
-import io.confluent.sigmarules.utilities.YamlUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;

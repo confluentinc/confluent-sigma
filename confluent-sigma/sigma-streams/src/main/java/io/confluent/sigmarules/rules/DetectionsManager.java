@@ -19,10 +19,8 @@
 
 package io.confluent.sigmarules.rules;
 
-import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
-import io.confluent.sigmarules.parsers.DetectionParser;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

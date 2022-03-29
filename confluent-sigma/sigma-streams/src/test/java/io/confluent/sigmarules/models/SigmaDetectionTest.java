@@ -19,21 +19,13 @@
 
 package io.confluent.sigmarules.models;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
-import io.confluent.sigmarules.parsers.DetectionParser;
-import io.confluent.sigmarules.parsers.ParsedSigmaRule;
-import io.confluent.sigmarules.parsers.SigmaRuleParser;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import org.junit.jupiter.api.DisplayNameGenerator.Simple;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
+import java.io.IOException;
+import org.junit.jupiter.api.Test;
 
 class SigmaDetectionTest {
 

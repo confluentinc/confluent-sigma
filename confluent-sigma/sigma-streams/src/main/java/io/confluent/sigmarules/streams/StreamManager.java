@@ -19,15 +19,14 @@
 
 package io.confluent.sigmarules.streams;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 
 public class StreamManager {
     public Properties properties = new Properties();

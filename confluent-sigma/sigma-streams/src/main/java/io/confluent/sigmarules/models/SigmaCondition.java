@@ -19,8 +19,6 @@
 
 package io.confluent.sigmarules.models;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.confluent.sigmarules.rules.DetectionsManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

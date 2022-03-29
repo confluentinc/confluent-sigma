@@ -22,25 +22,20 @@ package io.confluent.sigmarules.streams;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.processor.TopicNameExtractor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.sql.Timestamp;
-import java.util.Properties;
 
 public class SigmaStream extends StreamManager {
     final static Logger logger = LogManager.getLogger(SigmaStream.class);

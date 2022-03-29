@@ -19,11 +19,11 @@
 
 package io.confluent.sigmarules.aggregation;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import io.confluent.sigmarules.models.AggregateValues;
 import io.confluent.sigmarules.parsers.AggregateParser;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class AggregateParserTest {
 

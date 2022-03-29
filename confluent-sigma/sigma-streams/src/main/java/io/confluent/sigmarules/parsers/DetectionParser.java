@@ -24,17 +24,14 @@ import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.OperatorType;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
-import io.confluent.sigmarules.rules.ConditionsManager;
 import io.confluent.sigmarules.rules.DetectionsManager;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
