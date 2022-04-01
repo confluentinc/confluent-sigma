@@ -5,14 +5,7 @@
 # Parameter 1 the data file to send
 # Parameter 2 the number of paritions for the test topic
 
-if [ -f /tmp/ccloud-env.sh ] ; then
-  source /tmp/ccloud-env.sh
-elif [ -f ~/tmp/ccloud-env.sh ] ; then
-    source  ~/tmp/ccloud-env.sh
-else
-  echo "ccloud-env not found"
-  exit
-fi 
+source bin/auto-configure.sh
 
 docker run -v $(pwd)/test/config:/mnt/config --rm --network=host confluentinc/cp-server:latest \
   kafka-topics \
@@ -28,7 +21,7 @@ while true
 do
   docker run -v $(pwd)/test/data:/mnt/data --rm --network=host edenhill/kafkacat:1.5.0  \
     kafkacat -b ${BOOTSTRAP_SERVER} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
-    -X sasl.username=${KAFKA_SASL_USERNAME} -X sasl.password=${KAFKA_SASL_PASSWORD} -t test -l /mnt/data/$1
+    -X sasl.username=${KAFKA_SASL_USERNAME} -X sasl.password=${KAFKA_SASL_PASSWORD} -z snappy -t test -l /mnt/data/$1
 done
 
 
