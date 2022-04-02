@@ -19,17 +19,21 @@
 
 package io.confluent.sigmarules.models;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class SigmaDetections {
-    private Map<String, List<String>> detections;
+    private List<SigmaDetection> detections = new ArrayList<>();
 
-    public Map<String, List<String>> getDetections() {
+    public List<SigmaDetection> getDetections() {
         return detections;
     }
 
-    public void setDetections(Map<String, List<String>> detections) {
+    public void setDetections(List<SigmaDetection> detections) {
         this.detections = detections;
+    }
+
+    public void addDetection(SigmaDetection detection) {
+        this.detections.add(detection);
     }
 }

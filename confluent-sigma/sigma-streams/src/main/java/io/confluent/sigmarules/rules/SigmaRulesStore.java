@@ -19,22 +19,18 @@
 
 package io.confluent.sigmarules.rules;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import io.confluent.sigmarules.SigmaProperties;
 import io.confluent.sigmarules.models.SigmaRule;
-import io.confluent.sigmarules.utilities.YamlUtils;
 import io.kcache.Cache;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
+import java.util.Properties;
+import java.util.Set;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Properties;
-import java.util.Set;
 
 public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
 
@@ -117,23 +113,6 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
 
     Cache<String, String> getRules() {
         return this.sigmaRulesCache;
-    }
-
-    public SigmaRule getRule(String ruleName) {
-        SigmaRule sigmaRule = null;
-
-        try {
-            String rule = getRuleAsYaml(ruleName);
-            if (rule != null) {
-                sigmaRule = YamlUtils.getYAMLMapper().readValue(rule, SigmaRule.class);
-            }
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        };
-
-        return sigmaRule;
     }
 
     @Override

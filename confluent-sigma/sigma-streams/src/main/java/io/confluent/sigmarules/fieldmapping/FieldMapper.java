@@ -19,15 +19,13 @@
 
 package io.confluent.sigmarules.fieldmapping;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.confluent.sigmarules.models.SigmaFields;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
-import io.confluent.sigmarules.models.SigmaFields;
 
 public class FieldMapper {
     private SigmaFields sigmaFields = new SigmaFields();

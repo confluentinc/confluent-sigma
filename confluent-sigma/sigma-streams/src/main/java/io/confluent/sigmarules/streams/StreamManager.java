@@ -19,15 +19,14 @@
 
 package io.confluent.sigmarules.streams;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 
 public class StreamManager {
     public Properties properties = new Properties();
@@ -39,6 +38,8 @@ public class StreamManager {
         this.properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         this.properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         this.properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+        this.properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
+
     }
 
     public Properties getStreamProperties() {

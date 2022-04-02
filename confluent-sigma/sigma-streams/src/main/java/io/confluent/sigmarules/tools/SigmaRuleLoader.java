@@ -21,22 +21,25 @@ package io.confluent.sigmarules.tools;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.confluent.sigmarules.SigmaStreamsApp;
-import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
 import io.confluent.sigmarules.utilities.SigmaOptions;
 import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Properties;
-import org.apache.commons.cli.*;
-
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 public class SigmaRuleLoader {
     private SigmaRulesStore sigmaRulesStore;
@@ -50,7 +53,7 @@ public class SigmaRuleLoader {
     public void loadSigmaFile(String filename) {
         try {
             String rule = Files.readString(Path.of(filename));
-            SigmaRule sigmaRule = mapper.readValue(rule, SigmaRule.class);
+            ParsedSigmaRule sigmaRule = mapper.readValue(rule, ParsedSigmaRule.class);
             String key = sigmaRule.getTitle();
 
             System.out.println("Adding sigma rule: " + key);

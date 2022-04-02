@@ -19,60 +19,41 @@
 
 package io.confluent.sigmarules.rules;
 
-import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
-import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaDetection;
-import io.confluent.sigmarules.models.SigmaDetectionList;
-import io.confluent.sigmarules.models.SigmaRule;
-import io.confluent.sigmarules.parsers.DetectionParser;
-import java.io.IOException;
+import io.confluent.sigmarules.models.SigmaDetections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class DetectionsManager {
     final static Logger logger = LogManager.getLogger(DetectionsManager.class);
 
-    private Map<String, SigmaDetectionList> detections = new HashMap<>();
-    private FieldMapper fieldMapper = null;
+    private Map<String, SigmaDetections> detections = new HashMap<>();
     private Long windowTimeMS = 0L;
-    private DetectionParser parser;
 
-    public DetectionsManager() {
-        parser = new DetectionParser(fieldMapper);
-    }
+    public DetectionsManager() { }
 
-    public DetectionsManager(String fieldMapFile) throws IOException {
-        if (fieldMapFile != null) {
-            fieldMapper = new FieldMapper(fieldMapFile);
-        }
-
-        parser = new DetectionParser(fieldMapper);
-    }
-
-    public void addDetections(String detectionName, SigmaDetectionList detectionList) {
+    public void addDetections(String detectionName, SigmaDetections detectionList) {
         detections.put(detectionName, detectionList);
     }
 
-    public SigmaDetectionList getDetectionsByName(String detectionName) {
+    public SigmaDetections getDetectionsByName(String detectionName) {
         return detections.get(detectionName);
     }
 
-    public Map<String, SigmaDetectionList> getAllDetections() {
+    public Map<String, SigmaDetections> getAllDetections() {
         return detections;
     }
 
     public void printDetectionsAndConditions() {
         System.out.println("detection: ");
-        for (Map.Entry<String, SigmaDetectionList> detection : detections.entrySet()) {
+        for (Map.Entry<String, SigmaDetections> detection : detections.entrySet()) {
             System.out.printf("\t%s:\n", detection.getKey());
 
-            SigmaDetectionList searchIdentifier = detection.getValue();
+            SigmaDetections searchIdentifier = detection.getValue();
             for (SigmaDetection sigmaDetection : searchIdentifier.getDetections()) {
                 System.out.printf("\t\t%s:", sigmaDetection.getName());
                 if (sigmaDetection.getOperator() != null) {
@@ -91,35 +72,7 @@ public class DetectionsManager {
         }
     }
 
-    public void loadSigmaDetections(SigmaRule sigmaRule, ConditionsManager conditions) throws InvalidSigmaRuleException {
-        // loop through list of detections - search identifier are the keys
-        // the values can be either lists or maps (key / value pairs)
-        // See https://github.com/SigmaHQ/sigma/wiki/Specification#detection
-        for (Map.Entry<String, Object> entry : sigmaRule.getDetection().entrySet()) {
-            String detectionName = entry.getKey();
-            Object searchIdentifiers = entry.getValue();
-
-            if (detectionName.equals("condition") || detectionName.equals("timeframe") ||
-                detectionName.equals("fields")) {
-                // handle separately
-            } else {
-                this.addDetections(detectionName, parser.parseDetections(searchIdentifiers));
-            }
-        }
-
-        // parse conditions
-        if (sigmaRule.getDetection().containsKey("condition")) {
-            String condition = sigmaRule.getDetection().get("condition").toString();
-            String window = null;
-
-            if (sigmaRule.getDetection().containsKey("timeframe")) {
-                convertWindowTime(sigmaRule.getDetection().get("timeframe").toString());
-            }
-            conditions.loadSigmaConditions(condition);
-        }
-    }
-
-    private void convertWindowTime(String window) {
+    public void convertWindowTime(String window) {
         /*
             15s  (15 seconds)
             30m  (30 minutes)

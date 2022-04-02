@@ -19,20 +19,19 @@
 
 package io.confluent.sigmarules.rules;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import io.confluent.sigmarules.tools.SigmaRuleLoader;
 import io.confluent.sigmarules.utilities.SigmaOptions;
+import java.util.Properties;
 import org.junit.ClassRule;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
-
-import java.util.Properties;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SigmaRulesFactoryTest  {
@@ -78,7 +77,7 @@ public class SigmaRulesFactoryTest  {
         testProperties.setProperty("sigma.rule.filter.product", "zeek");
 
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
-        assertFalse("Should be false", srf.isFilteredRule("Simple Http"));
+        assertFalse("Should be false", srf.isRuleFiltered("Simple Http"));
     }
 
     @Test
@@ -87,7 +86,7 @@ public class SigmaRulesFactoryTest  {
         testProperties.setProperty("sigma.rule.filter.service", "http");
 
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
-        assertFalse("Should be false", srf.isFilteredRule("Simple Http"));
+        assertFalse("Should be false", srf.isRuleFiltered("Simple Http"));
     }
 
     @Test
@@ -97,7 +96,7 @@ public class SigmaRulesFactoryTest  {
         testProperties.setProperty("sigma.rule.filter.service", "http");
 
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
-        assertFalse("Should be false", srf.isFilteredRule("Simple Http"));
+        assertFalse("Should be false", srf.isRuleFiltered("Simple Http"));
     }
 
     @Test
@@ -109,18 +108,18 @@ public class SigmaRulesFactoryTest  {
 
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
         assertTrue("Should be true because it does not match product and service",
-                srf.isFilteredRule("Simple Http"));
+                srf.isRuleFiltered("Simple Http"));
     }
 
     @Test
     public void testIsFilteredRuleByProductAndServiceAndFilterList() {
         Properties testProperties = getProperties();
-        testProperties.setProperty("sigma.rule.filter.product", "zeek");
-        testProperties.setProperty("sigma.rule.filter.service", "http");
+        //testProperties.setProperty("sigma.rule.filter.product", "zeek");
+        //testProperties.setProperty("sigma.rule.filter.service", "http");
         testProperties.setProperty("sigma.rule.filter.title", "Simple Http");
 
         SigmaRulesFactory srf = new SigmaRulesFactory(testProperties);
         assertFalse("Should be false because is in the filter list",
-                srf.isFilteredRule("Simple Http"));
+                srf.isRuleFiltered("Simple Http"));
     }
 }

@@ -20,14 +20,13 @@
 package io.confluent.sigmarules.parsers;
 
 import io.confluent.sigmarules.models.SigmaCondition;
+import io.confluent.sigmarules.rules.ConditionsManager;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ConditionParser {
     final static Logger logger = LogManager.getLogger(ConditionParser.class);
@@ -44,48 +43,56 @@ public class ConditionParser {
 
     private String tempString = "";
     private SigmaCondition currentCondition = null;;
+    private AggregateParser aggregateParser = new AggregateParser();
 
-    public List<SigmaCondition> parseCondition(String condition) {
-        List<SigmaCondition> conditions = new ArrayList<>();
-        CharacterIterator it = new StringCharacterIterator(condition);
+    public ConditionsManager parseCondition(ParsedSigmaRule sigmaRule) {
+        ConditionsManager conditionsManager = new ConditionsManager();
 
-        Boolean doneParsing = false;
-        while (!doneParsing && it.current() != CharacterIterator.DONE) {
-            //System.out.println(it.current());
-            String currentChar = Character.toString(it.current());
-            switch (currentChar) {
-                case OPEN_PAREN:
-                    System.out.println("OPEN");
-                    break;
-                case CLOSE_PAREN:
-                    evaluateString(conditions, tempString);
-                    System.out.println("CLOSE");
-                    break;
-                case SPACE:
-                    if (!tempString.isBlank()) {
+        if (sigmaRule.getDetection().containsKey("condition")) {
+            String condition = sigmaRule.getDetection().get("condition").toString();
+
+            List<SigmaCondition> conditions = conditionsManager.getConditions();
+            CharacterIterator it = new StringCharacterIterator(condition);
+
+            Boolean doneParsing = false;
+            while (!doneParsing && it.current() != CharacterIterator.DONE) {
+                //System.out.println(it.current());
+                String currentChar = Character.toString(it.current());
+                switch (currentChar) {
+                    case OPEN_PAREN:
+                        System.out.println("OPEN");
+                        break;
+                    case CLOSE_PAREN:
                         evaluateString(conditions, tempString);
-                    }
-                    break;
-                case AGG_SEP:
-                    // aggregate condition
-                    String aggString = StringUtils.substringAfter(condition, "| ");
-                    logger.info("creating aggregate: " + aggString);
-                    SigmaCondition aggregateCondition = new SigmaCondition(aggString);
-                    aggregateCondition.setAggregateCondition(true);
-                    conditions.add(aggregateCondition);
-                    doneParsing = true;
-                    break;
-                default:
-                    tempString = tempString.concat(currentChar);
-                    break;
+                        System.out.println("CLOSE");
+                        break;
+                    case SPACE:
+                        if (!tempString.isBlank()) {
+                            evaluateString(conditions, tempString);
+                        }
+                        break;
+                    case AGG_SEP:
+                        // aggregate condition
+                        String aggString = StringUtils.substringAfter(condition, "| ");
+                        logger.info("creating aggregate: " + aggString);
+                        SigmaCondition aggregateCondition = new SigmaCondition(aggString);
+                        aggregateCondition.setAggregateCondition(true);
+                        aggregateCondition.setAggregateValues(aggregateParser.parseCondition(aggString));
+                        conditions.add(aggregateCondition);
+                        doneParsing = true;
+                        break;
+                    default:
+                        tempString = tempString.concat(currentChar);
+                        break;
+                }
+
+                it.next();
             }
 
-            it.next();
+            evaluateString(conditions, tempString);
         }
 
-        evaluateString(conditions, tempString);
-
-        return conditions;
+        return conditionsManager;
     }
 
     private void evaluateString(List<SigmaCondition> conditions, String eval) {
@@ -133,18 +140,6 @@ public class ConditionParser {
             }
             tempString = "";
         }
-    }
-
-    public static void main(String[] args) {
-        String theString = "pre_selection AND selection";
-
-        ConditionParser parser = new ConditionParser();
-        List<SigmaCondition> conditions = parser.parseCondition(theString);
-
-        for (SigmaCondition condition : conditions) {
-            System.out.println("condition: " + condition.toString());
-        }
-        
     }
 
 }
