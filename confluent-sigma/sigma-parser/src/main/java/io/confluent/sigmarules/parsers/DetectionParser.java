@@ -21,10 +21,10 @@ package io.confluent.sigmarules.parsers;
 
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
+import io.confluent.sigmarules.models.DetectionsManager;
 import io.confluent.sigmarules.models.OperatorType;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
-import io.confluent.sigmarules.rules.DetectionsManager;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,7 +54,8 @@ public class DetectionParser {
         this.fieldMapper = fieldMapper;
     }
 
-    public DetectionsManager parseDetections(ParsedSigmaRule sigmaRule)
+    public DetectionsManager parseDetections(
+        io.confluent.sigmarules.parsers.ParsedSigmaRule sigmaRule)
         throws InvalidSigmaRuleException {
         DetectionsManager detectionsManager = new DetectionsManager();
 

@@ -17,9 +17,8 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.rules;
+package io.confluent.sigmarules.models;
 
-import io.confluent.sigmarules.models.SigmaCondition;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;

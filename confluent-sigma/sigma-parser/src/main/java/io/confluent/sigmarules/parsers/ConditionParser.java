@@ -19,8 +19,8 @@
 
 package io.confluent.sigmarules.parsers;
 
+import io.confluent.sigmarules.models.ConditionsManager;
 import io.confluent.sigmarules.models.SigmaCondition;
-import io.confluent.sigmarules.rules.ConditionsManager;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.List;

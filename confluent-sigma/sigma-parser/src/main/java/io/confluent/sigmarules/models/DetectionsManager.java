@@ -17,7 +17,7 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.rules;
+package io.confluent.sigmarules.models;
 
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;

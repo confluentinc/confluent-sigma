@@ -32,21 +32,21 @@ public class SigmaRuleParser {
     final static Logger logger = LogManager.getLogger(SigmaRuleParser.class);
     ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
-    private DetectionParser detectionParser;
-    private ConditionParser conditionParser;
+    private io.confluent.sigmarules.parsers.DetectionParser detectionParser;
+    private io.confluent.sigmarules.parsers.ConditionParser conditionParser;
 
     public SigmaRuleParser() {
-        detectionParser = new DetectionParser();
-        conditionParser = new ConditionParser();
+        detectionParser = new io.confluent.sigmarules.parsers.DetectionParser();
+        conditionParser = new io.confluent.sigmarules.parsers.ConditionParser();
     }
 
     public SigmaRuleParser(FieldMapper fieldMapperFile) {
-        detectionParser = new DetectionParser(fieldMapperFile);
-        conditionParser = new ConditionParser();
+        detectionParser = new io.confluent.sigmarules.parsers.DetectionParser(fieldMapperFile);
+        conditionParser = new io.confluent.sigmarules.parsers.ConditionParser();
     }
 
     public SigmaRule parseRule(String rule) throws IOException, InvalidSigmaRuleException {
-        ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, ParsedSigmaRule.class);
+        io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, io.confluent.sigmarules.parsers.ParsedSigmaRule.class);
 
         SigmaRule sigmaRule = new SigmaRule();
         sigmaRule.copyParsedSigmaRule(parsedSigmaRule);

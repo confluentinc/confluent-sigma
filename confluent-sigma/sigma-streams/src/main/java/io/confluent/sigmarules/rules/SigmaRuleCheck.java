@@ -1,6 +1,7 @@
 package io.confluent.sigmarules.rules;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.confluent.sigmarules.models.DetectionsManager;
 import io.confluent.sigmarules.models.SigmaCondition;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
