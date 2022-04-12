@@ -23,9 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
-import io.confluent.sigmarules.parsers.ParsedSigmaRule;
-import io.confluent.sigmarules.rules.ConditionsManager;
-import io.confluent.sigmarules.rules.DetectionsManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -131,7 +128,8 @@ public class SigmaRule {
         System.out.println("*********\n");
     }
 
-    public void copyParsedSigmaRule(ParsedSigmaRule parsedSigmaRule) {
+    public void copyParsedSigmaRule(
+        io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule) {
         this.title = parsedSigmaRule.getTitle();
         this.description = parsedSigmaRule.getDescription();
         this.id = parsedSigmaRule.getId();
