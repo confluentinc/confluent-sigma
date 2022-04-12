@@ -20,6 +20,7 @@
 package io.confluent.sigmarules.rules;
 
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import java.io.IOException;
 import java.util.Properties;
 import org.junit.jupiter.api.Assertions;
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SigmaRulesFactoryTestAdd {
     @Test
-    void testRuleAdded() throws InvalidSigmaRuleException, IOException {
+    void testRuleAdded() throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         Properties testProperties = new Properties();
         testProperties.setProperty("sigma.rule.filter.product", "zeek");
 

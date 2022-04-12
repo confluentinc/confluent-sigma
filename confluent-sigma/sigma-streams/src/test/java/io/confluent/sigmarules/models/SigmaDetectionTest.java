@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,8 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testTrailingStarNoOperator() throws InvalidSigmaRuleException, IOException {
+    void testTrailingStarNoOperator()
+        throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         String testRule = "title: Simple Http\n"
             + "detection:\n"
             + "  test:\n"
@@ -56,7 +58,7 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testRegex() throws InvalidSigmaRuleException, IOException {
+    void testRegex() throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         SigmaRuleParser ruleParser = new SigmaRuleParser();
 
         String testRule = "title: Simple Http\n"
@@ -91,7 +93,7 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testRegexBrackets() throws InvalidSigmaRuleException, IOException {
+    void testRegexBrackets() throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         SigmaRuleParser ruleParser = new SigmaRuleParser();
 
         String testRule = "title: Simple Http\n"
@@ -110,7 +112,8 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testRegexCurlyBraces() throws InvalidSigmaRuleException, IOException {
+    void testRegexCurlyBraces()
+        throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         SigmaRuleParser ruleParser = new SigmaRuleParser();
 
         String testRule = "title: Simple Http\n"
@@ -128,7 +131,7 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testRegexSpecial() throws InvalidSigmaRuleException, IOException {
+    void testRegexSpecial() throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         SigmaRuleParser ruleParser = new SigmaRuleParser();
 
         String testRule = "title: Simple Http\n"
@@ -157,7 +160,7 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testStartsWith() throws InvalidSigmaRuleException, IOException {
+    void testStartsWith() throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         SigmaRuleParser ruleParser = new SigmaRuleParser();
 
         String testRule = "title: Simple Http\n"
@@ -175,7 +178,7 @@ class SigmaDetectionTest {
     }
 
     @Test
-    void testEndsWith() throws InvalidSigmaRuleException, IOException {
+    void testEndsWith() throws InvalidSigmaRuleException, IOException, SigmaRuleParserException {
         SigmaRuleParser ruleParser = new SigmaRuleParser();
 
         String testRule = "title: Simple Http\n"

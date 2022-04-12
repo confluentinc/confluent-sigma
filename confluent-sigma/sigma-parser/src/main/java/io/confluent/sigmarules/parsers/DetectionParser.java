@@ -20,6 +20,7 @@
 package io.confluent.sigmarules.parsers;
 
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.DetectionsManager;
 import io.confluent.sigmarules.models.OperatorType;
@@ -56,7 +57,7 @@ public class DetectionParser {
 
     public DetectionsManager parseDetections(
         io.confluent.sigmarules.parsers.ParsedSigmaRule sigmaRule)
-        throws InvalidSigmaRuleException {
+        throws InvalidSigmaRuleException, SigmaRuleParserException {
         DetectionsManager detectionsManager = new DetectionsManager();
 
         // loop through list of detections - search identifier are the keys
@@ -81,7 +82,8 @@ public class DetectionParser {
         return detectionsManager;
     }
 
-    private SigmaDetections parseDetection(Object searchIdentifiers) throws InvalidSigmaRuleException {
+    private SigmaDetections parseDetection(Object searchIdentifiers)
+        throws InvalidSigmaRuleException, SigmaRuleParserException {
         SigmaDetections parsedDetections = new SigmaDetections();
 
         // check if the search identifier is a list or a map
@@ -137,6 +139,8 @@ public class DetectionParser {
             }
         } else {
             logger.error("unknown type: " + searchIdentifiers.getClass() + " value: " + searchIdentifiers);
+            throw new SigmaRuleParserException("Unknown type: " + searchIdentifiers.getClass() +
+                " value: " + searchIdentifiers);
         }
         return parsedDetections;
     }

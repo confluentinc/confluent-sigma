@@ -12,7 +12,7 @@ detection:
     name: '*'
   pre_filter:
     name: '<share_root>'
-  time_frame: 1m
+  timeframe: 1m
   condition: name_exists AND NOT pre_filter | count(times_modified) by name > 5
 fields:
   - ts

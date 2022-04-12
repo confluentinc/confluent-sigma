@@ -72,11 +72,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.11.1</version>
-        </dependency>
-        <dependency>
             <groupId>io.kcache</groupId>
             <artifactId>kcache</artifactId>
             <version>3.4.1</version>

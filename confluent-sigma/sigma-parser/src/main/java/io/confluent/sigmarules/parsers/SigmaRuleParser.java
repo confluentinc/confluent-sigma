@@ -22,6 +22,7 @@ package io.confluent.sigmarules.parsers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
 import java.io.IOException;
@@ -45,7 +46,8 @@ public class SigmaRuleParser {
         conditionParser = new io.confluent.sigmarules.parsers.ConditionParser();
     }
 
-    public SigmaRule parseRule(String rule) throws IOException, InvalidSigmaRuleException {
+    public SigmaRule parseRule(String rule)
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
         io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, io.confluent.sigmarules.parsers.ParsedSigmaRule.class);
 
         SigmaRule sigmaRule = new SigmaRule();

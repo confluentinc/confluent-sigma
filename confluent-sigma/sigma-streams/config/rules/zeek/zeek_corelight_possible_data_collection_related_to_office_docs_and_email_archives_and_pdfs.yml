@@ -22,7 +22,7 @@ detection:
       - '.pdf'
       - '.vss'
       - '.viz'
-  time_frame: 1m 
+  timeframe: 1m 
   condition: name_exists AND NOT exclusion AND selection | count(name) by id_orig_h > 30
 falsepositive:
   - 'Network or file backups.'

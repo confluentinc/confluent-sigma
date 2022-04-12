@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
@@ -79,7 +80,7 @@ public class SimpleStreamTest {
 
     @Test
     public void checkSingleRule()
-        throws IOException, InvalidSigmaRuleException {
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
 
         String testRule = "title: Simple Http\n"
             + "logsource:\n"
@@ -117,7 +118,7 @@ public class SimpleStreamTest {
 
     @Test
     public void checkMultipleRules()
-        throws IOException, InvalidSigmaRuleException {
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
 
         String testRule = "title: Simple Http\n"
             + "logsource:\n"

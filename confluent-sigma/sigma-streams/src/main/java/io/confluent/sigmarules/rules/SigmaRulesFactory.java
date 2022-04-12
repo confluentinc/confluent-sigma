@@ -20,6 +20,7 @@
 package io.confluent.sigmarules.rules;
 
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
@@ -133,7 +134,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     public void handleRuleUpdate(String title, String rule) {
         try {
             addRule(title, rule);
-        } catch (IOException | InvalidSigmaRuleException e) {
+        } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
             e.printStackTrace();
         }
     }
@@ -146,10 +147,12 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     private void getRulesfromStore() {
         this.sigmaRulesStore.getRules().forEach((title, rule) -> {
            try {
-                addRule(title, rule.toString());
+                addRule(title, rule);
             } catch (IOException e) {
+               logger.error("Exception thrown for rule: " + title + " rule: " + rule);
                 e.printStackTrace();
-            } catch (InvalidSigmaRuleException e) {
+            } catch (InvalidSigmaRuleException | SigmaRuleParserException e) {
+               logger.error("Exception thrown for rule: " + title + " rule: " + rule);
                e.printStackTrace();
            }
         });
@@ -162,7 +165,8 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * @param rule as a string
      * @return
      */
-    public void addRule(String title, String rule) throws IOException, InvalidSigmaRuleException {
+    public void addRule(String title, String rule)
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
         SigmaRule sigmaRule = rulesParser.parseRule(rule);
 
         if (shouldBeFiltered(sigmaRule)) {
@@ -186,7 +190,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * Should this rule be filtered out?  There is a combination of factors to determine if a
      * rule should be used like the product and service of the rule and potentially a list of
      * specified titles.  Could be other ways in the future.
-     * @param title Of the rule to check
+     * @param sigmaRule rule to check
      * @return
      */
     public boolean shouldBeFiltered(SigmaRule sigmaRule) {
