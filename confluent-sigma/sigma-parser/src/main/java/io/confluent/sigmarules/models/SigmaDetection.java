@@ -29,7 +29,7 @@ public class SigmaDetection {
 
     private String name = ""; // TODO: This could be a list in the mapped file
     private String sigmaName = "";
-    private OperatorType operator = null; //contains, beginswith, endswith
+    private ModifierType modifier = null; //contains, beginswith, endswith
     private List<String> detectionValues = new ArrayList<>();
 
     public String getName() {
@@ -76,8 +76,8 @@ public class SigmaDetection {
         // if any value in the array is true, return and break out of the loop
         for (String detectionValue : detectionValues) {
             logger.debug("checking record value: " + recordValue + " against detectionValue: " + detectionValue);
-            if (this.operator != null) {
-                switch (this.operator) {
+            if (this.modifier != null) {
+                switch (this.modifier) {
                     case GREATER_THAN:
                         return Long.parseLong(recordValue) > Long.parseLong(detectionValue) ;
                     case LESS_THAN:
@@ -108,12 +108,12 @@ public class SigmaDetection {
         return "DetectionModel [name=" + name + ", values=" + detectionValues + "]";
     }
 
-    public OperatorType getOperator() {
-        return operator;
+    public ModifierType getModifier() {
+        return modifier;
     }
 
-    public void setOperator(OperatorType operatorArg) {
-        this.operator = operatorArg;
+    public void setModifier(ModifierType operatorArg) {
+        this.modifier = operatorArg;
     }
 
     public void setSigmaName(String sigmaNameArg) {

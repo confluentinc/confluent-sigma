@@ -23,7 +23,7 @@ import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.DetectionsManager;
-import io.confluent.sigmarules.models.OperatorType;
+import io.confluent.sigmarules.models.ModifierType;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
 import java.util.ArrayList;
@@ -163,13 +163,14 @@ public class DetectionParser {
 
         // handles the case where the operator is piped with the name (ex. field|endswith)
         if (StringUtils.contains(name, SEPERATOR))
-            detectionModel.setOperator(OperatorType.getEnum(StringUtils.substringAfter(name, SEPERATOR)));
+            detectionModel.setModifier(
+                ModifierType.getEnum(StringUtils.substringAfter(name, SEPERATOR)));
     }
 
 
     private void parseValue(SigmaDetection detectionModel, String value) throws InvalidSigmaRuleException {
-        if (detectionModel.getOperator() != null) {
-            detectionModel.addValue(buildStringWithOperator(value, detectionModel.getOperator()));
+        if (detectionModel.getModifier() != null) {
+            detectionModel.addValue(buildStringWithModifier(value, detectionModel.getModifier()));
         }
         else {
             detectionModel.addValue(sigmaWildcardToRegex(value));
@@ -177,12 +178,12 @@ public class DetectionParser {
     }
 
     // TODO We need to handle escaping in sigma
-    private String buildStringWithOperator(String value, OperatorType operator) throws InvalidSigmaRuleException {
+    private String buildStringWithModifier(String value, ModifierType modifier) throws InvalidSigmaRuleException {
 
         // Sigma spec isn't clear on what to do with wildcard characters when they are in vlaues with a "transformation"
         // which we are calling operator
-        if (operator != null) {
-            switch (operator) {
+        if (modifier != null) {
+            switch (modifier) {
                 case STARTS_WITH:
                 case BEGINS_WITH:
                     return sigmaWildcardToRegex(value) + ".*";

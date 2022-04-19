@@ -22,7 +22,7 @@ package io.confluent.sigmarules.models;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum OperatorType {
+public enum ModifierType {
 
     BEGINS_WITH("beginswith"),
     STARTS_WITH("startswith"),
@@ -35,22 +35,22 @@ public enum OperatorType {
     private final String value;
 
 
-    OperatorType(String val) {
+    ModifierType(String val) {
         value = val;
 
     }
-    private static final Map<String,OperatorType> lookup = new HashMap<String,OperatorType>();
+    private static final Map<String, ModifierType> lookup = new HashMap<String, ModifierType>();
 
     //Populate the lookup table on loading time
     static
     {
-        for(OperatorType t: OperatorType.values())
+        for(ModifierType t: ModifierType.values())
         {
             lookup.put(t.value, t);
         }
     }
 
-    public static OperatorType getEnum(String val)
+    public static ModifierType getEnum(String val)
     {
         return lookup.get(val);
     }

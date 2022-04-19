@@ -19,8 +19,6 @@
 
 package io.confluent.sigmarules.models;
 
-import io.confluent.sigmarules.models.SigmaDetection;
-import io.confluent.sigmarules.models.SigmaDetections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -56,8 +54,8 @@ public class DetectionsManager {
             SigmaDetections searchIdentifier = detection.getValue();
             for (SigmaDetection sigmaDetection : searchIdentifier.getDetections()) {
                 System.out.printf("\t\t%s:", sigmaDetection.getName());
-                if (sigmaDetection.getOperator() != null) {
-                    System.out.printf("|%s:", sigmaDetection.getOperator());
+                if (sigmaDetection.getModifier() != null) {
+                    System.out.printf("|%s:", sigmaDetection.getModifier());
                 }
 
                 if (sigmaDetection.getValues().size() > 1) {
