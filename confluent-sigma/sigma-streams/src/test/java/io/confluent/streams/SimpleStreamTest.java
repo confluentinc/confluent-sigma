@@ -118,6 +118,51 @@ public class SimpleStreamTest {
     }
 
     @Test
+    public void checkContainsAllRule()
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+
+        String testRule = "title: Simple Http\n"
+            + "logsource:\n"
+            + "  product: zeek\n"
+            + "  service: http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   foo|contains|all:\n"
+            + "     - abc\n"
+            + "     - 123\n"
+            + "  condition: test";
+
+        SigmaRulesFactory srf = new SigmaRulesFactory();;
+        srf.setFiltersFromProperties(getProperties());
+        srf.addRule("Simple Http", testRule);
+
+        SigmaStream stream = new SigmaStream(getProperties(), srf);
+        topology = stream.createTopology();
+        td = new TopologyTestDriver(topology, getProperties());
+
+        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+            Serdes.String().serializer());
+        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+            Serdes.String().deserializer());
+
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"abcdef123456\"}");
+        DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"fooabcdef123456foo\"}");
+        results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"ab123\"}");
+        assertTrue(outputTopic.isEmpty());
+
+    }
+
+    @Test
     public void checkListRule()
         throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
 

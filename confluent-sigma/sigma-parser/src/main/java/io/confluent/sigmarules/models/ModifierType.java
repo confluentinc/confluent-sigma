@@ -30,7 +30,8 @@ public enum ModifierType {
     CONTAINS("contains"),
     REGEX("re"),
     GREATER_THAN("greater_than"),
-    LESS_THAN("less_than");
+    LESS_THAN("less_than"),
+    ALL("all");
 
     private final String value;
 

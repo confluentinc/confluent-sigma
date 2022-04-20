@@ -27,6 +27,8 @@ import io.confluent.sigmarules.models.ModifierType;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,15 +165,27 @@ public class DetectionParser {
 
         // handles the case where the modifier is piped with the name (ex. field|endswith)
         // modifiers can be chained together
-        if (StringUtils.contains(name, SEPERATOR))
-            detectionModel.setModifier(
-                ModifierType.getEnum(StringUtils.substringAfter(name, SEPERATOR)));
+        if (StringUtils.contains(name, SEPERATOR)) {
+            String[] modifiers = StringUtils.split(name, SEPERATOR);
+
+            Iterator<String> iterator = Arrays.stream(modifiers).iterator();
+            while(iterator.hasNext()) {
+                ModifierType modifier = ModifierType.getEnum(iterator.next());
+                if (modifier == ModifierType.ALL) {
+                    detectionModel.setMatchAll(true);
+                } else {
+                    detectionModel.addModifier(modifier);
+                }
+            }
+        }
     }
 
 
     private void parseValue(SigmaDetection detectionModel, String value) throws InvalidSigmaRuleException {
-        if (detectionModel.getModifier() != null) {
-            detectionModel.addValue(buildStringWithModifier(value, detectionModel.getModifier()));
+        if (detectionModel.getModifiers().size() > 0) {
+            for (ModifierType modifier : detectionModel.getModifiers()) {
+                detectionModel.addValue(buildStringWithModifier(value, modifier));
+            }
         }
         else {
             detectionModel.addValue(sigmaWildcardToRegex(value));
@@ -181,7 +195,7 @@ public class DetectionParser {
     // TODO We need to handle escaping in sigma
     private String buildStringWithModifier(String value, ModifierType modifier) throws InvalidSigmaRuleException {
 
-        // Sigma spec isn't clear on what to do with wildcard characters when they are in vlaues with a "transformation"
+        // Sigma spec isn't clear on what to do with wildcard characters when they are in values with a "transformation"
         // which we are calling operator
         if (modifier != null) {
             switch (modifier) {
