@@ -82,6 +82,49 @@ public class DetectionParser {
         return detectionsManager;
     }
 
+    private void parseMap(SigmaDetections parsedDetections, LinkedHashMap<String, Object> searchIdMap)
+        throws InvalidSigmaRuleException {
+
+        for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
+            if (searchId.getValue() instanceof ArrayList) {
+                List<Object> searchArray = (ArrayList<Object>)searchId.getValue();
+                parseList(parsedDetections, searchId.getKey(), searchArray);
+            } else if (searchId.getValue() instanceof LinkedHashMap) {
+                LinkedHashMap<String, Object> searchIdInnerMap = (LinkedHashMap<String, Object>) searchId.getValue();
+                parseMap(parsedDetections, searchIdInnerMap);
+            } else { // key is the detection name
+                SigmaDetection detectionModel = new SigmaDetection();
+                parseName(detectionModel, searchId.getKey());
+                parseValue(detectionModel, searchId.getValue().toString());
+
+                parsedDetections.addDetection(detectionModel);
+            }
+        }
+    }
+
+    private void parseList(SigmaDetections parsedDetections, String name, List<Object> searchIdValues)
+        throws InvalidSigmaRuleException {
+
+        SigmaDetection detectionModel = null;
+        if (name != null) {
+            detectionModel = new SigmaDetection();
+            parseName(detectionModel, name);
+        }
+
+        for (Object v : searchIdValues) {
+            if ((v instanceof LinkedHashMap) || (name == null)) {
+                LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>)v;
+                parseMap(parsedDetections, searchIdMap);
+            } else {
+                parseValue(detectionModel, v.toString());
+            }
+        }
+
+        if ((detectionModel != null) && (detectionModel.getValues().size() > 0)) {
+            parsedDetections.addDetection(detectionModel);
+        }
+    }
+
     private SigmaDetections parseDetection(Object searchIdentifiers)
         throws InvalidSigmaRuleException, SigmaRuleParserException {
         SigmaDetections parsedDetections = new SigmaDetections();
@@ -89,54 +132,11 @@ public class DetectionParser {
         // check if the search identifier is a list or a map
         if (searchIdentifiers instanceof LinkedHashMap) {
             LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>) searchIdentifiers;
-            for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
-                if (searchId.getValue() instanceof ArrayList) {
-                    SigmaDetection detectionModel = new SigmaDetection();
-                    parseName(detectionModel, searchId.getKey());
-
-                    List<String> searchIdValues = (ArrayList<String>) searchId.getValue();
-                    for (String v : searchIdValues) {
-                        parseValue(detectionModel, v);
-                    }
-
-                    parsedDetections.addDetection(detectionModel);
-                } else if (searchId.getValue() instanceof LinkedHashMap) {
-                    LinkedHashMap<String, Object> searchIdInnerMap = (LinkedHashMap<String, Object>) searchId.getValue();
-                    for (Map.Entry<String, Object> searchIdInner : searchIdInnerMap.entrySet()) {
-                        SigmaDetection detectionModel = new SigmaDetection();
-                        parseName(detectionModel, searchIdInner.getKey());
-
-                        if (searchIdInner.getValue() instanceof ArrayList) {
-                            List<String> searchIdValues = (ArrayList<String>) searchIdInner.getValue();
-                            for (String v : searchIdValues) {
-                                parseValue(detectionModel, v);
-                            }
-                        } else {
-                            parseValue(detectionModel, searchIdInner.getValue().toString());
-                        }
-
-                        parsedDetections.addDetection(detectionModel);
-                    }
-                } else { // key is the detection name
-                    SigmaDetection detectionModel = new SigmaDetection();
-                    parseName(detectionModel, searchId.getKey());
-                    parseValue(detectionModel, searchId.getValue().toString());
-
-                    parsedDetections.addDetection(detectionModel);
-                }
-            }
+            parseMap(parsedDetections, searchIdMap);
         } else if (searchIdentifiers instanceof ArrayList) {
-            List<String> searchArray = (ArrayList<String>)searchIdentifiers;
-            for (Object searchMap : searchArray) {
-                LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>)searchMap;
-                for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
-                    SigmaDetection detectionModel = new SigmaDetection();
-                    parseName(detectionModel, searchId.getKey());
-                    parseValue(detectionModel, searchId.getValue().toString());
-
-                    parsedDetections.addDetection(detectionModel);
-                }
-            }
+            // Array list contains a map of key/values and parsed by the parseMap function eventually
+            List<Object> searchArray = (ArrayList<Object>)searchIdentifiers;
+            parseList(parsedDetections, null, searchArray);
         } else {
             logger.error("unknown type: " + searchIdentifiers.getClass() + " value: " + searchIdentifiers);
             throw new SigmaRuleParserException("Unknown type: " + searchIdentifiers.getClass() +
@@ -161,7 +161,8 @@ public class DetectionParser {
             }
         }
 
-        // handles the case where the operator is piped with the name (ex. field|endswith)
+        // handles the case where the modifier is piped with the name (ex. field|endswith)
+        // modifiers can be chained together
         if (StringUtils.contains(name, SEPERATOR))
             detectionModel.setModifier(
                 ModifierType.getEnum(StringUtils.substringAfter(name, SEPERATOR)));

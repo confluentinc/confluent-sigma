@@ -28,6 +28,7 @@ import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import java.io.IOException;
+import java.security.Security;
 import java.util.Properties;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
@@ -112,6 +113,132 @@ public class SimpleStreamTest {
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"bc\"}");
+        assertTrue(outputTopic.isEmpty());
+
+    }
+
+    @Test
+    public void checkListRule()
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+
+        String testRule = "title: Simple Http\n"
+            + "logsource:\n"
+            + "  product: zeek\n"
+            + "  service: http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   foo:\n"
+            + "     - abcd\n"
+            + "     - 1234\n"
+            + "     - abc123\n"
+            + "  condition: test";
+
+        SigmaRulesFactory srf = new SigmaRulesFactory();;
+        srf.setFiltersFromProperties(getProperties());
+        srf.addRule("Simple Http", testRule);
+
+        SigmaStream stream = new SigmaStream(getProperties(), srf);
+        topology = stream.createTopology();
+        td = new TopologyTestDriver(topology, getProperties());
+
+        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+            Serdes.String().serializer());
+        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+            Serdes.String().deserializer());
+
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"abcd\"}");
+        DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"abc123\"}");
+        results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"1234\"}");
+        results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"empty\"}");
+        assertTrue(outputTopic.isEmpty());
+
+    }
+
+    @Test
+    public void checkMapRule()
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+
+        String testRule = "title: Simple Http\n"
+            + "logsource:\n"
+            + "  product: zeek\n"
+            + "  service: http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "     - EventLog: Security\n"
+            + "  condition: test";
+
+        SigmaRulesFactory srf = new SigmaRulesFactory();;
+        srf.setFiltersFromProperties(getProperties());
+        srf.addRule("Simple Http", testRule);
+
+        SigmaStream stream = new SigmaStream(getProperties(), srf);
+        topology = stream.createTopology();
+        td = new TopologyTestDriver(topology, getProperties());
+
+        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+            Serdes.String().serializer());
+        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+            Serdes.String().deserializer());
+
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"EventLog\" : \"Security\"}");
+        DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"foo\" : \"abc123\"}");
+        assertTrue(outputTopic.isEmpty());
+    }
+
+    @Test
+    public void checkMapAndListRule()
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+
+        String testRule = "title: Simple Http\n"
+            + "logsource:\n"
+            + "  product: zeek\n"
+            + "  service: http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "     - EventLog: Security\n"
+            + "       EventID:\n"
+            + "         - 517\n"
+            + "         - 1102\n"
+            + "  condition: test";
+
+        SigmaRulesFactory srf = new SigmaRulesFactory();;
+        srf.setFiltersFromProperties(getProperties());
+        srf.addRule("Simple Http", testRule);
+
+        SigmaStream stream = new SigmaStream(getProperties(), srf);
+        topology = stream.createTopology();
+        td = new TopologyTestDriver(topology, getProperties());
+
+        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+            Serdes.String().serializer());
+        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+            Serdes.String().deserializer());
+
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\"EventLog\" : \"Security\", \"EventID\" : \"517\"}");
+        DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
     }

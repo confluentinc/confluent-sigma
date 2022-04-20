@@ -75,29 +75,35 @@ public class SigmaDetection {
     private boolean matchDetectionPattern(String recordValue) {
         // if any value in the array is true, return and break out of the loop
         for (String detectionValue : detectionValues) {
-            logger.debug("checking record value: " + recordValue + " against detectionValue: " + detectionValue);
+            logger.info("checking record value: " + recordValue + " against detectionValue: "
+                + detectionValue);
             if (this.modifier != null) {
                 switch (this.modifier) {
                     case GREATER_THAN:
-                        return Long.parseLong(recordValue) > Long.parseLong(detectionValue) ;
+                        if (Long.parseLong(recordValue) > Long.parseLong(detectionValue))
+                            return true;
+                        break;
                     case LESS_THAN:
-                        return Long.parseLong(recordValue) < Long.parseLong(detectionValue) ;
-
+                        if (Long.parseLong(recordValue) < Long.parseLong(detectionValue))
+                            return true;
+                        break;
                     //All these types have been converted into a regular expression by the parser.
                     case REGEX:
                     case STARTS_WITH:
                     case ENDS_WITH:
-                        return recordValue.matches(detectionValue);
+                        if (recordValue.matches(detectionValue))
+                            return true;
+                        break;
                     default:
                         // We should never get to a situation where there is an supported operator here since we should
                         // throw an exception during the creation of sigmaDetection  If we get here this a problem and
                         // we need to fail fast
                         throw new UnsupportedOperationException();
                 }
-            // TODO If there isn't a reason to treat the sigma detection pattern (or value or whatever we
-            // want to call it) as a regex should we use matches?
-            } else {
-                return recordValue.matches(detectionValue);
+                // TODO If there isn't a reason to treat the sigma detection pattern (or value or whatever we
+                // want to call it) as a regex should we use matches?
+            } else if (recordValue.matches(detectionValue)) {
+                return true;
             }
         }
         return false;
