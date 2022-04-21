@@ -46,30 +46,6 @@ public class DetectionsManager {
         return detections;
     }
 
-    public void printDetectionsAndConditions() {
-        System.out.println("detection: ");
-        for (Map.Entry<String, SigmaDetections> detection : detections.entrySet()) {
-            System.out.printf("\t%s:\n", detection.getKey());
-
-            SigmaDetections searchIdentifier = detection.getValue();
-            for (SigmaDetection sigmaDetection : searchIdentifier.getDetections()) {
-                System.out.printf("\t\t%s:", sigmaDetection.getName());
-                for (ModifierType modifier : sigmaDetection.getModifiers()) {
-                    System.out.printf("|%s:", modifier);
-                }
-
-                if (sigmaDetection.getValues().size() > 1) {
-                    System.out.printf("\n");
-                    for (String detectionValue : sigmaDetection.getValues()) {
-                        System.out.println("\t\t\t" + detectionValue);
-                    }
-                } else {
-                    System.out.printf("%s\n", sigmaDetection.getValues().get(0));
-                }
-            }
-        }
-    }
-
     public void convertWindowTime(String window) {
         /*
             15s  (15 seconds)
