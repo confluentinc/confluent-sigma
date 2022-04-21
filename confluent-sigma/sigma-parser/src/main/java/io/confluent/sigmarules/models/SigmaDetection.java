@@ -76,7 +76,7 @@ public class SigmaDetection {
     private boolean matchDetectionPattern(String recordValue) {
         // if all is set, then all values must match otherwise,
         // if any value in the array is true, return and break out of the loop
-        Integer matchCount = 0;
+        int matchCount = 0;
         for (String detectionValue : detectionValues) {
             logger.info("checking record value: " + recordValue + " against detectionValue: "
                 + detectionValue);
