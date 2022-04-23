@@ -121,13 +121,6 @@ public class SigmaRule {
         return Serdes.serdeFrom(sigmaRuleSer, sigmaRuleDes);
     }
 
-    public void printSigmaRule() {
-        System.out.println("\n*********");
-        System.out.println("title: " + title + "\n");
-        detectionsManager.printDetectionsAndConditions();
-        System.out.println("*********\n");
-    }
-
     public void copyParsedSigmaRule(
         io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule) {
         this.title = parsedSigmaRule.getTitle();

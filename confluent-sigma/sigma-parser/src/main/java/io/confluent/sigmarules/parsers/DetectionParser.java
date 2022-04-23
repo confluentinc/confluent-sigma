@@ -23,10 +23,12 @@ import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.DetectionsManager;
-import io.confluent.sigmarules.models.OperatorType;
+import io.confluent.sigmarules.models.ModifierType;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +84,49 @@ public class DetectionParser {
         return detectionsManager;
     }
 
+    private void parseMap(SigmaDetections parsedDetections, LinkedHashMap<String, Object> searchIdMap)
+        throws InvalidSigmaRuleException {
+
+        for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
+            if (searchId.getValue() instanceof ArrayList) {
+                List<Object> searchArray = (ArrayList<Object>)searchId.getValue();
+                parseList(parsedDetections, searchId.getKey(), searchArray);
+            } else if (searchId.getValue() instanceof LinkedHashMap) {
+                LinkedHashMap<String, Object> searchIdInnerMap = (LinkedHashMap<String, Object>) searchId.getValue();
+                parseMap(parsedDetections, searchIdInnerMap);
+            } else { // key is the detection name
+                SigmaDetection detectionModel = new SigmaDetection();
+                parseName(detectionModel, searchId.getKey());
+                parseValue(detectionModel, searchId.getValue().toString());
+
+                parsedDetections.addDetection(detectionModel);
+            }
+        }
+    }
+
+    private void parseList(SigmaDetections parsedDetections, String name, List<Object> searchIdValues)
+        throws InvalidSigmaRuleException {
+
+        SigmaDetection detectionModel = null;
+        if (name != null) {
+            detectionModel = new SigmaDetection();
+            parseName(detectionModel, name);
+        }
+
+        for (Object v : searchIdValues) {
+            if ((v instanceof LinkedHashMap) || (name == null)) {
+                LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>)v;
+                parseMap(parsedDetections, searchIdMap);
+            } else {
+                parseValue(detectionModel, v.toString());
+            }
+        }
+
+        if ((detectionModel != null) && (detectionModel.getValues().size() > 0)) {
+            parsedDetections.addDetection(detectionModel);
+        }
+    }
+
     private SigmaDetections parseDetection(Object searchIdentifiers)
         throws InvalidSigmaRuleException, SigmaRuleParserException {
         SigmaDetections parsedDetections = new SigmaDetections();
@@ -89,54 +134,11 @@ public class DetectionParser {
         // check if the search identifier is a list or a map
         if (searchIdentifiers instanceof LinkedHashMap) {
             LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>) searchIdentifiers;
-            for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
-                if (searchId.getValue() instanceof ArrayList) {
-                    SigmaDetection detectionModel = new SigmaDetection();
-                    parseName(detectionModel, searchId.getKey());
-
-                    List<String> searchIdValues = (ArrayList<String>) searchId.getValue();
-                    for (String v : searchIdValues) {
-                        parseValue(detectionModel, v);
-                    }
-
-                    parsedDetections.addDetection(detectionModel);
-                } else if (searchId.getValue() instanceof LinkedHashMap) {
-                    LinkedHashMap<String, Object> searchIdInnerMap = (LinkedHashMap<String, Object>) searchId.getValue();
-                    for (Map.Entry<String, Object> searchIdInner : searchIdInnerMap.entrySet()) {
-                        SigmaDetection detectionModel = new SigmaDetection();
-                        parseName(detectionModel, searchIdInner.getKey());
-
-                        if (searchIdInner.getValue() instanceof ArrayList) {
-                            List<String> searchIdValues = (ArrayList<String>) searchIdInner.getValue();
-                            for (String v : searchIdValues) {
-                                parseValue(detectionModel, v);
-                            }
-                        } else {
-                            parseValue(detectionModel, searchIdInner.getValue().toString());
-                        }
-
-                        parsedDetections.addDetection(detectionModel);
-                    }
-                } else { // key is the detection name
-                    SigmaDetection detectionModel = new SigmaDetection();
-                    parseName(detectionModel, searchId.getKey());
-                    parseValue(detectionModel, searchId.getValue().toString());
-
-                    parsedDetections.addDetection(detectionModel);
-                }
-            }
+            parseMap(parsedDetections, searchIdMap);
         } else if (searchIdentifiers instanceof ArrayList) {
-            List<String> searchArray = (ArrayList<String>)searchIdentifiers;
-            for (Object searchMap : searchArray) {
-                LinkedHashMap<String, Object> searchIdMap = (LinkedHashMap<String, Object>)searchMap;
-                for (Map.Entry<String, Object> searchId : searchIdMap.entrySet()) {
-                    SigmaDetection detectionModel = new SigmaDetection();
-                    parseName(detectionModel, searchId.getKey());
-                    parseValue(detectionModel, searchId.getValue().toString());
-
-                    parsedDetections.addDetection(detectionModel);
-                }
-            }
+            // Array list contains a map of key/values and parsed by the parseMap function eventually
+            List<Object> searchArray = (ArrayList<Object>)searchIdentifiers;
+            parseList(parsedDetections, null, searchArray);
         } else {
             logger.error("unknown type: " + searchIdentifiers.getClass() + " value: " + searchIdentifiers);
             throw new SigmaRuleParserException("Unknown type: " + searchIdentifiers.getClass() +
@@ -161,15 +163,29 @@ public class DetectionParser {
             }
         }
 
-        // handles the case where the operator is piped with the name (ex. field|endswith)
-        if (StringUtils.contains(name, SEPERATOR))
-            detectionModel.setOperator(OperatorType.getEnum(StringUtils.substringAfter(name, SEPERATOR)));
+        // handles the case where the modifier is piped with the name (ex. field|endswith)
+        // modifiers can be chained together
+        if (StringUtils.contains(name, SEPERATOR)) {
+            String[] modifiers = StringUtils.split(name, SEPERATOR);
+
+            Iterator<String> iterator = Arrays.stream(modifiers).iterator();
+            while(iterator.hasNext()) {
+                ModifierType modifier = ModifierType.getEnum(iterator.next());
+                if (modifier == ModifierType.ALL) {
+                    detectionModel.setMatchAll(true);
+                } else {
+                    detectionModel.addModifier(modifier);
+                }
+            }
+        }
     }
 
 
     private void parseValue(SigmaDetection detectionModel, String value) throws InvalidSigmaRuleException {
-        if (detectionModel.getOperator() != null) {
-            detectionModel.addValue(buildStringWithOperator(value, detectionModel.getOperator()));
+        if (detectionModel.getModifiers().size() > 0) {
+            for (ModifierType modifier : detectionModel.getModifiers()) {
+                detectionModel.addValue(buildStringWithModifier(value, modifier));
+            }
         }
         else {
             detectionModel.addValue(sigmaWildcardToRegex(value));
@@ -177,12 +193,12 @@ public class DetectionParser {
     }
 
     // TODO We need to handle escaping in sigma
-    private String buildStringWithOperator(String value, OperatorType operator) throws InvalidSigmaRuleException {
+    private String buildStringWithModifier(String value, ModifierType modifier) throws InvalidSigmaRuleException {
 
-        // Sigma spec isn't clear on what to do with wildcard characters when they are in vlaues with a "transformation"
+        // Sigma spec isn't clear on what to do with wildcard characters when they are in values with a "transformation"
         // which we are calling operator
-        if (operator != null) {
-            switch (operator) {
+        if (modifier != null) {
+            switch (modifier) {
                 case STARTS_WITH:
                 case BEGINS_WITH:
                     return sigmaWildcardToRegex(value) + ".*";

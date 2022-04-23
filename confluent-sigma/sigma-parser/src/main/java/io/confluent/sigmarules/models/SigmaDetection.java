@@ -29,8 +29,9 @@ public class SigmaDetection {
 
     private String name = ""; // TODO: This could be a list in the mapped file
     private String sigmaName = "";
-    private OperatorType operator = null; //contains, beginswith, endswith
+    private List<ModifierType> modifiers = new ArrayList<>(); //contains, beginswith, endswith
     private List<String> detectionValues = new ArrayList<>();
+    private Boolean matchAll = false;
 
     public String getName() {
         return name;
@@ -73,31 +74,56 @@ public class SigmaDetection {
      * @return whether there is a match.
      */
     private boolean matchDetectionPattern(String recordValue) {
+        // if all is set, then all values must match otherwise,
         // if any value in the array is true, return and break out of the loop
+        int matchCount = 0;
         for (String detectionValue : detectionValues) {
-            logger.debug("checking record value: " + recordValue + " against detectionValue: " + detectionValue);
-            if (this.operator != null) {
-                switch (this.operator) {
-                    case GREATER_THAN:
-                        return Long.parseLong(recordValue) > Long.parseLong(detectionValue) ;
-                    case LESS_THAN:
-                        return Long.parseLong(recordValue) < Long.parseLong(detectionValue) ;
+            logger.info("checking record value: " + recordValue + " against detectionValue: "
+                + detectionValue);
 
-                    //All these types have been converted into a regular expression by the parser.
-                    case REGEX:
-                    case STARTS_WITH:
-                    case ENDS_WITH:
-                        return recordValue.matches(detectionValue);
-                    default:
-                        // We should never get to a situation where there is an supported operator here since we should
-                        // throw an exception during the creation of sigmaDetection  If we get here this a problem and
-                        // we need to fail fast
-                        throw new UnsupportedOperationException();
+            if (modifiers.size() > 0) {
+                for (ModifierType modifier : modifiers) {
+                    switch (modifier) {
+                        case GREATER_THAN:
+                            if (Long.parseLong(recordValue) > Long.parseLong(detectionValue))
+                                matchCount++;
+                            break;
+                        case LESS_THAN:
+                            if (Long.parseLong(recordValue) < Long.parseLong(detectionValue))
+                                matchCount++;
+                            break;
+                        //All these types have been converted into a regular expression by the parser.
+                        case REGEX:
+                        case CONTAINS:
+                        case BEGINS_WITH:
+                        case STARTS_WITH:
+                        case ENDS_WITH:
+                            if (recordValue.matches(detectionValue))
+                                matchCount++;
+                            break;
+                        case ALL:
+                            break;
+                        default:
+                            // We should never get to a situation where there is an supported operator here since we should
+                            // throw an exception during the creation of sigmaDetection  If we get here this a problem and
+                            // we need to fail fast
+                            throw new UnsupportedOperationException();
+                    }
+                    // TODO If there isn't a reason to treat the sigma detection pattern (or value or whatever we
+                    // want to call it) as a regex should we use matches?
                 }
-            // TODO If there isn't a reason to treat the sigma detection pattern (or value or whatever we
-            // want to call it) as a regex should we use matches?
-            } else {
-                return recordValue.matches(detectionValue);
+            } else if (recordValue.matches(detectionValue)) {
+                matchCount++;
+            }
+
+            // if the modifier is set to ALL, then the matchCount must match the number of
+            // detection values. otherwise, any match will return true
+            if (matchAll) {
+                if (matchCount == detectionValues.size()) {
+                    return true;
+                }
+            } else if (matchCount > 0) {
+                return true;
             }
         }
         return false;
@@ -108,15 +134,25 @@ public class SigmaDetection {
         return "DetectionModel [name=" + name + ", values=" + detectionValues + "]";
     }
 
-    public OperatorType getOperator() {
-        return operator;
+    public List<ModifierType> getModifiers() {
+        return modifiers;
     }
 
-    public void setOperator(OperatorType operatorArg) {
-        this.operator = operatorArg;
+    public void addModifier (ModifierType modifier) {
+        if (modifier != null)
+            this.modifiers.add(modifier);
     }
 
     public void setSigmaName(String sigmaNameArg) {
         this.sigmaName = sigmaNameArg;
     }
+
+    public Boolean getMatchAll() {
+        return matchAll;
+    }
+
+    public void setMatchAll(Boolean matchAll) {
+        this.matchAll = matchAll;
+    }
+
 }

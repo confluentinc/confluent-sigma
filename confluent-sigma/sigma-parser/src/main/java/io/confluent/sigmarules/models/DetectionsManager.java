@@ -19,8 +19,6 @@
 
 package io.confluent.sigmarules.models;
 
-import io.confluent.sigmarules.models.SigmaDetection;
-import io.confluent.sigmarules.models.SigmaDetections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -46,30 +44,6 @@ public class DetectionsManager {
 
     public Map<String, SigmaDetections> getAllDetections() {
         return detections;
-    }
-
-    public void printDetectionsAndConditions() {
-        System.out.println("detection: ");
-        for (Map.Entry<String, SigmaDetections> detection : detections.entrySet()) {
-            System.out.printf("\t%s:\n", detection.getKey());
-
-            SigmaDetections searchIdentifier = detection.getValue();
-            for (SigmaDetection sigmaDetection : searchIdentifier.getDetections()) {
-                System.out.printf("\t\t%s:", sigmaDetection.getName());
-                if (sigmaDetection.getOperator() != null) {
-                    System.out.printf("|%s:", sigmaDetection.getOperator());
-                }
-
-                if (sigmaDetection.getValues().size() > 1) {
-                    System.out.printf("\n");
-                    for (String detectionValue : sigmaDetection.getValues()) {
-                        System.out.println("\t\t\t" + detectionValue);
-                    }
-                } else {
-                    System.out.printf("%s\n", sigmaDetection.getValues().get(0));
-                }
-            }
-        }
     }
 
     public void convertWindowTime(String window) {
