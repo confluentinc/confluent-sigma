@@ -22,6 +22,7 @@ package io.confluent.sigmarules.streams;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
@@ -34,6 +35,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Produced;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,6 +92,7 @@ public class SigmaStream extends StreamManager {
                 simpleTopology.createSimpleTopology(sigmaStream, rule, outputTopic);
             }
         }
+        sigmaStream.to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
         return builder.build();
     }

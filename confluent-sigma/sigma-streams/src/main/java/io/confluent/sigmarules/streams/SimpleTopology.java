@@ -39,8 +39,8 @@ public class SimpleTopology {
   public void createSimpleTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
       String outputTopic) {
     sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData))
-        .mapValues(sourceData -> buildResults(rule, sourceData))
-        .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+        .mapValues(sourceData -> buildResults(rule, sourceData));
+
 
   }
 
