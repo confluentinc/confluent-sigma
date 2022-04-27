@@ -25,6 +25,8 @@ import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
@@ -39,10 +41,27 @@ public class SimpleTopology {
   public void createSimpleTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
       String outputTopic) {
     sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData))
-        .mapValues(sourceData -> buildResults(rule, sourceData));
-
+        .mapValues(sourceData -> buildResults(rule, sourceData))
+        .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
   }
+
+  public void createSimpleFlatMapTopology(KStream<String, JsonNode> sigmaStream,
+      List<SigmaRule> rules, String outputTopic) {
+
+    sigmaStream.flatMapValues(sourceData -> {
+          List<DetectionResults> results = new ArrayList<>();
+          for (SigmaRule rule : rules) {
+            if (ruleCheck.isValid(rule, sourceData)) {
+              results.add(buildResults(rule, sourceData));
+            }
+          }
+          return results;
+        })
+        .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+
+  }
+
 
   private DetectionResults buildResults(SigmaRule rule, JsonNode sourceData) {
     DetectionResults results = new DetectionResults();

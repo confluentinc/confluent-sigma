@@ -92,7 +92,18 @@ public class SigmaStream extends StreamManager {
                 simpleTopology.createSimpleTopology(sigmaStream, rule, outputTopic);
             }
         }
-        sigmaStream.to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+
+        return builder.build();
+    }
+
+    public Topology createFlatMapTopology() {
+        StreamsBuilder builder = new StreamsBuilder();
+
+        KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
+            Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
+
+        SimpleTopology simpleTopology = new SimpleTopology();
+        simpleTopology.createSimpleFlatMapTopology(sigmaStream, )
 
         return builder.build();
     }
