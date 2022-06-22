@@ -66,6 +66,10 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
             kcacheProps.setProperty("kafkacache.sasl.jaas.config",
                 properties.getProperty("sasl.jaas.config"));
 
+        if (properties.containsKey("sasl.client.callback.handler.class"))
+            kcacheProps.setProperty("kafkacache.sasl.client.callback.handler.class",
+                    properties.getProperty("sasl.client.callback.handler.class"));
+
         if (properties.containsKey(SigmaProperties.SCHEMA_REGISTRY.toString())) {
             kcacheProps.setProperty(KEY_CONVERTER_SCHEMA_REGISTRY_URL,
                 properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
