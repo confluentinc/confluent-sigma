@@ -21,6 +21,11 @@
 package io.confluent.sigmarules.rules;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.confluent.sigmarules.models.DetectionsManager;
 import io.confluent.sigmarules.models.SigmaCondition;
 import io.confluent.sigmarules.models.SigmaDetection;
@@ -85,26 +90,21 @@ public class SigmaRuleCheck {
     if (myDetections != null) {
       for (SigmaDetection d : myDetections.getDetections()) {
         String name = d.getName();
-        if (sourceData.has(name)) {
-          JsonNode sourceValues = sourceData.get(name);
+        String jsonPath = "$." + name;
 
-          if (sourceValues.isArray()) {
-            for (final JsonNode sourceValue : sourceValues) {
-              if (!checkValue(condition, d, sourceValue.asText())) {
-                return false;
-              } else {
-                validDetections = true;
-              }
-            }
-          } else {
-            // this is a string
-            String sourceValue = sourceValues.asText();
-            if (!checkValue(condition, d, sourceValue)) {
-              return false;
-            } else {
-              validDetections = true;
-            }
-          }
+        Configuration conf = Configuration.builder()
+                .mappingProvider(new JacksonMappingProvider()) // Required for JsonNode object
+                .jsonProvider(new JacksonJsonProvider()) // Required for JsonNode object
+                .options(Option.SUPPRESS_EXCEPTIONS) // SUPPRESS_EXCEPTIONS prevents JsonPath from failing if path is not found, returning path as null instead
+                .build();
+
+        JsonNode jsonPathSourceValues = JsonPath.using(conf).parse(sourceData.toString()).read(jsonPath, JsonNode.class);
+
+        if (jsonPathSourceValues != null) {
+          validDetections = beginDetectionProcessing(jsonPathSourceValues, d, condition);
+        } else if (sourceData.has(name)) {
+          JsonNode sourceValues = sourceData.get(name);
+          validDetections = beginDetectionProcessing(sourceValues, d, condition);
         } else {
           // does not contain all detection names
           return false;
@@ -120,6 +120,28 @@ public class SigmaRuleCheck {
     }
 
     return false;
+  }
+
+  private Boolean beginDetectionProcessing(JsonNode sourceValues, SigmaDetection d, SigmaCondition condition) {
+    Boolean validDetections = false;
+    if (sourceValues.isArray()) {
+      for (final JsonNode sourceValue : sourceValues) {
+        if (!checkValue(condition, d, sourceValue.asText())) {
+          return false;
+        } else {
+          validDetections = true;
+        }
+      }
+    } else {
+      // this is a string
+      String sourceValue = sourceValues.asText();
+      if (!checkValue(condition, d, sourceValue)) {
+        return false;
+      } else {
+        validDetections = true;
+      }
+    }
+    return validDetections;
   }
 
   private Boolean checkValue(SigmaCondition condition, SigmaDetection model, String sourceValue) {
