@@ -1,3 +1,10 @@
+# ksqlDB for Winlogbeat
+
+Once Winlogbeat events are in Confluent, they can be analyzed in real time using ksqlDB.
+
+The following ksql query can be used to create a Stream from Winlogbeat events:
+
+```sql
 CREATE STREAM WINLOGBEAT (
     "@timestamp" VARCHAR,
     "@metadata" STRUCT<
@@ -58,3 +65,4 @@ CREATE STREAM WINLOGBEAT (
     ecs STRUCT<
         version VARCHAR>) 
 WITH (KAFKA_TOPIC='winlogbeat', VALUE_FORMAT='JSON');
+```
