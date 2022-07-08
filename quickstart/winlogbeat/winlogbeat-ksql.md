@@ -2,7 +2,9 @@
 
 Once Winlogbeat events are in Confluent, they can be analyzed in real time using ksqlDB.
 
-The following ksql query can be used to create a Stream from Winlogbeat events:
+The following ksql query can be used to create a Stream from Winlogbeat events.  Note extensive use of the `STRUCT` keyword to read and parse nested JSON.
+
+A tutorial on working with nested JSON in ksqlDB is available at [developer.confluent.io](https://developer.confluent.io/tutorials/working-with-nested-json/ksql.html "Working with nested JSON").
 
 ```sql
 CREATE STREAM WINLOGBEAT (
@@ -66,3 +68,23 @@ CREATE STREAM WINLOGBEAT (
         version VARCHAR>) 
 WITH (KAFKA_TOPIC='winlogbeat', VALUE_FORMAT='JSON');
 ```
+Now that a Stream has been created from the topic, it can be queried using ksqlDB.
+
+Looking at a [sample record](https://github.com/confluentinc/cyber/blob/bhayes-elastic/quickstart/winlogbeat/winlogbeat_ksql_event.json) in this Stream and you can see that there are scalar values in nested JSON, as well as JSON objects in nested JSON.
+
+Since the `EVENT_DATA` field will always have different data in it, the original ksql query leaves this field as a `VARCHAR` data type instead of further trying to extract fields using `STRUCT`.
+
+The JSON objects that are the values for this nested field can be queried using a combination of the `->` operator and the `EXTRACTJSONFIELD` function in ksqlDB.
+
+For example, to filter out all Windows Event Logs with user events for user bert:
+
+
+```sql
+SELECT 
+*
+FROM WINLOGBEAT 
+WHERE EXTRACTJSONFIELD(WINLOG->EVENT_DATA, '$.SubjectUserName') = 'bert'
+EMIT CHANGES;
+
+```
+
