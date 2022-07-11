@@ -345,7 +345,7 @@ public class SimpleStreamTest {
     }
 
     @Test
-    public void checkNestedMapAndListRule()
+    public void checkNestedMapUsingListRule()
             throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
 
         // Not able to test field mappings, so adding the rule in the format that field mappings normalize to
@@ -355,8 +355,8 @@ public class SimpleStreamTest {
                 + "  service: http\n"
                 + "detection:\n"
                 + "  test:\n"
-                + "     - Event.System.EventLog: Security\n"
-                + "       Event.System.EventID:\n"
+                + "     - $.Event.System.EventLog: Security\n"
+                + "       $.Event.System.EventID:\n"
                 + "         - 517\n"
                 + "         - 1102\n"
                 + "  condition: test";
@@ -383,7 +383,7 @@ public class SimpleStreamTest {
     }
 
     @Test
-    public void checkMapWithPeriodDelimiterAndListRule()
+    public void checkObjectWithPeriodDelimiterUsingListRule()
             throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
 
         // Not able to test field mappings, so adding the rule in the format that field mappings normalize to

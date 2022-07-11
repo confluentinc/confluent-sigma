@@ -23,9 +23,6 @@ package io.confluent.sigmarules.rules;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
-import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.confluent.sigmarules.models.DetectionsManager;
 import io.confluent.sigmarules.models.SigmaCondition;
 import io.confluent.sigmarules.models.SigmaDetection;
@@ -37,18 +34,18 @@ import org.apache.logging.log4j.Logger;
 public class SigmaRuleCheck {
   final static Logger logger = LogManager.getLogger(SigmaRuleCheck.class);
 
-  public Boolean isValid(SigmaRule rule, JsonNode data) {
+  public Boolean isValid(SigmaRule rule, JsonNode data, Configuration jsonPathConf) {
     if (rule != null)
-      return checkConditions(rule, data);
+      return checkConditions(rule, data, jsonPathConf);
 
     logger.error("Invalid Rule");
     return false;
   }
 
-  private Boolean checkConditions(SigmaRule rule, JsonNode sourceData) {
+  private Boolean checkConditions(SigmaRule rule, JsonNode sourceData, Configuration jsonPathConf) {
     for (SigmaCondition c : rule.getConditionsManager().getConditions()) {
       if (!c.getAggregateCondition()) {
-        if (checkCondition(c, rule.getDetectionsManager(), sourceData)) {
+        if (checkCondition(c, rule.getDetectionsManager(), sourceData, jsonPathConf)) {
           logger.debug("source data: " + sourceData.toString());
           return true;
         }
@@ -58,23 +55,23 @@ public class SigmaRuleCheck {
     return false;
   }
 
-  private Boolean checkCondition(SigmaCondition condition, DetectionsManager detections, JsonNode sourceData) {
+  private Boolean checkCondition(SigmaCondition condition, DetectionsManager detections, JsonNode sourceData, Configuration jsonPathConf) {
     if (!condition.getAggregateCondition()) {
       Boolean pairedResult = false;
       if (condition.getPairedCondition() != null) {
-        pairedResult = checkCondition(condition.getPairedCondition(), detections, sourceData);
+        pairedResult = checkCondition(condition.getPairedCondition(), detections, sourceData, jsonPathConf);
 
         // if paired condition is true and operator is OR, no need to check
         if (pairedResult && condition.getOperator().equals("OR")) {
           return true;
         } else if (condition.getOperator().equals("OR")) {
-          return checkParentConditions(condition, detections, sourceData);
+          return checkParentConditions(condition, detections, sourceData, jsonPathConf);
         } else { //AND case
-          Boolean myResult = checkParentConditions(condition, detections, sourceData);
+          Boolean myResult = checkParentConditions(condition, detections, sourceData, jsonPathConf);
           return pairedResult && myResult;
         }
       } else {
-        return checkParentConditions(condition, detections, sourceData);
+        return checkParentConditions(condition, detections, sourceData, jsonPathConf);
       }
     }
 
@@ -82,7 +79,7 @@ public class SigmaRuleCheck {
   }
 
   private Boolean checkParentConditions(SigmaCondition condition, DetectionsManager detections,
-      JsonNode sourceData) {
+      JsonNode sourceData, Configuration jsonPathConf) {
     // detections grouped together are combined for a status
     Boolean validDetections = false;
     SigmaDetections myDetections = detections.getDetectionsByName(condition.getConditionName());
@@ -90,17 +87,9 @@ public class SigmaRuleCheck {
     if (myDetections != null) {
       for (SigmaDetection d : myDetections.getDetections()) {
         String name = d.getName();
-        String jsonPath = "$." + name;
 
-        Configuration conf = Configuration.builder()
-                .mappingProvider(new JacksonMappingProvider()) // Required for JsonNode object
-                .jsonProvider(new JacksonJsonProvider()) // Required for JsonNode object
-                .options(Option.SUPPRESS_EXCEPTIONS) // SUPPRESS_EXCEPTIONS prevents JsonPath from failing if path is not found, returning path as null instead
-                .build();
-
-        JsonNode jsonPathSourceValues = JsonPath.using(conf).parse(sourceData.toString()).read(jsonPath, JsonNode.class);
-
-        if (jsonPathSourceValues != null) {
+        if (name.charAt(0) == '$') {
+          JsonNode jsonPathSourceValues = JsonPath.using(jsonPathConf).parse(sourceData.toString()).read(name, JsonNode.class);
           validDetections = beginDetectionProcessing(jsonPathSourceValues, d, condition);
         } else if (sourceData.has(name)) {
           JsonNode sourceValues = sourceData.get(name);
