@@ -101,7 +101,7 @@ public class SigmaStream extends StreamManager {
         return Configuration.builder()
                 .mappingProvider(new JacksonMappingProvider()) // Required for JsonNode object
                 .jsonProvider(new JacksonJsonProvider()) // Required for JsonNode object
-                .options(Option.DEFAULT_PATH_LEAF_TO_NULL) // DEFAULT_PATH_LEAF_TO_NULL prevents JsonPath from failing if leaf is not found, returning as null instead
+                .options(Option.SUPPRESS_EXCEPTIONS) // Return null when path is not found - https://github.com/json-path/JsonPath#tweaking-configuration
                 .build();
     }
 

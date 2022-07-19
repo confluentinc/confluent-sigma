@@ -90,6 +90,7 @@ public class SigmaRuleCheck {
 
         if (name.charAt(0) == '$') {
           JsonNode jsonPathSourceValues = JsonPath.using(jsonPathConf).parse(sourceData.toString()).read(name, JsonNode.class);
+          if (jsonPathSourceValues == null) break;
           validDetections = beginDetectionProcessing(jsonPathSourceValues, d, condition);
         } else if (sourceData.has(name)) {
           JsonNode sourceValues = sourceData.get(name);
