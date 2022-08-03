@@ -6,5 +6,5 @@ This collection assumes that you already have a running instance of Confluent Pl
 
 ## Confluent for Winlogbeat Events
 
-- [Installing and Configuring Winlogbeat](https://github.com/confluentinc/cyber/blob/bhayes-elastic/quickstart/winlogbeat/install-and-configure-winlogbeat.md)
-- [Streaming Analytics of Winlogbeat data with ksqlDB](https://github.com/confluentinc/cyber/blob/bhayes-elastic/quickstart/winlogbeat/winlogbeat-ksql.md)
+- [Installing and Configuring Winlogbeat](https://github.com/confluentinc/cyber/blob/master/quickstart/winlogbeat/install-and-configure-winlogbeat.md)
+- [Streaming Analytics of Winlogbeat data with ksqlDB](https://github.com/confluentinc/cyber/blob/bhayes/quickstart/winlogbeat/winlogbeat-ksql.md)
