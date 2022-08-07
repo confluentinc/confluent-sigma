@@ -1,4 +1,5 @@
 # Create Demo Environment
+These instructions are provided for running the Winlogbeat and Zeek data sources in a demo environment.
 ## Configure AWS VPC and EC2 Hosts
 1. Clone the repository:
     ```
