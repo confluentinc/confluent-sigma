@@ -5,11 +5,12 @@ from configparser import ConfigParser
 import argparse
 import json
 
-# TODO: Create VPC and Subnet, Security Group ID on the fly
 
 parser = argparse.ArgumentParser(description=
     '''This script creates a VPC Mirror Session in AWS''')
 parser.add_argument('-f', dest='config_file', action='store', help='the full path of the config file')
+parser.add_argument('-d', dest='debug', action='store_true', help='turn on debugging output')
+
 
 args = parser.parse_args()
 
@@ -151,8 +152,8 @@ def create_traffic_mirror_target(zeek_nic_id):
         ],
     #DryRun = True
     )
-    print("Create Traffic Mirror Target response is ")
-    #print(response)
+    #print("Create Traffic Mirror Target response is ")
+    debugprint(response)
     return(response)
     
 def create_traffic_mirror_filter():
@@ -166,7 +167,7 @@ def create_traffic_mirror_filter():
             }
         ]   
     )
-    #print(response)
+    debugprint(response)
     TrafficMirrorFilter = response['TrafficMirrorFilter']
     filter_id = TrafficMirrorFilter['TrafficMirrorFilterId']
     print("filter ID is " + filter_id)
@@ -185,7 +186,7 @@ def create_traffic_mirror_filter_rule(filter_id):
         Description = 'Default Allow All'
     )
     print("create ingress rule")
-    #print(json.dumps(ingress_response))
+    debugprint(json.dumps(ingress_response))
 
     ec2 = boto3.client('ec2')
     egress_response = ec2.create_traffic_mirror_filter_rule(
@@ -198,7 +199,7 @@ def create_traffic_mirror_filter_rule(filter_id):
         Description = 'Default Allow All'           
     )
     print("create egress rule")
-    #print(json.dumps(egress_response))
+    debugprint(json.dumps(egress_response))
     
 
     
@@ -212,9 +213,7 @@ def create_traffic_mirror_session(windows_nic_id,TargetId,filter_id):
     response = ec2.create_traffic_mirror_session(
         NetworkInterfaceId = windows_nic_id,
         TrafficMirrorTargetId = TargetId,
-        #TrafficMirrorFilterId = 'tmf-0496ce4c2f5898806',
         TrafficMirrorFilterId = filter_id,
-        #TODO: Create Traffic Mirror Filter dynmically
         SessionNumber = 1,
         Description = 'bhayes winlogbeat demo mirror session',
         TagSpecifications=[
@@ -224,13 +223,23 @@ def create_traffic_mirror_session(windows_nic_id,TargetId,filter_id):
             }
         ]        
     )
-    #print(response)
+    debugprint(response)
     return(response)
 
+    
+if args.debug:
+	def debugprint(*args):
+		for arg in args:
+			print (arg),
+		print
+		print
+else:
+	debugprint = lambda *a: None
+
 zeek_instance_info = get_running_instance_info('zeek')
-#print(zeek_instance_info)
+debugprint(zeek_instance_info)
 zeek_host_info = parse_instance_info(zeek_instance_info)
-#print(json.dumps(zeek_host_info))
+debugprint(json.dumps(zeek_host_info))
 
 zeek_nic_id = zeek_host_info['NetworkInterfaceId']
 
@@ -239,7 +248,7 @@ windows_instance_info = get_running_instance_info('windows')
 windows_host_info = parse_instance_info(windows_instance_info)
 windows_nic_id = windows_host_info['NetworkInterfaceId']
 
-#print(json.dumps(windows_host_info))
+debugprint(json.dumps(windows_host_info))
 
 filter_id = create_traffic_mirror_filter()
 create_traffic_mirror_filter_rule(filter_id)

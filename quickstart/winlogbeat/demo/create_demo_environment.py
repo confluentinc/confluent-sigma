@@ -9,6 +9,7 @@ import json
 parser = argparse.ArgumentParser(description=
     '''This script creates a VPC in AWS''')
 parser.add_argument('-f', dest='config_file', action='store', help='the full path of the config file')
+parser.add_argument('-d', dest='debug', action='store_true', help='turn on debugging output')
 
 args = parser.parse_args()
 
@@ -86,7 +87,7 @@ def create_subnet(vpc_id):
             }
         ]          
     )
-    print(json.dumps(response))
+    debugprint(json.dumps(response))
     Subnet = response['Subnet']
     subnet_id = Subnet['SubnetId']
     return(subnet_id)
@@ -113,7 +114,7 @@ def create_internet_gateway(vpc_id):
             
         ]       
     )
-    print(json.dumps(create_response))
+    debugprint(json.dumps(create_response))
     InternetGateway = create_response['InternetGateway']
     gateway_id = InternetGateway['InternetGatewayId']    
 
@@ -122,7 +123,7 @@ def create_internet_gateway(vpc_id):
         InternetGatewayId = gateway_id,
         VpcId = vpc_id
     )
-    print(json.dumps(attach_response))
+    debugprint(json.dumps(attach_response))
     return(gateway_id)
 
 
@@ -135,7 +136,7 @@ def route_table_info(vpc_id):
     RouteTables = response['RouteTables']
     table = RouteTables[0]
     RouteTableId = table['RouteTableId']
-    print(json.dumps(response))
+    debugprint(json.dumps(response))
     return(RouteTableId)
 
 
@@ -146,14 +147,14 @@ def create_default_route(route_id,gateway_id,subnet_id):
         RouteTableId = route_id,
         GatewayId = gateway_id
     )
-    print(json.dumps(response))
+    debugprint(json.dumps(response))
 
     ec2 = boto3.client('ec2')
     associate_response = ec2.associate_route_table(
         RouteTableId = route_id,
         SubnetId = subnet_id
     )
-    print(json.dumps(associate_response))
+    debugprint(json.dumps(associate_response))
     
     
 def create_security_group(vpc_id):
@@ -170,7 +171,6 @@ def create_security_group(vpc_id):
         ]          
     )
     GroupId = response['GroupId']
-    print("GroupId is " + GroupId)
     return(GroupId)
 
 
@@ -190,7 +190,7 @@ def authorize_security_group_ingress(GroupId):
             }
         ]        
     )
-    print(response)
+    debugprint(response)
     
 
 def create_instance(host_job,subnet,security_group_id):
@@ -231,8 +231,6 @@ def create_instance(host_job,subnet,security_group_id):
         MaxCount=1,
         InstanceType=InstanceType,
         KeyName=figs['pem'],
-        #SecurityGroupIds=SecurityGroupIds,
-        #SubnetId=subnet,
         NetworkInterfaces=[
             {
                 'AssociatePublicIpAddress': True,
@@ -253,6 +251,18 @@ def create_instance(host_job,subnet,security_group_id):
     print(vm_name, " has been created")
 
 
+############### done with function definitions
+############### make stuff happen here
+
+if args.debug:
+	def debugprint(*args):
+		for arg in args:
+			print (arg),
+		print
+		print
+else:
+	debugprint = lambda *a: None
+
 vpc_response = create_vpc()
 #print(json.dumps(vpc_response))
 if vpc_response:
@@ -264,19 +274,17 @@ subnet_id = create_subnet(vpc_id)
 print ("Created subnet " + subnet_id)
 
 dns_repsonse = enableDnsHostnames(vpc_id)
-print(json.dumps(dns_repsonse))
-
-#TODO: create a security group
+debugprint(json.dumps(dns_repsonse))
 
 gateway_id = create_internet_gateway(vpc_id)
-print(gateway_id)
+print("Created Internet Gateway " + gateway_id)
 
 main_route_table_id = route_table_info(vpc_id)
-
 route_response = create_default_route(main_route_table_id,gateway_id,subnet_id)
-#print(json.dumps(route_response))
+debugprint(json.dumps(route_response))
 
 security_group_id = create_security_group(vpc_id)
+print("Created Security Group " + security_group_id)
 authorize_security_group_ingress(security_group_id)
 
 create_instance('zeek',subnet_id,security_group_id)
