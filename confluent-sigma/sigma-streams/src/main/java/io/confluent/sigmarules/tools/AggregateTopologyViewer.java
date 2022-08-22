@@ -30,7 +30,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 
-public class TopologyViewer {
+public class AggregateTopologyViewer {
 
   public static void main(String[] args)
       throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
@@ -51,13 +51,17 @@ public class TopologyViewer {
         + "  service: http\n"
         + "detection:\n"
         + "  test:\n"
-        + "   - foo: 'ab*'\n"
-        + "  condition: test";
+        + "   - foo|re: '^.{5}.*$'\n"
+        + "  timeframe: 10s\n"
+        + "  condition: test | count() > 5";
 
     SigmaRulesFactory srf = new SigmaRulesFactory();;
     srf.setFiltersFromProperties(testProperties);
     srf.addRule("Simple Http", testRule);
     //srf.addRule("Simple Http2", testRule);
+    //srf.addRule("Simple Http3", testRule);
+    //srf.addRule("Simple Http4", testRule);
+    //srf.addRule("Simple Http5", testRule);
 
     SigmaStream stream = new SigmaStream(testProperties, srf);
     Topology topology = stream.createTopology();

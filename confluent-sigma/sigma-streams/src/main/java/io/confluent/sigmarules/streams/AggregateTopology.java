@@ -27,12 +27,16 @@ import io.confluent.sigmarules.parsers.AggregateParser;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.SlidingWindows;
 import org.apache.kafka.streams.kstream.Windowed;
@@ -54,7 +58,7 @@ public class AggregateTopology {
         AggregateValues aggregateValues = rule.getConditionsManager().getAggregateCondition().getAggregateValues();
 
         sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData))
-            .selectKey((k, v) -> updateKey(aggregateValues))
+            .selectKey((k, v) -> rule.getTitle())
             .groupByKey()
             .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(windowTimeMS),
                 Duration.ofMillis(windowTimeMS)))
@@ -69,6 +73,22 @@ public class AggregateTopology {
                 new KeyValue<>("", buildResults(rule, value.getSourceData())))
             .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
     }
+
+    public void createAggregateFlatMapTopology(KStream<String, JsonNode> sigmaStream,
+        List<SigmaRule> rules, String outputTopic) {
+
+        sigmaStream.flatMapValues(sourceData -> {
+                List<DetectionResults> results = new ArrayList<>();
+                for (SigmaRule rule : rules) {
+                    if (ruleCheck.isValid(rule, sourceData)) {
+                        results.add(buildResults(rule, sourceData));
+                    }
+                }
+                return results;
+            })
+            .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+    }
+
 
     private String updateKey(AggregateValues aggregateValues) {
         if (aggregateValues.getGroupBy() == null || aggregateValues.getGroupBy().isEmpty()) {
