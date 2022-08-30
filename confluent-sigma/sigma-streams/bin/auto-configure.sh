@@ -28,3 +28,5 @@ else
   echo "sigma properties not found"
   exit
 fi
+
+export SIGMAPROPS=$PROPS
