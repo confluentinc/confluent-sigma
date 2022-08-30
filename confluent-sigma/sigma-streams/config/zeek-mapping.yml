@@ -4,6 +4,7 @@ backends:
   - splunk
   - splunkxml
   - corelight_splunk
+  - confluent_sigma
 logsources:
   zeek-category-accounting:
     category: accounting
