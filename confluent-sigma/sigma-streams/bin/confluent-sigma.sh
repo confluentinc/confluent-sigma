@@ -36,4 +36,4 @@ fi
 
 echo "using $PROPS config"
 
-java -cp target/sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp $* -c $PROPS
+java -cp sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp $* -c $PROPS
