@@ -16,7 +16,7 @@
     </fileSets>
     <files>
         <file>
-            <source> ${project.build.directory}/${project.artifactId}-${project.version}-fat.jar</source>
+            <source> ${project.build.directory}/${project.artifactId}-${project.version}.jar</source>
             <outputDirectory>/</outputDirectory>
         </file>
     </files>
