@@ -15,25 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script for launching the sigma streams app.  First parameter should be a config
-# properties file.  if its not then we check and see if there is already an environmental variable set for
-# SIGMAPROPS
+# script to remove default topics
 
-PROPS=
-
-if [ -f "$1" ] ; then
-  PROPS=$1
-elif [ -n "$SIGMAPROPS" ] ; then
-  PROPS=$SIGMAPROPS
-elif [ -f ~/.config/sigma.properties ] ; then
-  PROPS=~/.config/sigma.properties
-elif [ -f ~/.confluent/sigma.properties ] ; then
-  PROPS=~/.confluent/sigma.properties
-elif [ -f ~/tmp/sigma.properties ] ; then
-  PROPS=~/tmp/sigma.properties
-fi
-
-
-echo "using $PROPS config"
-
-java -cp sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp $* -c $PROPS
+kafka-topics --bootstrap-server localhost:9092 --delete --topic sigma-rules dns-detection http-detection

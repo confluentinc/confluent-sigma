@@ -21,7 +21,11 @@
 
 PROPS=
 
-if [ -f ~/.config/sigma.properties ] ; then
+if [ -f "$1" ] ; then
+  PROPS=$1
+elif [ -n "$SIGMAPROPS" ] ; then
+  PROPS=$SIGMAPROPS
+elif [ -f ~/.config/sigma.properties ] ; then
   PROPS=~/.config/sigma.properties
 elif [ -f ~/.confluent/sigma.properties ] ; then
   PROPS=~/.confluent/sigma.properties
@@ -29,4 +33,4 @@ elif [ -f ~/tmp/sigma.properties ] ; then
   PROPS=~/tmp/sigma.properties
 fi
 
-java -cp target/sigma-streams-1.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $* -c $PROPS
+java -cp sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $* -c $PROPS

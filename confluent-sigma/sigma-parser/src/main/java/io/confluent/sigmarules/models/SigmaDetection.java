@@ -78,8 +78,9 @@ public class SigmaDetection {
         // if any value in the array is true, return and break out of the loop
         int matchCount = 0;
         for (String detectionValue : detectionValues) {
-            logger.info("checking record value: " + recordValue + " against detectionValue: "
-                + detectionValue);
+            if (logger.isDebugEnabled())
+                logger.debug("checking record value: " + recordValue + " against detectionValue: "
+                    + detectionValue);
 
             if (modifiers.size() > 0) {
                 for (ModifierType modifier : modifiers) {

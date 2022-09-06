@@ -141,6 +141,17 @@ You can also use any standard kafka publisher to load rules.  Here is an example
 ### Sigma Streams Application
 ![alt text](images/streams_app.png "Sigma Streams App")
 
-Example:
+The Confluent Sigma streams app is a java application which you could run like a typical java application through the 
+class file. A more convenient options is to use the confluent-sigma.sh script in bin
 
-`sigma-streams-app -c properties-file`
+`bin/confluent-sigma.sh properties-file`
+
+If you do not specify the property files it will check the `$SIGMAPROPS` environment variable to see if thats set.
+if thats not set it will search the following directories for the existence of a sigma.properties
+
+- `~/.config`
+- `~/.confluent` 
+- `~/tmp`
+
+See example [sigma.properties](sigma-streams/config/sigma.properties) in sigma-streams config directory
+
