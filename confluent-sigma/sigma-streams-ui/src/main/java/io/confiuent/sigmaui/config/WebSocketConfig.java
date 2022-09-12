@@ -19,6 +19,7 @@
 
 package io.confiuent.sigmaui.config;
 
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -34,6 +35,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint(new String[] { "/confluent-sigma-websocket" }).withSockJS();
+        registry.addEndpoint(new String[] { "/confluent-sigma-websocket" })
+            .setAllowedOriginPatterns("*")
+            .withSockJS();
     }
 }
