@@ -63,7 +63,7 @@ public class SimpleTopologyViewer {
     srf.addRule("Simple Http5", testRule);
 
     SigmaStream stream = new SigmaStream(testProperties, srf);
-    Topology topology = stream.createTestTopology();
+    Topology topology = stream.createTopology();
     System.out.println(topology.describe());
 
   }

@@ -75,7 +75,7 @@ public class AggregateTopology {
     }
 
     public void createAggregateFlatMapTopology(KStream<String, JsonNode> sigmaStream,
-        List<SigmaRule> rules, String outputTopic) {
+        Map<Long, List<SigmaRule>> rules, String outputTopic) {
 
         sigmaStream.flatMapValues(sourceData -> {
                 List<DetectionResults> results = new ArrayList<>();

@@ -28,6 +28,7 @@ import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -50,6 +51,9 @@ public class SigmaStream extends StreamManager {
     private String inputTopic;
     private String outputTopic;
     private SigmaRuleCheck ruleCheck;
+    private SimpleTopology simpleTopology = new SimpleTopology();
+    private AggregateTopology aggregateTopology = new AggregateTopology();
+
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
@@ -63,7 +67,7 @@ public class SigmaStream extends StreamManager {
     public void startStream() {
         createTopic(inputTopic);
 
-        Topology topology = createTestTopology();
+        Topology topology = createTopology();
         streams = new KafkaStreams(topology, getStreamProperties());
 
         streams.cleanUp();
@@ -80,34 +84,11 @@ public class SigmaStream extends StreamManager {
     // iterates through each rule and publishes to output topic for
     // each rule that is a match
     public Topology createTopology() {
-        return createTestTopology();
-
-        /*
-        StreamsBuilder builder = new StreamsBuilder();
-
-        KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
-                Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
-        for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
-            SigmaRule rule = entry.getValue();
-            if (rule.getConditionsManager().hasAggregateCondition()) {
-                AggregateTopology aggregateTopology = new AggregateTopology();
-                aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic);
-            } else {
-                SimpleTopology simpleTopology = new SimpleTopology();
-                simpleTopology.createSimpleTopology(sigmaStream, rule, outputTopic);
-            }
-        }
-
-        return builder.build();
-
-         */
-    }
-
-    public Topology createTestTopology() {
+        // container of simple rules
         List<SigmaRule> simpleRules = new ArrayList<>();
 
-        SimpleTopology simpleTopology = new SimpleTopology();
-        AggregateTopology aggregateTopology = new AggregateTopology();
+        // container of aggregrate rules grouped by window time
+        Map<Long, List<SigmaRule>> aggregrateRules = new HashMap<>();
 
         StreamsBuilder builder = new StreamsBuilder();
         KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
@@ -117,11 +98,20 @@ public class SigmaStream extends StreamManager {
             SigmaRule rule = entry.getValue();
 
             if (rule.getConditionsManager().hasAggregateCondition()) {
-                aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic);
+                Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
+
+                if (!aggregrateRules.containsKey(windowTimeMS)) {
+                    aggregrateRules.put(windowTimeMS, new ArrayList<>());
+                }
+
+                aggregrateRules.get(windowTimeMS).add(rule);
             } else {
                 simpleRules.add(rule);
             }
         }
+
+        if (aggregrateRules.size() > 0)
+            aggregateTopology.createAggregateFlatMapTopology(sigmaStream, aggregrateRules, outputTopic);
 
         if (simpleRules.size() > 0)
             simpleTopology.createSimpleFlatMapTopology(sigmaStream, simpleRules, outputTopic);
