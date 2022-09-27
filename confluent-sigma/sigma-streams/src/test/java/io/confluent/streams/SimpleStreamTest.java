@@ -458,4 +458,95 @@ public class SimpleStreamTest {
         assertTrue(outputTopic.isEmpty());
     }
 
+    @Test
+    public void checkSimpleRegex()
+            throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+
+        // Not able to test field mappings, so adding the rule in the format that field mappings normalize to
+        String testRule = "title: Simple DNS\n" +
+                "status: stable\n" +
+                "description: 'foo'\n" +
+                "author: Rob Stucke\n" +
+                "detection:\n" +
+                "  selection_uri:\n" +
+                "    - query|re: ^.*$\n" +
+                "  condition: selection_uri\n" +
+                "fields:\n" +
+                "  - host\n" +
+                "  - query\n" +
+                "  - resp\n" +
+                "falsepositive:\n" +
+                "  - 'Legitimate internal WebDAV'";
+
+        SigmaRulesFactory srf = new SigmaRulesFactory();
+        srf.setFiltersFromProperties(getProperties());
+        srf.addRule("Simple DNS", testRule);
+
+        SigmaStream stream = new SigmaStream(getProperties(), srf);
+        topology = stream.createTopology();
+        td = new TopologyTestDriver(topology, getProperties());
+
+        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+                Serdes.String().serializer());
+        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+                Serdes.String().deserializer());
+
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\n" +
+                "  \"timestamp\": \"2020-09-21T19:37:57.242Z\",\n" +
+                "  \"host\": \"FOO\",\n" +
+                "  \"query\": \"xxx-yyy-fff-1-ccc.aaa.us.amazonaws.com.\",\n" +
+                "  \"resp\": \"192.168.1.1\"\n" +
+                "}\n");
+        DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple DNS"));
+        assertTrue(outputTopic.isEmpty());
+    }
+
+    @Test
+    public void testContains()
+            throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+
+        // Not able to test field mappings, so adding the rule in the format that field mappings normalize to
+        String testRule = "title: Simple DNS\n" +
+                "status: stable\n" +
+                "description: 'foo'\n" +
+                "author: Rob Stucke\n" +
+                "detection:\n" +
+                "  selection_uri:\n" +
+                "    - query|contains: aws\n" +
+                "  condition: selection_uri\n" +
+                "fields:\n" +
+                "  - host\n" +
+                "  - query\n" +
+                "  - resp\n" +
+                "falsepositive:\n" +
+                "  - 'Legitimate internal WebDAV'";
+
+        SigmaRulesFactory srf = new SigmaRulesFactory();
+        srf.setFiltersFromProperties(getProperties());
+        srf.addRule("Simple DNS", testRule);
+
+        SigmaStream stream = new SigmaStream(getProperties(), srf);
+        topology = stream.createTopology();
+        td = new TopologyTestDriver(topology, getProperties());
+
+        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+                Serdes.String().serializer());
+        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+                Serdes.String().deserializer());
+
+        assertTrue(outputTopic.isEmpty());
+
+        inputTopic.pipeInput("{\n" +
+                "  \"timestamp\": \"2020-09-21T19:37:57.242Z\",\n" +
+                "  \"host\": \"FOO\",\n" +
+                "  \"query\": \"xxx-yyy-fff-1-ccc.aaa.us.amazonaws.com.\",\n" +
+                "  \"resp\": \"192.168.1.1\"\n" +
+                "}\n");
+        DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple DNS"));
+        assertTrue(outputTopic.isEmpty());
+    }
 }
