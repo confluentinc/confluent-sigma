@@ -30,4 +30,4 @@ then
     exit 1
 fi
 
-java -cp sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $*
+java -cp sigma-streams-1.2.1-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $*

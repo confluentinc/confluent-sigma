@@ -18,4 +18,4 @@
 # Script for launching the sigma streams ui app.
 
 
-java -jar sigma-streams-ui-1.2.0.jar config/application.properties
+java -jar sigma-streams-ui-1.2.1.jar config/application.properties

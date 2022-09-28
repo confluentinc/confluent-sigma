@@ -2,6 +2,6 @@
 # docker push michaelpeacock/confluent-sigma:v1
 
 FROM openjdk:11
-COPY ./target/sigma-streams-1.2.0-fat.jar /tmp
+COPY ./target/sigma-streams-1.2.1-fat.jar /tmp
 WORKDIR /tmp
-CMD java -cp sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp -c /tmp/config/sigma.properties
+CMD java -cp sigma-streams-1.2.1-fat.jar io.confluent.sigmarules.SigmaStreamsApp -c /tmp/config/sigma.properties
