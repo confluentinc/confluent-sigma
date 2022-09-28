@@ -19,18 +19,15 @@
 
 # first check the default locations for sigma.properties.
 
-PROPS=
-
-if [ -f "$1" ] ; then
-  PROPS=$1
-elif [ -n "$SIGMAPROPS" ] ; then
-  PROPS=$SIGMAPROPS
-elif [ -f ~/.config/sigma.properties ] ; then
-  PROPS=~/.config/sigma.properties
-elif [ -f ~/.confluent/sigma.properties ] ; then
-  PROPS=~/.confluent/sigma.properties
-elif [ -f ~/tmp/sigma.properties ] ; then
-  PROPS=~/tmp/sigma.properties
+if [ $# -eq 0 ]
+then
+    echo ""
+    echo "Usage:"
+    echo "sigma-loader.sh [-f sigma-rule.yml] [-d rules-directory] -c sigma.properties"
+    echo ""
+    echo "properties file passed to -c contains standard kafka connection properties.  This is likely to be the same as you are passing to confluent-sigma"
+    echo ""
+    exit 1
 fi
 
-java -cp sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $* -c $PROPS
+java -cp sigma-streams-1.2.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $*
