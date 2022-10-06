@@ -26,7 +26,7 @@ import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.AggregateParser;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
-import java.sql.Timestamp;
+
 import java.time.Duration;
 import java.util.Map;
 import org.apache.kafka.common.serialization.Serde;
@@ -40,10 +40,10 @@ import org.apache.kafka.streams.kstream.Windowed;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AggregateTopology {
+public class AggregateTopology extends SigmaTopology {
     final static Logger logger = LogManager.getLogger(AggregateTopology.class);
 
-    private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
+    private final SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
 
     public void createAggregateTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
         String outputTopic, Configuration jsonPathConf) {
@@ -86,7 +86,7 @@ public class AggregateTopology {
         results.setResults(balance.getResults());
         results.setSourceData(source);
 
-        Long newValue = 1L;
+        long newValue = 1L;
         String distinctValue = aggregateValues.getDistinctValue();
         if (distinctValue == null || distinctValue.isEmpty()) {
             distinctValue = "CurrentCount";
@@ -102,8 +102,8 @@ public class AggregateTopology {
     }
 
     private Boolean doStreamFiltering(AggregateValues aggregateValues, AggregateResults tableValues) {
-        Long operationValue = Long.parseLong(aggregateValues.getOperationValue());
-        Boolean matchFound = false;
+        long operationValue = Long.parseLong(aggregateValues.getOperationValue());
+        boolean matchFound = false;
 
         for (Map.Entry<String, Long> results : tableValues.getResults().entrySet()) {
             switch (aggregateValues.getOperation()) {
@@ -137,8 +137,7 @@ public class AggregateTopology {
                     break;
             }
 
-            if (matchFound == true) {
-                logger.info("********************");
+            if (matchFound) {
                 logger.info("Found a match Key: " + results.getKey() + " Value: " + results.getValue() +
                         " Comp Value " + operationValue);
                 return true;
@@ -147,22 +146,4 @@ public class AggregateTopology {
 
         return false;
     }
-
-    private DetectionResults buildResults(SigmaRule rule, JsonNode sourceData) {
-        DetectionResults results = new DetectionResults();
-        results.setSourceData(sourceData);
-
-        // check rule factory conditions manager for aggregate condition
-        // and set it metadata
-        if (rule != null) {
-            results.getSigmaMetaData().setId(rule.getId());
-            results.getSigmaMetaData().setTitle(rule.getTitle());
-        }
-
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        results.setTimeStamp(timestamp.getTime());
-
-        return results;
-    }
-
 }

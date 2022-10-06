@@ -57,7 +57,7 @@ public class SigmaRuleCheck {
 
   private Boolean checkCondition(SigmaCondition condition, DetectionsManager detections, JsonNode sourceData, Configuration jsonPathConf) {
     if (!condition.getAggregateCondition()) {
-      Boolean pairedResult = false;
+      Boolean pairedResult;
       if (condition.getPairedCondition() != null) {
         pairedResult = checkCondition(condition.getPairedCondition(), detections, sourceData, jsonPathConf);
 
@@ -101,9 +101,7 @@ public class SigmaRuleCheck {
         }
       }
 
-      if (validDetections) {
-        return true;
-      }
+      return validDetections;
     } else {
       logger.info("No detections for condition: " + condition.getConditionName() +
           " source: " + sourceData.toString());
@@ -113,7 +111,7 @@ public class SigmaRuleCheck {
   }
 
   private Boolean beginDetectionProcessing(JsonNode sourceValues, SigmaDetection d, SigmaCondition condition) {
-    Boolean validDetections = false;
+    boolean validDetections = false;
     if (sourceValues.isArray()) {
       for (final JsonNode sourceValue : sourceValues) {
         if (!checkValue(condition, d, sourceValue.asText())) {
@@ -135,11 +133,7 @@ public class SigmaRuleCheck {
   }
 
   private Boolean checkValue(SigmaCondition condition, SigmaDetection model, String sourceValue) {
-    if (model.matches(sourceValue, condition.getNotCondition())) {
-      return true;
-    } else {
-      return false;
-    }
+    return model.matches(sourceValue, condition.getNotCondition());
   }
 
 }

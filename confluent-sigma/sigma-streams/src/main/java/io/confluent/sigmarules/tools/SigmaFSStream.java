@@ -57,9 +57,7 @@ public class SigmaFSStream {
     private StreamsBuilder createBuilder() {
         StreamsBuilder builder = new StreamsBuilder();
         KStream<String, String> sigmaRulesRaw = builder.stream("sigma_rules_fs");
-        KStream<String, String> sigmaRule = sigmaRulesRaw.map((k, v) -> {
-             return createSigmaRule(v);
-        });
+        KStream<String, String> sigmaRule = sigmaRulesRaw.map((k, v) -> createSigmaRule(v));
         sigmaRule.to("sigma_rules", Produced.with(Serdes.String(), Serdes.String()));
 
         return builder;
@@ -79,7 +77,7 @@ public class SigmaFSStream {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         String key = null;
         String value = parseFSConnectorYaml(rule);
-        SigmaRule sigmaRule = null;
+        SigmaRule sigmaRule;
 
         try {
             sigmaRule = mapper.readValue(value, SigmaRule.class);
@@ -89,15 +87,12 @@ public class SigmaFSStream {
             // add the rule to the cache
             //sigmaRulesManager.addRule(sigmaRule.getTitle(), parsedYaml);
 
-        } catch (JsonMappingException e) {
-            System.out.println(value);
-            e.printStackTrace();
         } catch (JsonProcessingException e) {
             System.out.println(value);
             e.printStackTrace();
         }
 
-        return new KeyValue<String, String>(key, value);
+        return new KeyValue<>(key, value);
     }
 
     private String parseFSConnectorYaml(String fsConnectYaml) {
