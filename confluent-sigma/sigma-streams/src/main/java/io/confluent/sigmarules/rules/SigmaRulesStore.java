@@ -127,7 +127,7 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
     @Override
     public void handleUpdate(String key, String value, String oldValue, TopicPartition tp, long offset, long timestamp) {
 
-        if (oldValue == null || (oldValue != null && !value.equals(oldValue))) {
+        if (oldValue == null || !value.equals(oldValue)) {
             if (observer != null) {
                 observer.handleRuleUpdate(key, getRuleAsYaml(key));
             }

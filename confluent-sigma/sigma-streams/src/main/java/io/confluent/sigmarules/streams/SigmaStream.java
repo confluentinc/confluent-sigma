@@ -48,7 +48,7 @@ public class SigmaStream extends StreamManager {
     private ObjectMapper jsonMapper = new ObjectMapper(new JsonFactory());
     private String inputTopic;
     private String outputTopic;
-    private Configuration jsonPathConf;
+    private final Configuration jsonPathConf = createJsonPathConfig();
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
@@ -56,7 +56,6 @@ public class SigmaStream extends StreamManager {
         this.ruleFactory = ruleFactory;
         this.outputTopic = properties.getProperty("output.topic");
         this.inputTopic = properties.getProperty("data.topic");
-        this.jsonPathConf = setJsonPathConfig();
     }
 
     public void startStream() {
@@ -97,7 +96,7 @@ public class SigmaStream extends StreamManager {
         return builder.build();
     }
 
-    public Configuration setJsonPathConfig() {
+    public static Configuration createJsonPathConfig() {
         return Configuration.builder()
                 .mappingProvider(new JacksonMappingProvider()) // Required for JsonNode object
                 .jsonProvider(new JacksonJsonProvider()) // Required for JsonNode object

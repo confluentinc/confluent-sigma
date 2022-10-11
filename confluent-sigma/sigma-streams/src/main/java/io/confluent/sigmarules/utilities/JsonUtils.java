@@ -36,12 +36,10 @@ public class JsonUtils {
 
     public static String toJson(Object payload) {
         try {
-            String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload);
-            return json;
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-
         return "";
     }
 

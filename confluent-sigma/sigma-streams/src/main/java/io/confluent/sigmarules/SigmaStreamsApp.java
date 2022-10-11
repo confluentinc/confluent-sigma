@@ -39,7 +39,7 @@ public class SigmaStreamsApp extends StreamManager {
         createSigmaRules();
         createSigmaStream();
 
-        this.ruleFactory.addObserver((rule -> handleNewRule(rule)), false);
+        this.ruleFactory.addObserver((this::handleNewRule), false);
     }
 
     private void handleNewRule(SigmaRule newRule) {
@@ -69,13 +69,5 @@ public class SigmaStreamsApp extends StreamManager {
     public static void main(String[] args) {
         SigmaStreamsApp sigma = new SigmaStreamsApp(new SigmaOptions(args));
         sigma.start();
-
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
     }
 }
