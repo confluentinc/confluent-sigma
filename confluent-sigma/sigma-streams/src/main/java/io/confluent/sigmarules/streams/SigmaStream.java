@@ -22,9 +22,11 @@ package io.confluent.sigmarules.streams;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.confluent.sigmarules.models.DetectionResults;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.confluent.sigmarules.models.SigmaRule;
-import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
 import java.util.ArrayList;
@@ -38,7 +40,6 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Produced;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,16 +51,12 @@ public class SigmaStream extends StreamManager {
     private ObjectMapper jsonMapper = new ObjectMapper(new JsonFactory());
     private String inputTopic;
     private String outputTopic;
-    private SigmaRuleCheck ruleCheck;
-    private SimpleTopology simpleTopology = new SimpleTopology();
-    private AggregateTopology aggregateTopology = new AggregateTopology();
-
+    private final Configuration jsonPathConf = createJsonPathConfig();
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
 
         this.ruleFactory = ruleFactory;
-        this.ruleCheck = new SigmaRuleCheck();
         this.outputTopic = properties.getProperty("output.topic");
         this.inputTopic = properties.getProperty("data.topic");
     }
@@ -98,25 +95,28 @@ public class SigmaStream extends StreamManager {
             SigmaRule rule = entry.getValue();
 
             if (rule.getConditionsManager().hasAggregateCondition()) {
-                Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
-
-                if (!aggregrateRules.containsKey(windowTimeMS)) {
-                    aggregrateRules.put(windowTimeMS, new ArrayList<>());
-                }
-
-                aggregrateRules.get(windowTimeMS).add(rule);
-            } else {
+              AggregateTopology aggregateTopology = new AggregateTopology();
+              aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic, jsonPathConf);
+           } else {
                 simpleRules.add(rule);
             }
         }
 
-        if (aggregrateRules.size() > 0)
-            aggregateTopology.createAggregateFlatMapTopology(sigmaStream, aggregrateRules, outputTopic);
+        if (simpleRules.size() > 0) {
+          SimpleTopology simpleTopology = new SimpleTopology();
+          simpleTopology.createSimpleFlatMapTopology(sigmaStream, simpleRules, outputTopic, jsonPathConf);
+        }
 
-        if (simpleRules.size() > 0)
-            simpleTopology.createSimpleFlatMapTopology(sigmaStream, simpleRules, outputTopic);
 
         return builder.build();
+    }
+
+    public static Configuration createJsonPathConfig() {
+        return Configuration.builder()
+                .mappingProvider(new JacksonMappingProvider()) // Required for JsonNode object
+                .jsonProvider(new JacksonJsonProvider()) // Required for JsonNode object
+                .options(Option.SUPPRESS_EXCEPTIONS) // Return null when path is not found - https://github.com/json-path/JsonPath#tweaking-configuration
+                .build();
     }
 
 }

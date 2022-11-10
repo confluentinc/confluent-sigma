@@ -21,10 +21,10 @@
 package io.confluent.sigmarules.streams;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.jayway.jsonpath.Configuration;
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.kafka.common.serialization.Serdes;
@@ -33,26 +33,26 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SimpleTopology {
+public class SimpleTopology extends SigmaTopology {
   final static Logger logger = LogManager.getLogger(SimpleTopology.class);
 
   private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
 
   public void createSimpleTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
-      String outputTopic) {
-    sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData))
+                                   String outputTopic, Configuration jsonPathConf) {
+    sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData, jsonPathConf))
         .mapValues(sourceData -> buildResults(rule, sourceData))
         .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
   }
 
   public void createSimpleFlatMapTopology(KStream<String, JsonNode> sigmaStream,
-      List<SigmaRule> rules, String outputTopic) {
+      List<SigmaRule> rules, String outputTopic, Configuration jsonPathConf) {
 
     sigmaStream.flatMapValues(sourceData -> {
           List<DetectionResults> results = new ArrayList<>();
           for (SigmaRule rule : rules) {
-            if (ruleCheck.isValid(rule, sourceData)) {
+            if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
               results.add(buildResults(rule, sourceData));
             }
           }
@@ -60,24 +60,6 @@ public class SimpleTopology {
         })
         .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
-  }
-
-
-  private DetectionResults buildResults(SigmaRule rule, JsonNode sourceData) {
-    DetectionResults results = new DetectionResults();
-    results.setSourceData(sourceData);
-
-    // check rule factory conditions manager for aggregate condition
-    // and set it metadata
-    if (rule != null) {
-      results.getSigmaMetaData().setId(rule.getId());
-      results.getSigmaMetaData().setTitle(rule.getTitle());
-    }
-
-    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-    results.setTimeStamp(timestamp.getTime());
-
-    return results;
   }
 
 }

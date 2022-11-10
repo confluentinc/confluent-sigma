@@ -20,36 +20,32 @@
 package io.confluent.sigmarules.streams;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.jayway.jsonpath.Configuration;
 import io.confluent.sigmarules.models.AggregateValues;
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.AggregateParser;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
-import java.sql.Timestamp;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.SlidingWindows;
 import org.apache.kafka.streams.kstream.Windowed;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AggregateTopology {
+public class AggregateTopology extends SigmaTopology {
     final static Logger logger = LogManager.getLogger(AggregateTopology.class);
 
-    private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
+    private final SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
 
     public void createAggregateTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
-        String outputTopic) {
+        String outputTopic, Configuration jsonPathConf) {
 
         final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
         Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
@@ -57,8 +53,8 @@ public class AggregateTopology {
 
         AggregateValues aggregateValues = rule.getConditionsManager().getAggregateCondition().getAggregateValues();
 
-        sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData))
-            .selectKey((k, v) -> rule.getTitle())
+        sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData, jsonPathConf))
+            .selectKey((k, v) -> updateKey(aggregateValues))
             .groupByKey()
             .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(windowTimeMS),
                 Duration.ofMillis(windowTimeMS)))
@@ -73,22 +69,6 @@ public class AggregateTopology {
                 new KeyValue<>("", buildResults(rule, value.getSourceData())))
             .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
     }
-
-    public void createAggregateFlatMapTopology(KStream<String, JsonNode> sigmaStream,
-        Map<Long, List<SigmaRule>> rules, String outputTopic) {
-
-        sigmaStream.flatMapValues(sourceData -> {
-                List<DetectionResults> results = new ArrayList<>();
-                for (SigmaRule rule : rules) {
-                    if (ruleCheck.isValid(rule, sourceData)) {
-                        results.add(buildResults(rule, sourceData));
-                    }
-                }
-                return results;
-            })
-            .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
-    }
-
 
     private String updateKey(AggregateValues aggregateValues) {
         if (aggregateValues.getGroupBy() == null || aggregateValues.getGroupBy().isEmpty()) {
@@ -105,7 +85,7 @@ public class AggregateTopology {
         results.setResults(balance.getResults());
         results.setSourceData(source);
 
-        Long newValue = 1L;
+        long newValue = 1L;
         String distinctValue = aggregateValues.getDistinctValue();
         if (distinctValue == null || distinctValue.isEmpty()) {
             distinctValue = "CurrentCount";
@@ -121,8 +101,8 @@ public class AggregateTopology {
     }
 
     private Boolean doStreamFiltering(AggregateValues aggregateValues, AggregateResults tableValues) {
-        Long operationValue = Long.parseLong(aggregateValues.getOperationValue());
-        Boolean matchFound = false;
+        long operationValue = Long.parseLong(aggregateValues.getOperationValue());
+        boolean matchFound = false;
 
         for (Map.Entry<String, Long> results : tableValues.getResults().entrySet()) {
             switch (aggregateValues.getOperation()) {
@@ -156,8 +136,7 @@ public class AggregateTopology {
                     break;
             }
 
-            if (matchFound == true) {
-                logger.info("********************");
+            if (matchFound) {
                 logger.info("Found a match Key: " + results.getKey() + " Value: " + results.getValue() +
                         " Comp Value " + operationValue);
                 return true;
@@ -166,22 +145,4 @@ public class AggregateTopology {
 
         return false;
     }
-
-    private DetectionResults buildResults(SigmaRule rule, JsonNode sourceData) {
-        DetectionResults results = new DetectionResults();
-        results.setSourceData(sourceData);
-
-        // check rule factory conditions manager for aggregate condition
-        // and set it metadata
-        if (rule != null) {
-            results.getSigmaMetaData().setId(rule.getId());
-            results.getSigmaMetaData().setTitle(rule.getTitle());
-        }
-
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        results.setTimeStamp(timestamp.getTime());
-
-        return results;
-    }
-
 }

@@ -14,14 +14,14 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.    
+ * under the License.
  */
-
 package io.confluent.sigmarules.rules;
 
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
+import io.confluent.sigmarules.models.LogSource;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import java.io.IOException;
@@ -94,10 +94,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
             List<String> parsedTitles;
             try (Stream<String> lines = Files.lines(Paths.get(properties.getProperty("sigma.rule.filter.list")))) {
                 parsedTitles = lines.collect(Collectors.toList());
-
-                for(String title : parsedTitles) {
-                    titles.add(title);
-                }
+                titles.addAll(parsedTitles);
             } catch (IOException e) {
                 logger.error("error reading filter list");
                 e.printStackTrace();
@@ -127,7 +124,6 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * Handles any new rules that are added to the Sigma Rules topic
      * @param title of the rule
      * @param rule as a string
-     * @return
      */
     // callback from kcache
     @Override
@@ -141,20 +137,15 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
 
     /**
      * Pulls in all rules that is currently stored in the Sigma Rules topic
-     * @param
-     * @return
      */
     private void getRulesfromStore() {
         this.sigmaRulesStore.getRules().forEach((title, rule) -> {
            try {
                 addRule(title, rule);
-            } catch (IOException e) {
+            } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
                logger.error("Exception thrown for rule: " + title + " rule: " + rule);
                 e.printStackTrace();
-            } catch (InvalidSigmaRuleException | SigmaRuleParserException e) {
-               logger.error("Exception thrown for rule: " + title + " rule: " + rule);
-               e.printStackTrace();
-           }
+            }
         });
     }
 
@@ -163,7 +154,6 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * get parsed and a SigmaRule object will be created.
      * @param title of the rule
      * @param rule as a string
-     * @return
      */
     public void addRule(String title, String rule)
         throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
@@ -176,14 +166,10 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         }
 
         sigmaRules.put(title, sigmaRule);
-        Boolean newRule = false;
-        if (!sigmaRules.containsKey(title)) {
-            newRule = true;
-        }
+        boolean newRule = !sigmaRules.containsKey(title);
 
-        if (newRule && observer != null) {
+        if (newRule && observer != null)
             observer.handleNewRule(sigmaRule);
-        }
     }
 
     /**
@@ -191,18 +177,14 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * rule should be used like the product and service of the rule and potentially a list of
      * specified titles.  Could be other ways in the future.
      * @param sigmaRule rule to check
-     * @return
+     * @return true if the rule should be filtered out
      */
     public boolean shouldBeFiltered(SigmaRule sigmaRule) {
         // verify product and service match before continuing
         if (titles.isEmpty()) {
-            if (productAndServiceMatch(sigmaRule) == true) {
-                return false;
-            }
+            return !productAndServiceMatch(sigmaRule);
         } else if (titles.contains(sigmaRule.getTitle())) {
-            if (productAndServiceMatch(sigmaRule) == true) {
-                return false;
-            }
+            return !productAndServiceMatch(sigmaRule);
         }
         return true;
     }
@@ -220,23 +202,28 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * if not specified
      */
     private Boolean productAndServiceMatch(SigmaRule rule) {
+        String product = null, service = null;
+
+        LogSource logsource = rule.getLogsource();
+        if (logsource != null) {
+            product = logsource.getProduct();
+            service = logsource.getService();
+        }
+
         logger.info("checking product: " + product + " service: " + service);
-        logger.info("sigma rule product: " + rule.getLogsource().getProduct() + " service: " +
-            rule.getLogsource().getService());
-        Boolean validProduct = true;
-        Boolean validService = true;
+        logger.info("sigma rule product: " + product + " service: " + service);
 
-        if (product != null) {
-            if (!product.equals(rule.getLogsource().getProduct())) {
+        boolean validProduct = true;
+        boolean validService = true;
+
+        if (this.product != null)
+            if (!this.product.equals(product))
                 validProduct = false;
-            }
-        }
 
-        if (service != null) {
-            if (!service.equals(rule.getLogsource().getService())) {
+        if (this.service != null)
+            if (!this.service.equals(service))
                 validService = false;
-            }
-        }
+
 
         return validProduct & validService;
     }

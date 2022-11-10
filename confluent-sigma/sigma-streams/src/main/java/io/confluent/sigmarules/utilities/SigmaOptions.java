@@ -75,8 +75,6 @@ public class SigmaOptions {
         } catch (ParseException | FileNotFoundException e) {
             e.printStackTrace();
             System.exit(0);
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -91,7 +89,7 @@ public class SigmaOptions {
     }
 
     public String getProperty(String property) throws IllegalArgumentException {
-        if (properties.containsKey(property) == false) {
+        if (!properties.containsKey(property)) {
             logger.fatal("Properties file does not contain " + property);
             throw new IllegalArgumentException(property + " not in properties file");
         }

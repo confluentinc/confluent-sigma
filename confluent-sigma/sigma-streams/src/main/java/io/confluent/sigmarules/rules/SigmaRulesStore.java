@@ -66,6 +66,10 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
             kcacheProps.setProperty("kafkacache.sasl.jaas.config",
                 properties.getProperty("sasl.jaas.config"));
 
+        if (properties.containsKey("sasl.client.callback.handler.class"))
+            kcacheProps.setProperty("kafkacache.sasl.client.callback.handler.class",
+                    properties.getProperty("sasl.client.callback.handler.class"));
+
         if (properties.containsKey(SigmaProperties.SCHEMA_REGISTRY.toString())) {
             kcacheProps.setProperty(KEY_CONVERTER_SCHEMA_REGISTRY_URL,
                 properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
@@ -123,7 +127,7 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
     @Override
     public void handleUpdate(String key, String value, String oldValue, TopicPartition tp, long offset, long timestamp) {
 
-        if (oldValue == null || (oldValue != null && !value.equals(oldValue))) {
+        if (oldValue == null || !value.equals(oldValue)) {
             if (observer != null) {
                 observer.handleRuleUpdate(key, getRuleAsYaml(key));
             }
