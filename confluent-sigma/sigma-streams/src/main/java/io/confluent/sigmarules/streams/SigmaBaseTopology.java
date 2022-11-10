@@ -6,7 +6,7 @@ import io.confluent.sigmarules.models.SigmaRule;
 
 import java.sql.Timestamp;
 
-public class SigmaTopology {
+public class SigmaBaseTopology {
     protected DetectionResults buildResults(SigmaRule rule, JsonNode sourceData) {
         DetectionResults results = new DetectionResults();
         results.setSourceData(sourceData);

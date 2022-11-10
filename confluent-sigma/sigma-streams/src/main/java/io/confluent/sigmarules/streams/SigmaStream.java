@@ -104,7 +104,7 @@ public class SigmaStream extends StreamManager {
 
         if (simpleRules.size() > 0) {
           SimpleTopology simpleTopology = new SimpleTopology();
-          simpleTopology.createSimpleFlatMapTopology(sigmaStream, simpleRules, outputTopic, jsonPathConf);
+          simpleTopology.createSimpleTopology(sigmaStream, simpleRules, outputTopic, jsonPathConf);
         }
 
 

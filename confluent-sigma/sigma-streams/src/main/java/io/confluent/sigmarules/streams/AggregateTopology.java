@@ -39,7 +39,7 @@ import org.apache.kafka.streams.kstream.Windowed;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AggregateTopology extends SigmaTopology {
+public class AggregateTopology extends SigmaBaseTopology {
     final static Logger logger = LogManager.getLogger(AggregateTopology.class);
 
     private final SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
