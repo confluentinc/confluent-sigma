@@ -39,13 +39,17 @@ public class SimpleTopology extends SigmaBaseTopology {
   private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
 
   public void createSimpleTopology(KStream<String, JsonNode> sigmaStream,
-      List<SigmaRule> rules, String outputTopic, Configuration jsonPathConf) {
+      List<SigmaRule> rules, String outputTopic, Configuration jsonPathConf,
+      Boolean firstMatch) {
 
     sigmaStream.flatMapValues(sourceData -> {
           List<DetectionResults> results = new ArrayList<>();
-          for (SigmaRule rule : rules) {
-            if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
-              results.add(buildResults(rule, sourceData));
+          for (int i = 0; i < rules.size(); i++) {
+            if (ruleCheck.isValid(rules.get(i), sourceData, jsonPathConf)) {
+              results.add(buildResults(rules.get(i), sourceData));
+
+              if (firstMatch)
+                break;
             }
           }
           return results;

@@ -26,11 +26,11 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import io.confluent.sigmarules.SigmaProperties;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -51,14 +51,18 @@ public class SigmaStream extends StreamManager {
     private ObjectMapper jsonMapper = new ObjectMapper(new JsonFactory());
     private String inputTopic;
     private String outputTopic;
+    private Boolean firstMatch = false;
     private final Configuration jsonPathConf = createJsonPathConfig();
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
 
         this.ruleFactory = ruleFactory;
-        this.outputTopic = properties.getProperty("output.topic");
-        this.inputTopic = properties.getProperty("data.topic");
+        this.outputTopic = properties.getProperty(SigmaProperties.OUTPUT_TOPIC.toString());
+        this.inputTopic = properties.getProperty(SigmaProperties.DATA_TOPIC.toString());
+
+        this.firstMatch = Boolean.valueOf(
+            properties.getProperty(SigmaProperties.SIGMA_RULE_FIRST_MATCH.toString()));
     }
 
     public void startStream() {
@@ -84,9 +88,6 @@ public class SigmaStream extends StreamManager {
         // container of simple rules
         List<SigmaRule> simpleRules = new ArrayList<>();
 
-        // container of aggregrate rules grouped by window time
-        Map<Long, List<SigmaRule>> aggregrateRules = new HashMap<>();
-
         StreamsBuilder builder = new StreamsBuilder();
         KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
             Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
@@ -95,8 +96,9 @@ public class SigmaStream extends StreamManager {
             SigmaRule rule = entry.getValue();
 
             if (rule.getConditionsManager().hasAggregateCondition()) {
-              AggregateTopology aggregateTopology = new AggregateTopology();
-              aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic, jsonPathConf);
+                AggregateTopology aggregateTopology = new AggregateTopology();
+                aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic,
+                    jsonPathConf);
            } else {
                 simpleRules.add(rule);
             }
@@ -104,9 +106,9 @@ public class SigmaStream extends StreamManager {
 
         if (simpleRules.size() > 0) {
           SimpleTopology simpleTopology = new SimpleTopology();
-          simpleTopology.createSimpleTopology(sigmaStream, simpleRules, outputTopic, jsonPathConf);
+          simpleTopology.createSimpleTopology(sigmaStream, simpleRules, outputTopic,
+              jsonPathConf, firstMatch);
         }
-
 
         return builder.build();
     }

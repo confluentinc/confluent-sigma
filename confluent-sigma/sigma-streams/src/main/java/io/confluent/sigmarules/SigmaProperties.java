@@ -35,7 +35,8 @@ public enum SigmaProperties {
     SIGMA_RULE_FILTER_LIST("sigma.rule.filter.list", false),
     SCHEMA_REGISTRY("schema.registry", false),
     SECURITY_PROTOCOL("security.protocol", false),
-    SASL_MECHANISM("sasl.mechanism", false);
+    SASL_MECHANISM("sasl.mechanism", false),
+    SIGMA_RULE_FIRST_MATCH("sigma.rule.first.match", false);
 
 
     private final String name;
