@@ -19,17 +19,29 @@
 
 package io.confluent.sigmarules.streams;
 
+import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.KafkaException;
+import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class StreamManager {
-    public Properties properties = new Properties();
+    final static Logger logger = LogManager.getLogger(StreamManager.class.getName());
+
+    protected Properties properties = new Properties();
+    private AdminClient client = null;
 
     public StreamManager(Properties properties) {
         this.properties.putAll(properties);
@@ -40,22 +52,42 @@ public class StreamManager {
         this.properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         this.properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
 
+        try {
+            client = AdminClient.create(this.properties);
+        } catch (KafkaException e) {
+            logger.error(e);
+        }
+
     }
 
     public Properties getStreamProperties() {
         return this.properties;
     }
 
-    public void createTopic(String topicName) {
-        createTopic(topicName, 1, 1);
-    }
 
-    public void createTopic(String topicName, int numPartitions, int replicationFactor) {
-        AdminClient client = AdminClient.create(getStreamProperties());
-        List<NewTopic> topics = new ArrayList<>();
-        topics.add(new NewTopic(topicName, numPartitions, (short)replicationFactor));
-        client.createTopics(topics);
-        client.close();
+    public void createTopic(String topicName) {
+        if (client != null) {
+            List<NewTopic> topics = new ArrayList<>();
+            topics.add(new NewTopic(topicName, Optional.empty(),
+                Optional.empty()));
+
+            logger.info("creating topics " + Arrays.toString(topics.toArray()));
+            CreateTopicsResult result = client.createTopics(topics);
+            KafkaFuture<Void> future = result.values().get(topicName);
+
+            // Call get() to block until the topic creation is complete or has failed
+            // if creation failed the ExecutionException wraps the underlying cause.
+            try {
+                if (future != null)
+                    future.get();
+            } catch (InterruptedException e) {
+                logger.error(e);
+            } catch (ExecutionException e) {
+                logger.error(e);
+            }
+        } else {
+            logger.error("No admin client initialized");
+        }
     }
 
 

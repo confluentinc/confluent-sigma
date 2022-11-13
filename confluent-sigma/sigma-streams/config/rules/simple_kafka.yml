@@ -1,0 +1,12 @@
+title: Simple Http Kafka
+description: 'Outputs results to a Kafka topic. Detects a download from Webdav service which could be used as a way to transfer tools internally. Determine if this is a) Legitimate server b) legitimate binary/file'
+author: Mike Peacock
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection_uri:
+    - uri: '*mike*'
+  condition: selection_uri
+kafka:
+  outputTopic: my-test-results

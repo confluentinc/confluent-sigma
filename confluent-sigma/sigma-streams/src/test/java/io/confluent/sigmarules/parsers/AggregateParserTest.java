@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,14 +14,22 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.
- *
+ * under the License.    
  */
 
-package io.confluent.sigmarules.rules;
+package io.confluent.sigmarules.parsers;
 
-import io.confluent.sigmarules.models.SigmaRule;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public interface SigmaRuleFactoryObserver {
-    void handleNewRule(SigmaRule newRule);
+import io.confluent.sigmarules.models.AggregateValues;
+import org.junit.jupiter.api.Test;
+
+class AggregateParserTest {
+
+    @Test
+    void parseCondition() {
+        AggregateParser parser = new AggregateParser();
+        AggregateValues results = parser.parseCondition("count() > 15");
+        assertTrue(results.getOperation() != null);
+    }
 }

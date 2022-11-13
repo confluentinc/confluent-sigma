@@ -17,20 +17,20 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.aggregation;
+package io.confluent.sigmarules.models;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.confluent.sigmarules.models.AggregateValues;
-import io.confluent.sigmarules.parsers.AggregateParser;
-import org.junit.jupiter.api.Test;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class KafkaRule {
+    private String outputTopic;
 
-class AggregateParserTest {
-
-    @Test
-    void parseCondition() {
-        AggregateParser parser = new AggregateParser();
-        AggregateValues results = parser.parseCondition("count() > 15");
-        assertTrue(results.getOperation() != null);
+    public String getOutputTopic() {
+        return outputTopic;
     }
+
+    public void setOutputTopic(String outputTopic) {
+        this.outputTopic = outputTopic;
+    }
+
 }

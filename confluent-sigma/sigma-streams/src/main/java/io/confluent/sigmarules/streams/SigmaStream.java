@@ -67,6 +67,7 @@ public class SigmaStream extends StreamManager {
 
     public void startStream() {
         createTopic(inputTopic);
+        createTopic(outputTopic);
 
         Topology topology = createTopology();
         streams = new KafkaStreams(topology, getStreamProperties());

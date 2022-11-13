@@ -24,9 +24,11 @@ import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.LogSource;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
+import io.confluent.sigmarules.streams.StreamManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,13 +46,14 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     private Map<String, SigmaRule> sigmaRules = new HashMap<>();
     private SigmaRulesStore sigmaRulesStore;
     private SigmaRuleParser rulesParser;
-    private SigmaRuleFactoryObserver observer = null;
     private Properties properties;
+    private StreamManager streamManager;
 
     // filters for specific rules
     private Set<String> titles = new HashSet<>();
     private String product = null;
     private String service = null;
+
 
     // This should only be called for testing as it does not load the rules store
     public SigmaRulesFactory() { rulesParser = new SigmaRuleParser(); }
@@ -70,6 +73,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
             logger.info("no field mapping file provided");
         }
 
+        streamManager = new StreamManager(properties);
         rulesParser = new SigmaRuleParser(fieldMapFile);
 
         // create the rules cache
@@ -110,16 +114,6 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         }
     }
 
-    public void addObserver(SigmaRuleFactoryObserver observer, Boolean immediateCallback) {
-        this.observer = observer;
-
-        if (immediateCallback) {
-            for (Map.Entry<String, SigmaRule> entry : sigmaRules.entrySet()) {
-                observer.handleNewRule(entry.getValue());
-            }
-        }
-    }
-
     /**
      * Handles any new rules that are added to the Sigma Rules topic
      * @param title of the rule
@@ -139,9 +133,12 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * Pulls in all rules that is currently stored in the Sigma Rules topic
      */
     private void getRulesfromStore() {
+        List<String> kafkaOutputTopics = new ArrayList<>();
+
         this.sigmaRulesStore.getRules().forEach((title, rule) -> {
            try {
                 addRule(title, rule);
+
             } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
                logger.error("Exception thrown for rule: " + title + " rule: " + rule);
                 e.printStackTrace();
@@ -155,21 +152,25 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * @param title of the rule
      * @param rule as a string
      */
-    public void addRule(String title, String rule)
+    public SigmaRule addRule(String title, String rule)
         throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
         SigmaRule sigmaRule = rulesParser.parseRule(rule);
 
         if (shouldBeFiltered(sigmaRule)) {
             logger.info(title + " will not be loaded.  It does not match the filtered rules " +
                     "condition.");
-            return;
+            return null;
         }
 
         sigmaRules.put(title, sigmaRule);
-        boolean newRule = !sigmaRules.containsKey(title);
 
-        if (newRule && observer != null)
-            observer.handleNewRule(sigmaRule);
+        if (streamManager != null &&
+            sigmaRule.getKafkaRule() != null &&
+            sigmaRule.getKafkaRule().getOutputTopic() != null) {
+            streamManager.createTopic(sigmaRule.getKafkaRule().getOutputTopic());
+        }
+
+        return sigmaRule;
     }
 
     /**

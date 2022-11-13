@@ -42,6 +42,8 @@ public class SigmaRule {
     private DetectionsManager detectionsManager;
     private ConditionsManager conditionsManager;
 
+    private KafkaRule kafkaRule;
+
     public String getTitle() {
         return title;
     }
@@ -98,6 +100,14 @@ public class SigmaRule {
         this.logsource = logsource;
     }
 
+    public KafkaRule getKafkaRule() {
+        return kafkaRule;
+    }
+
+    public void setKafkaRule(KafkaRule kafkaRule) {
+        this.kafkaRule = kafkaRule;
+    }
+
     public String toString() {
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -129,6 +139,7 @@ public class SigmaRule {
         this.author = parsedSigmaRule.getAuthor();
         this.references = parsedSigmaRule.getReferences();
         this.logsource = parsedSigmaRule.getLogsource();
+        this.kafkaRule = parsedSigmaRule.getKafka();
     }
 
 }

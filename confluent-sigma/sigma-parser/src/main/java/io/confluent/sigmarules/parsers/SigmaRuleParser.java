@@ -48,7 +48,7 @@ public class SigmaRuleParser {
 
     public SigmaRule parseRule(String rule)
         throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
-        io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, io.confluent.sigmarules.parsers.ParsedSigmaRule.class);
+        ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, ParsedSigmaRule.class);
 
         SigmaRule sigmaRule = new SigmaRule();
         sigmaRule.copyParsedSigmaRule(parsedSigmaRule);
@@ -58,12 +58,4 @@ public class SigmaRuleParser {
         return sigmaRule;
     }
 
-    /*
-    public Boolean filterDetections(JsonNode data) {
-        // Filter the Stream
-        //logger.info("Checking conditions for: " + ruleTitle);
-        return conditions.checkConditions(detections, data);
-    }
-
-     */
 }

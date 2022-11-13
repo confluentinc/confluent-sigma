@@ -42,6 +42,8 @@ public class SimpleTopology extends SigmaBaseTopology {
       List<SigmaRule> rules, String outputTopic, Configuration jsonPathConf,
       Boolean firstMatch) {
 
+    setDefaultOutputTopic(outputTopic);
+
     sigmaStream.flatMapValues(sourceData -> {
           List<DetectionResults> results = new ArrayList<>();
           for (int i = 0; i < rules.size(); i++) {
@@ -54,7 +56,7 @@ public class SimpleTopology extends SigmaBaseTopology {
           }
           return results;
         })
-        .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+        .to(detectionTopicNameExtractor, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
   }
 
