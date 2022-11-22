@@ -19,13 +19,20 @@
 
 package io.confiuent.sigmaui.rules;
 
+import io.confiuent.sigmaui.config.SigmaUIProperties;
 import io.confiuent.sigmaui.models.RegexRule;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
+import io.confluent.sigmarules.SigmaProperties;
 import io.kcache.Cache;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import javax.annotation.PostConstruct;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
@@ -33,14 +40,9 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 
 @Component
 public class RegexRulesStore implements CacheUpdateHandler<String, RegexRule> {
@@ -50,24 +52,56 @@ public class RegexRulesStore implements CacheUpdateHandler<String, RegexRule> {
 
     private RegexRuleObserver observer;
 
-    @Value("${kafka.bootstrapAddress}")
-    private String bootstrapAddress;
-
-    @Value("${kafka.schemaRegistry}")
-    private String schemaRegistry;
+    @Autowired
+    SigmaUIProperties sigmaProperties;
 
     @Value("${confluent.regex.ruleTopic}")
     private String ruleTopic;
 
+    public static final String KEY_CONVERTER_SCHEMA_REGISTRY_URL = "key.converter.schema.registry.url";
+    public static final String VALUE_CONVERTER_SCHEMA_REGISTRY_URL = "value.converter.schema.registry.url";
+
     @PostConstruct
     private void initialize() {
-        Properties props = new Properties();
-        props.setProperty("kafkacache.bootstrap.servers", this.bootstrapAddress);
-        props.setProperty("kafkacache.topic", this.ruleTopic);
-        props.setProperty("key.converter.schema.registry.url", this.schemaRegistry);
-        props.setProperty("value.converter.schema.registry.url", this.schemaRegistry);
-        this.regexRulesCache = (Cache<String, RegexRule>)new KafkaCache(new KafkaCacheConfig(props), Serdes.String(), getJsonSerde(), this, null);
-        this.regexRulesCache.init();
+        Properties properties = sigmaProperties.getProperties();
+        Properties kcacheProps = new Properties(properties);
+        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
+            properties.getProperty(SigmaProperties.BOOTSTRAP_SERVER.toString()));
+        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG,
+            properties.getProperty(SigmaProperties.SIGMA_RULES_TOPIC.toString()));
+
+        // optional config parameters
+        if (properties.containsKey(SigmaProperties.SECURITY_PROTOCOL.toString()))
+            kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SECURITY_PROTOCOL_CONFIG,
+                properties.getProperty(SigmaProperties.SECURITY_PROTOCOL.toString()));
+
+        if (properties.containsKey(SigmaProperties.SASL_MECHANISM.toString()))
+            kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SASL_MECHANISM_CONFIG,
+                properties.getProperty(SigmaProperties.SASL_MECHANISM.toString()));
+
+        if (properties.containsKey("sasl.jaas.config"))
+            kcacheProps.setProperty("kafkacache.sasl.jaas.config",
+                properties.getProperty("sasl.jaas.config"));
+
+        if (properties.containsKey("sasl.client.callback.handler.class"))
+            kcacheProps.setProperty("kafkacache.sasl.client.callback.handler.class",
+                properties.getProperty("sasl.client.callback.handler.class"));
+
+        if (properties.containsKey(SigmaProperties.SCHEMA_REGISTRY.toString())) {
+            kcacheProps.setProperty(KEY_CONVERTER_SCHEMA_REGISTRY_URL,
+                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+            kcacheProps.setProperty(VALUE_CONVERTER_SCHEMA_REGISTRY_URL,
+                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+        }
+
+        regexRulesCache = new KafkaCache<>(
+            new KafkaCacheConfig(kcacheProps),
+            Serdes.String(),
+            getJsonSerde(),
+            this,
+            null);
+
+        regexRulesCache.init();
     }
 
     public void addObserver(RegexRuleObserver observer) {
