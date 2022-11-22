@@ -26,9 +26,12 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import io.confluent.sigmarules.SigmaProperties;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.kafka.common.serialization.Serdes;
@@ -48,18 +51,23 @@ public class SigmaStream extends StreamManager {
     private ObjectMapper jsonMapper = new ObjectMapper(new JsonFactory());
     private String inputTopic;
     private String outputTopic;
+    private Boolean firstMatch = false;
     private final Configuration jsonPathConf = createJsonPathConfig();
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
 
         this.ruleFactory = ruleFactory;
-        this.outputTopic = properties.getProperty("output.topic");
-        this.inputTopic = properties.getProperty("data.topic");
+        this.outputTopic = properties.getProperty(SigmaProperties.OUTPUT_TOPIC.toString());
+        this.inputTopic = properties.getProperty(SigmaProperties.DATA_TOPIC.toString());
+
+        this.firstMatch = Boolean.valueOf(
+            properties.getProperty(SigmaProperties.SIGMA_RULE_FIRST_MATCH.toString()));
     }
 
     public void startStream() {
         createTopic(inputTopic);
+        createTopic(outputTopic);
 
         Topology topology = createTopology();
         streams = new KafkaStreams(topology, getStreamProperties());
@@ -78,19 +86,29 @@ public class SigmaStream extends StreamManager {
     // iterates through each rule and publishes to output topic for
     // each rule that is a match
     public Topology createTopology() {
-        StreamsBuilder builder = new StreamsBuilder();
+        // container of simple rules
+        List<SigmaRule> simpleRules = new ArrayList<>();
 
+        StreamsBuilder builder = new StreamsBuilder();
         KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
-                Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
+            Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
+
         for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
             SigmaRule rule = entry.getValue();
+
             if (rule.getConditionsManager().hasAggregateCondition()) {
                 AggregateTopology aggregateTopology = new AggregateTopology();
-                aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic, jsonPathConf);
-            } else {
-                SimpleTopology simpleTopology = new SimpleTopology();
-                simpleTopology.createSimpleTopology(sigmaStream, rule, outputTopic, jsonPathConf);
+                aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic,
+                    jsonPathConf);
+           } else {
+                simpleRules.add(rule);
             }
+        }
+
+        if (simpleRules.size() > 0) {
+          SimpleTopology simpleTopology = new SimpleTopology();
+          simpleTopology.createSimpleTopology(sigmaStream, simpleRules, outputTopic,
+              jsonPathConf, firstMatch);
         }
 
         return builder.build();

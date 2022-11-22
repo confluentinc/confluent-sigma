@@ -23,6 +23,7 @@ public class RuleResults {
     private String title;
     private String id;
     private Boolean isAggregateCondition = false;
+    private String outputTopic;
 
     public String getTitle() {
         return title;
@@ -43,5 +44,13 @@ public class RuleResults {
 
     public void setAggregateCondition(Boolean aggregateCondition) {
         isAggregateCondition = aggregateCondition;
+    }
+
+    public String getOutputTopic() {
+        return outputTopic;
+    }
+
+    public void setOutputTopic(String outputTopic) {
+        this.outputTopic = outputTopic;
     }
 }

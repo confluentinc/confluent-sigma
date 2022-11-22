@@ -38,18 +38,6 @@ public class SigmaStreamsApp extends StreamManager {
 
         createSigmaRules();
         createSigmaStream();
-
-        this.ruleFactory.addObserver((this::handleNewRule), false);
-    }
-
-    private void handleNewRule(SigmaRule newRule) {
-        logger.info("Received a new rule: " + newRule.getTitle());
-
-        // need to stop the stream and rebuild the topology
-        //                if (streams != null) {
-        //                    streams.close();
-        //                    startStream();
-        //                }
     }
 
     private void createSigmaRules() {

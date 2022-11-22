@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
+import io.confluent.sigmarules.models.KafkaRule;
 import io.confluent.sigmarules.models.LogSource;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,8 @@ public class ParsedSigmaRule {
     private List<String> references;
     private LogSource logsource;
     private Map<String, Object> detection;
+
+    private KafkaRule kafka;
 
     public String getTitle() {
         return title;
@@ -96,6 +99,13 @@ public class ParsedSigmaRule {
 
     public void setLogsource(LogSource logsource) {
         this.logsource = logsource;
+    }
+    public KafkaRule getKafka() {
+        return kafka;
+    }
+
+    public void setKafka(KafkaRule kafka) {
+        this.kafka = kafka;
     }
 
     public String toString() {

@@ -48,6 +48,7 @@ public class SigmaRulesFactoryTest  {
 
     Properties getProperties() {
         Properties testProperties = new Properties();
+        testProperties.setProperty("application.id", "test-app");
         testProperties.setProperty("bootstrap.server", kafka.getBootstrapServers());
         testProperties.setProperty("sigma.rules.topic", "rules");
         testProperties.setProperty("schema.registry", "localhost:8888");

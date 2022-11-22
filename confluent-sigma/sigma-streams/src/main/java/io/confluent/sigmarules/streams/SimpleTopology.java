@@ -25,22 +25,38 @@ import com.jayway.jsonpath.Configuration;
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SimpleTopology extends SigmaTopology {
+public class SimpleTopology extends SigmaBaseTopology {
   final static Logger logger = LogManager.getLogger(SimpleTopology.class);
 
   private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
 
-  public void createSimpleTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
-                                   String outputTopic, Configuration jsonPathConf) {
-    sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData, jsonPathConf))
-        .mapValues(sourceData -> buildResults(rule, sourceData))
-        .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+  public void createSimpleTopology(KStream<String, JsonNode> sigmaStream,
+      List<SigmaRule> rules, String outputTopic, Configuration jsonPathConf,
+      Boolean firstMatch) {
+
+    setDefaultOutputTopic(outputTopic);
+
+    sigmaStream.flatMapValues(sourceData -> {
+          List<DetectionResults> results = new ArrayList<>();
+          for (int i = 0; i < rules.size(); i++) {
+            if (ruleCheck.isValid(rules.get(i), sourceData, jsonPathConf)) {
+              results.add(buildResults(rules.get(i), sourceData));
+
+              if (firstMatch)
+                break;
+            }
+          }
+          return results;
+        })
+        .to(detectionTopicNameExtractor, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
   }
 
