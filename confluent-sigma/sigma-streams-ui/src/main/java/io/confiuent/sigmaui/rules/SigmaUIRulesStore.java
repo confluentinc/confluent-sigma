@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,11 +14,33 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.    
+ * under the License.
+ *
  */
 
 package io.confiuent.sigmaui.rules;
 
-interface SigmaRuleObserver {
-    void handleRuleUpdate(String paramString1, String paramString2);
+import io.confiuent.sigmaui.config.SigmaUIProperties;
+import io.confluent.sigmarules.rules.SigmaRulesStore;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class SigmaUIRulesStore {
+  @Autowired
+  SigmaUIProperties properties;
+
+  private SigmaRulesStore rulesStore;
+
+  @PostConstruct
+  private void initialize() {
+
+    rulesStore = new SigmaRulesStore(properties.getProperties());
+  }
+
+  public SigmaRulesStore getRulesStore() {
+    return rulesStore;
+  }
+
 }

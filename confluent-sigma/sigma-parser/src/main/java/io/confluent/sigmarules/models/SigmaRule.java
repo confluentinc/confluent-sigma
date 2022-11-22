@@ -19,6 +19,7 @@
 
 package io.confluent.sigmarules.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
@@ -32,6 +33,7 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SigmaRule {
     private String title;
     private String description;

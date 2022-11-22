@@ -52,10 +52,10 @@ public class RegexStream {
     final static Logger logger = LogManager.getLogger(RegexStream.class);
     private KafkaStreams streams;
 
-    @Value("${kafka.bootstrapAddress}")
+    @Value("${bootstrap.server}")
     private String bootstrapAddress;
 
-    @Value("${kafka.schemaRegistry}")
+    @Value("${schema.registry}")
     private String schemaRegistry;
 
     @Value("${confluent.regex.inputTopic}")

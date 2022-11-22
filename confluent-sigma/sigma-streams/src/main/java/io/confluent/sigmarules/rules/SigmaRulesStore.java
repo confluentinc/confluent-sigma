@@ -120,11 +120,6 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
     }
 
     @Override
-    public void cacheInitialized() {
-        CacheUpdateHandler.super.cacheInitialized();
-    }
-
-    @Override
     public void handleUpdate(String key, String value, String oldValue, TopicPartition tp, long offset, long timestamp) {
 
         if (oldValue == null || !value.equals(oldValue)) {
