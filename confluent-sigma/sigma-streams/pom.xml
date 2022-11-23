@@ -159,9 +159,20 @@
                 <version>${dockerfile-maven-version}</version>
                 <executions>
                     <execution>
-                        <id>default</id>
+                        <id>package</id>
                         <goals>
                             <goal>build</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>deploy</id>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>push</id>
+                        <goals>
                             <goal>push</goal>
                         </goals>
                     </execution>
