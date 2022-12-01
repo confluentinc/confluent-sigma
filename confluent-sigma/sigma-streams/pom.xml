@@ -7,7 +7,7 @@
     <parent>
         <artifactId>confluent-sigma</artifactId>
         <groupId>io.confluent</groupId>
-        <version>1.2.1</version>
+        <version>${revision}</version>
     </parent>
 
 
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>sigma-parser</artifactId>
-            <version>1.2.1</version>
+            <version>${revision}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -134,6 +134,32 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
             </plugin>
+	    <plugin>
+	      <groupId>com.google.code.maven-replacer-plugin</groupId>
+	      <artifactId>replacer</artifactId>
+	      <version>1.5.3</version>
+	      <executions>
+		<execution>
+		  <phase>generate-sources</phase>
+		  <goals>
+		    <goal>replace</goal>
+		  </goals>
+		</execution>
+	      </executions>
+	      <configuration>
+		<includes>
+		  <include>${basedir}/bin/sigma-loader.sh</include>
+		  <include>${basedir}/bin/confluent-sigma.sh</include>
+  		  <include>${basedir}/Dockerfile</include>
+		</includes>
+		<replacements>
+		  <replacement>
+		    <token>@VERSION@</token>
+		    <value>${revision}</value>
+		  </replacement>
+		</replacements>
+	      </configuration>
+	    </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -164,18 +190,18 @@
                             <goal>build</goal>
                         </goals>
                     </execution>
-                    <execution>
+<!--                    <execution>
                         <id>deploy</id>
                         <goals>
                             <goal>push</goal>
                         </goals>
                     </execution>
                     <execution>
-                        <id>push</id>
+                        <id>install</id>
                         <goals>
                             <goal>push</goal>
                         </goals>
-                    </execution>
+                    </execution>-->
                 </executions>
                 <configuration>
                     <repository>wlaforest/confluent-sigma</repository>
