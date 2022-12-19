@@ -167,25 +167,25 @@
               <artifactId>replacer</artifactId>
               <version>1.5.3</version>
               <executions>
-            <execution>
-              <phase>generate-sources</phase>
-              <goals>
-                <goal>replace</goal>
-              </goals>
-            </execution>
+                <execution>
+                    <phase>generate-sources</phase>
+                    <goals>
+                        <goal>replace</goal>
+                    </goals>
+                </execution>
               </executions>
               <configuration>
-            <includes>
-              <include>${basedir}/bin/sigma-loader.sh</include>
-              <include>${basedir}/bin/confluent-sigma.sh</include>
-              <include>${basedir}/Dockerfile</include>
-            </includes>
-            <replacements>
-              <replacement>
-                <token>@VERSION@</token>
-                <value>${revision}</value>
-              </replacement>
-            </replacements>
+                <includes>
+                    <include>${basedir}/bin/sigma-loader.sh</include>
+                    <include>${basedir}/bin/confluent-sigma.sh</include>
+                    <include>${basedir}/Dockerfile</include>
+                </includes>
+                <replacements>
+                    <replacement>
+                        <token>@VERSION@</token>
+                        <value>${revision}</value>
+                    </replacement>
+                </replacements>
               </configuration>
             </plugin>
             <plugin>
