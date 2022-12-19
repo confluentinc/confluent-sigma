@@ -220,7 +220,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <repository>wlaforest/confluent-sigma</repository>
+                    <repository>confuentinc/confluent-sigma</repository>
                     <tag>${project.version}</tag>
                     <buildArgs>
                         <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
