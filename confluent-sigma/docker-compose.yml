@@ -160,7 +160,7 @@ services:
       - NET_ADMIN
 
   confluent-sigma-streams:
-    image: wlaforest/confluent-sigma:@VERSION@
+    image: wlaforest/confluent-sigma:latest
     container_name: confluent-sigma-streams
     depends_on:
       - broker
@@ -180,7 +180,7 @@ services:
         sleep infinity
 
   confluent-sigma-regex-ui:
-    image: wlaforest/confluent-sigma-regex-ui:@VERSION@
+    image: wlaforest/confluent-sigma-regex-ui:latest
     container_name: confluent-sigma-regex-ui
     depends_on:
       - broker
