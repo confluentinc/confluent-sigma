@@ -37,7 +37,7 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <repository>wlaforest/confluent-sigma</repository>
+                            <repository>confluentinc/confluent-sigma</repository>
                             <tag>${project.version}</tag>
                             <buildArgs>
                                 <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
@@ -132,7 +132,32 @@
     </dependencies>
 
     <build>
-        <plugins>
+      <plugins>
+	<plugin>
+          <groupId>com.google.code.maven-replacer-plugin</groupId>
+          <artifactId>replacer</artifactId>
+          <version>1.5.3</version>
+          <executions>
+            <execution>
+              <phase>generate-sources</phase>
+              <goals>
+                <goal>replace</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <includes>
+              <include>${basedir}/bin/sigma-loader.sh</include>
+              <include>${basedir}/bin/confluent-sigma.sh</include>
+            </includes>
+            <replacements>
+              <replacement>
+                <token>@VERSION@</token>
+                <value>${revision}</value>
+              </replacement>
+            </replacements>
+          </configuration>
+        </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
@@ -163,32 +188,6 @@
                 <version>${maven-surefire-plugin.version}</version>
             </plugin>
             <plugin>
-              <groupId>com.google.code.maven-replacer-plugin</groupId>
-              <artifactId>replacer</artifactId>
-              <version>1.5.3</version>
-              <executions>
-                <execution>
-                    <phase>generate-sources</phase>
-                    <goals>
-                        <goal>replace</goal>
-                    </goals>
-                </execution>
-              </executions>
-              <configuration>
-                <includes>
-                    <include>${basedir}/bin/sigma-loader.sh</include>
-                    <include>${basedir}/bin/confluent-sigma.sh</include>
-                    <include>${basedir}/Dockerfile</include>
-                </includes>
-                <replacements>
-                    <replacement>
-                        <token>@VERSION@</token>
-                        <value>${revision}</value>
-                    </replacement>
-                </replacements>
-              </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <inherited>false</inherited>
@@ -213,7 +212,8 @@
                 <version>${dockerfile-maven-version}</version>
                 <executions>
                     <execution>
-                        <id>package</id>
+                      <id>package</id>
+		      <phase>package</phase>
                         <goals>
                             <goal>build</goal>
                         </goals>
