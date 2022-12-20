@@ -265,7 +265,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <repository>confuentinc/confluent-sigma-ui</repository>
+                    <repository>confluentinc/confluent-sigma-ui</repository>
                     <tag>${project.version}</tag>
                     <buildArgs>
                         <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
