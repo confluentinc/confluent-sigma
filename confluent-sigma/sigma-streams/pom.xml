@@ -220,7 +220,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <repository>confuentinc/confluent-sigma</repository>
+                    <repository>confluentinc/confluent-sigma</repository>
                     <tag>${project.version}</tag>
                     <buildArgs>
                         <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
