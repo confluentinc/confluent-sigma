@@ -27,6 +27,7 @@ public enum SigmaPropertyEnum {
     SIGMA_RULES_TOPIC("sigma.rules.topic", true, "sigma-rules"),
     DATA_TOPIC("data.topic", true, "dns"),
     OUTPUT_TOPIC( "output.topic", true, "detections"),
+    APPLICATION_ID("application.id", true,"SigmaStreams"),
     SIGMA_RULE_FILTER_PRODUCT("sigma.rule.filter.product", false, null),
     SIGMA_RULE_FILTER_SERVICE("sigma.rule.filter.service", false, null),
     SIGMA_MAX_RULES("sigma.max.rules", false, null),
