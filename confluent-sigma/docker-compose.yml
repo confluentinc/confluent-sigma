@@ -20,6 +20,12 @@ services:
     ports:
       - "9092:9092"
       - "9101:9101"
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 100
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -146,3 +152,21 @@ services:
     command:
       - -c
       - /tmp/config/sigma.properties
+
+  dns-load-data:
+    image: edenhill/kcat:1.7.1
+    container_name: dns-load-data
+    hostname: dns-load-data
+    depends_on:
+      broker:
+        condition: service_healthy
+    volumes:
+      - ./demo/data:/tmp/data
+    command:
+      - -b
+      - broker:29092
+      - -t
+      - dns
+      - -P
+      - -l
+      - /tmp/data/dns.txt
