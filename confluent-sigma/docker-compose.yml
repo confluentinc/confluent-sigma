@@ -132,15 +132,6 @@ services:
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
 
-  # Fetch the large zeek pcap if it has not already been done.
-  zeek-download:
-    image: wlaforest/gdown
-    container_name: zeek-download
-    hostname: zeek-download
-    volumes:
-      - ./zeek:/tmp/down
-    command: gdown.sh 1Mo2cjWx8QFU3oekRLdaeWZztWa0VwF3e zeek_streamer.pcap
-
   confluent-sigma-streams:
     image: confluentinc/confluent-sigma:1.3.0
     container_name: confluent-sigma-streams
@@ -151,33 +142,7 @@ services:
       - ksqldb-server
     hostname: confluent-sigma-streams
     volumes:
-      - ./sigma:/tmp/config
+      - ./demo/config:/tmp/config
     command:
-      - bash
       - -c
-      - |
-        echo "Starting Streams app...java -cp sigma-streams-1.3.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp -c /tmp/config/sigma-dns.properties"
-        cd /tmp
-        java -cp sigma-streams-1.3.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp -c /tmp/config/sigma-dns.properties
-        sleep infinity
-
-#  confluent-sigma-regex-ui:
-#    image: confluentinc/confluent-sigma-regex-ui:latest
-#    container_name: confluent-sigma-regex-ui
-#    depends_on:
-#      - broker
-#      - connect
-#      - control-center
-#      - ksqldb-server
-#    hostname: confluent-sigma-regex-ui
-#    ports:
-#      - 8080:8080
-#    environment:
-#      kafka_bootstrapAddress: 'broker:29092'
-#      kafka_schemaRegistry: 'http://schema-registry:8081'
-#      kafka_sigma_rules_topic: 'sigma-rules'
-#      confluent_regex_applicationID: 'regex-application'
-#      confluent_regex_inputTopic: 'splunk-s2s-events'
-#      confluent_regex_ruleTopic: 'regex-rules'
-#      confluent_regex_filterField: 'sourcetype'
-#      confluent_regex_regexField: 'event'
+      - /tmp/config/sigma.properties
