@@ -1,4 +1,0 @@
-Possible Windows Executable Download Without Matching Mime Type
-Executable from Webdav
-Possible Data Collection related to Office Docs and Email Archives and PDFs
-Domain User Enumeration Network Recon 01
