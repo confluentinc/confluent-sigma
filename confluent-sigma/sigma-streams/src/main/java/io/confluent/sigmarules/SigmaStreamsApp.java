@@ -24,6 +24,7 @@ import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import io.confluent.sigmarules.streams.StreamManager;
 import io.confluent.sigmarules.utilities.SigmaOptions;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -67,6 +68,14 @@ public class SigmaStreamsApp extends StreamManager {
     }
 
     public static void main(String[] args) {
+        if (logger.getLevel().isLessSpecificThan(Level.INFO))
+        {
+            String message = "Starting SigmaSteamsApp with arguments: ";
+            for (int i = 0; i < args.length; i++)
+                message = message + args[i] + " ";
+            logger.log(Level.INFO, message);
+        }
+
         SigmaStreamsApp sigma = new SigmaStreamsApp(new SigmaOptions(args));
         sigma.start();
     }
