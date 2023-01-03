@@ -142,16 +142,33 @@ services:
     image: confluentinc/confluent-sigma:1.3.0
     container_name: confluent-sigma-streams
     depends_on:
-      - broker
-      - connect
-      - control-center
-      - ksqldb-server
+      broker:
+        condition: service_healthy
     hostname: confluent-sigma-streams
     volumes:
       - ./demo/config:/tmp/config
     command:
       - -c
       - /tmp/config/sigma.properties
+
+  confluent-sigma-ui:
+    image: confluentinc/confluent-sigma-ui:1.3.0
+    container_name: confluent-sigma-ui
+    depends_on:
+      broker:
+        condition: service_healthy
+    hostname: confluent-sigma-ui
+    ports:
+      - 8080:8080
+    environment:
+      kafka_bootstrapAddress: 'broker:29092'
+      kafka_schemaRegistry: 'http://schema-registry:8081'
+      kafka_sigma_rules_topic: 'sigma-rules'
+      confluent_regex_applicationID: 'regex-application'
+      confluent_regex_inputTopic: 'splunk-s2s-events'
+      confluent_regex_ruleTopic: 'regex-rules'
+      confluent_regex_filterField: 'sourcetype'
+      confluent_regex_regexField: 'event'
 
   dns-load-data:
     image: edenhill/kcat:1.7.1
