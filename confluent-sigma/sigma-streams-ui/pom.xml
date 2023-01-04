@@ -176,6 +176,13 @@
             <version>1.2.1</version>
             <scope>compile</scope>
         </dependency>
+        <!--  Jackson brings up the latest as of 1/4/2022 Snakeyaml version, however in build process, 1.30 is pulled in. Pinning to fix it  -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.33</version>
+        </dependency>
+
     </dependencies>
 
     <build>
