@@ -15,25 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script for launching the sigma streams app.  First parameter should be a config
-# properties file.  if its not then we check and see if there is already an environmental variable set for
-# SIGMAPROPS
+# Script for launching the sigma streams app.  The only parameter that should be passed in is a properties file.  If
+# this is not passed in then auto-configure.sh will find one in the default locations
 
-PROPS=
-
-if [ -f "$1" ] ; then
-  PROPS=$1
-elif [ -n "$SIGMAPROPS" ] ; then
-  PROPS=$SIGMAPROPS
-elif [ -f ~/.config/sigma.properties ] ; then
-  PROPS=~/.config/sigma.properties
-elif [ -f ~/.confluent/sigma.properties ] ; then
-  PROPS=~/.confluent/sigma.properties
-elif [ -f ~/tmp/sigma.properties ] ; then
-  PROPS=~/tmp/sigma.properties
+if [ -f bin/auto-configure.sh ] ; then
+  source bin/auto-configure.sh
+elif [ -f auto-configure.sh ] ; then
+  source auto-configure.sh
 fi
 
+# After running auto-configure we will check and see if a properties file is passed in as the parameter
+# if so then this should be used rather than whats found in the path
 
-echo "using $PROPS config"
+if [ $# -gt 0 ] ; then
+  if [ -f $1 ] ; then
+    echo "foo $1"
+    SIGMA_PROPS=$1
+  fi
+fi
 
-java -cp sigma-streams-1.3.0-fat.jar io.confluent.sigmarules.SigmaStreamsApp $* -c $PROPS
+echo "Using properties $SIGMA_PROPS, and jar $SIGMA_JAR"
+
+if [ -f $SIGMA_PROPS ] ; then
+  java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp -c $SIGMA_PROPS
+else
+  java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp
+fi
