@@ -29,7 +29,10 @@ fi
 # After running auto-configure we will check and see if a properties file is passed in as the parameter
 # if so then this should be used rather than whats found in the path
 if [ $# -gt 0 ] ; then
-  if [ -f "$1" ] ; then
+  if [ "$1" = '-i' ] ; then
+    docker run -it confluentinc/confluent-sigma:1.3.0
+    exit
+  elif [ -f "$1" ] ; then
     SIGMA_PROPS=$1
   fi
 fi
@@ -45,7 +48,6 @@ else
   if [ -f "$SIGMA_JAR" ] ; then
     java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp
   else
-    docker run -it -v $SIGMA_PROPS_DIR:/conf confluentinc/confluent-sigma:1.3.0
+    docker run -it confluentinc/confluent-sigma:1.3.0
   fi
-  # java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp
 fi
