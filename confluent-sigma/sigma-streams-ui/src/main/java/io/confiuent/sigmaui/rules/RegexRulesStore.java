@@ -23,7 +23,7 @@ import io.confiuent.sigmaui.config.SigmaUIProperties;
 import io.confiuent.sigmaui.models.RegexRule;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
-import io.confluent.sigmarules.SigmaProperties;
+import io.confluent.sigmarules.config.SigmaConfig;
 import io.kcache.Cache;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
@@ -66,18 +66,18 @@ public class RegexRulesStore implements CacheUpdateHandler<String, RegexRule> {
         Properties properties = sigmaProperties.getProperties();
         Properties kcacheProps = new Properties(properties);
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
-            properties.getProperty(SigmaProperties.BOOTSTRAP_SERVER.toString()));
+            properties.getProperty(SigmaConfig.BOOTSTRAP_SERVER.toString()));
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG,
-            properties.getProperty(SigmaProperties.SIGMA_RULES_TOPIC.toString()));
+            properties.getProperty(SigmaConfig.SIGMA_RULES_TOPIC.toString()));
 
         // optional config parameters
-        if (properties.containsKey(SigmaProperties.SECURITY_PROTOCOL.toString()))
+        if (properties.containsKey(SigmaConfig.SECURITY_PROTOCOL.toString()))
             kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SECURITY_PROTOCOL_CONFIG,
-                properties.getProperty(SigmaProperties.SECURITY_PROTOCOL.toString()));
+                properties.getProperty(SigmaConfig.SECURITY_PROTOCOL.toString()));
 
-        if (properties.containsKey(SigmaProperties.SASL_MECHANISM.toString()))
+        if (properties.containsKey(SigmaConfig.SASL_MECHANISM.toString()))
             kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SASL_MECHANISM_CONFIG,
-                properties.getProperty(SigmaProperties.SASL_MECHANISM.toString()));
+                properties.getProperty(SigmaConfig.SASL_MECHANISM.toString()));
 
         if (properties.containsKey("sasl.jaas.config"))
             kcacheProps.setProperty("kafkacache.sasl.jaas.config",
@@ -87,11 +87,11 @@ public class RegexRulesStore implements CacheUpdateHandler<String, RegexRule> {
             kcacheProps.setProperty("kafkacache.sasl.client.callback.handler.class",
                 properties.getProperty("sasl.client.callback.handler.class"));
 
-        if (properties.containsKey(SigmaProperties.SCHEMA_REGISTRY.toString())) {
+        if (properties.containsKey(SigmaConfig.SCHEMA_REGISTRY.toString())) {
             kcacheProps.setProperty(KEY_CONVERTER_SCHEMA_REGISTRY_URL,
-                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+                properties.getProperty(SigmaConfig.SCHEMA_REGISTRY.toString()));
             kcacheProps.setProperty(VALUE_CONVERTER_SCHEMA_REGISTRY_URL,
-                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+                properties.getProperty(SigmaConfig.SCHEMA_REGISTRY.toString()));
         }
 
         regexRulesCache = new KafkaCache<>(

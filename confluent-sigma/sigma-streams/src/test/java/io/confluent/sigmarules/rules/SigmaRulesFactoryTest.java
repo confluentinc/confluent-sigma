@@ -23,7 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import io.confluent.sigmarules.tools.SigmaRuleLoader;
-import io.confluent.sigmarules.utilities.SigmaOptions;
+import io.confluent.sigmarules.config.SigmaOptions;
 import java.util.Properties;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.AfterAll;

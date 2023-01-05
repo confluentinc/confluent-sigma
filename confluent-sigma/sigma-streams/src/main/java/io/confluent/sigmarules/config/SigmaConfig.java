@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.confluent.sigmarules;
+package io.confluent.sigmarules.config;
 
 /**
  * Enum for all the Sigma specific properties
  */
-public enum SigmaProperties {
+public enum SigmaConfig {
 
     BOOTSTRAP_SERVER("bootstrap.server", true),
     SIGMA_RULES_TOPIC("sigma.rules.topic", true),
@@ -42,7 +42,7 @@ public enum SigmaProperties {
     private final String name;
     private final boolean required;
 
-    SigmaProperties(final String nameArg, boolean requiredArg) {
+    SigmaConfig(final String nameArg, boolean requiredArg) {
         this.name = nameArg;
         this.required = requiredArg;
     }
