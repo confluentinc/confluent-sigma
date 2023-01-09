@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.StreamSupport;
 import javax.annotation.PostConstruct;
+import io.confluent.sigmarules.config.SigmaOptions;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +51,13 @@ public class SigmaStreamsComponent {
     @PostConstruct
     private void initialize() {
         Properties properties = getPropertiesFromEnv();
-        this.ruleFactory = new SigmaRulesFactory(properties);
-        this.sigmaStream = new SigmaStream(properties, ruleFactory);
+        initializeWithProps(properties);
+    }
+
+    private void initializeWithProps(Properties properties) {
+        this.streamManager = new StreamManager(properties);
+        this.ruleFactory = new SigmaRulesFactory(streamManager.getStreamProperties());
+        this.sigmaStream = new SigmaStream(streamManager.getStreamProperties(), ruleFactory);
 
         sigmaStream.startStream();
     }
@@ -65,5 +72,19 @@ public class SigmaStreamsComponent {
             .forEach(propName -> props.setProperty(propName, springEnv.getProperty(propName)));
 
         return props;
+    }
+
+    public static void main(String[] args) {
+        if (logger.getLevel().isLessSpecificThan(Level.INFO))
+        {
+            String message = "Starting SigmaSteamsApp with arguments: ";
+            for (int i = 0; i < args.length; i++)
+                message = message + args[i] + " ";
+            logger.log(Level.INFO, message);
+        }
+
+        SigmaOptions sigmaOptions = new SigmaOptions(args);
+        SigmaStreamsComponent sigma = new SigmaStreamsComponent();
+        sigma.initializeWithProps(sigmaOptions.getProperties());
     }
 }

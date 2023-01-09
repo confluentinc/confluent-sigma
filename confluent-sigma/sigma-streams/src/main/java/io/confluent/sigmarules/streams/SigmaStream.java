@@ -26,7 +26,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
-import io.confluent.sigmarules.config.SigmaConfig;
+import io.confluent.sigmarules.SigmaPropertyEnum;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
@@ -58,11 +58,11 @@ public class SigmaStream extends StreamManager {
         super(properties);
 
         this.ruleFactory = ruleFactory;
-        this.outputTopic = properties.getProperty(SigmaConfig.OUTPUT_TOPIC.toString());
-        this.inputTopic = properties.getProperty(SigmaConfig.DATA_TOPIC.toString());
+        this.outputTopic = properties.getProperty(SigmaPropertyEnum.OUTPUT_TOPIC.toString());
+        this.inputTopic = properties.getProperty(SigmaPropertyEnum.DATA_TOPIC.toString());
 
         this.firstMatch = Boolean.valueOf(
-            properties.getProperty(SigmaConfig.SIGMA_RULE_FIRST_MATCH.toString()));
+            properties.getProperty(SigmaPropertyEnum.SIGMA_RULE_FIRST_MATCH.toString()));
     }
 
     public void startStream() {

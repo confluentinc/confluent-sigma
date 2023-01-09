@@ -1,7 +1,4 @@
-# docker build -t michaelpeacock/confluent-sigma-regex-ui:latest .
-# docker push michaelpeacock/confluent-sigma-regex-ui:latest
-
 FROM openjdk:11
-COPY ./target/sigma-streams-ui-1.2.1.jar /tmp
+COPY ./target/sigma-streams-ui-1.3.2.jar /tmp
 WORKDIR /tmp
-CMD java -jar sigma-streams-ui-1.2.1.jar
+CMD java -jar sigma-streams-ui-1.3.2.jar
