@@ -88,3 +88,4 @@ public class SigmaStreamsComponent {
         sigma.initializeWithProps(sigmaOptions.getProperties());
     }
 }
+

@@ -25,7 +25,7 @@ public enum SigmaPropertyEnum {
     BOOTSTRAP_SERVER("bootstrap.server", true, "localhost:9092"),
     SIGMA_RULES_TOPIC("sigma.rules.topic", true, "sigma-rules"),
     DATA_TOPIC("data.topic", true, "dns"),
-    OUTPUT_TOPIC( "output.topic", true, "detections"),
+    OUTPUT_TOPIC( "output.topic", true, "dns-detection"),
     APPLICATION_ID("application.id", true,"SigmaStreams"),
     SIGMA_RULE_FILTER_PRODUCT("sigma.rule.filter.product", false, null),
     SIGMA_RULE_FILTER_SERVICE("sigma.rule.filter.service", false, null),

@@ -33,29 +33,36 @@ public class SigmaRuleParser {
     final static Logger logger = LogManager.getLogger(SigmaRuleParser.class);
     ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
-    private io.confluent.sigmarules.parsers.DetectionParser detectionParser;
-    private io.confluent.sigmarules.parsers.ConditionParser conditionParser;
+    private DetectionParser detectionParser;
+    private ConditionParser conditionParser;
 
     public SigmaRuleParser() {
-        detectionParser = new io.confluent.sigmarules.parsers.DetectionParser();
-        conditionParser = new io.confluent.sigmarules.parsers.ConditionParser();
+        detectionParser = new DetectionParser();
+        conditionParser = new ConditionParser();
     }
 
     public SigmaRuleParser(FieldMapper fieldMapperFile) {
-        detectionParser = new io.confluent.sigmarules.parsers.DetectionParser(fieldMapperFile);
-        conditionParser = new io.confluent.sigmarules.parsers.ConditionParser();
+        detectionParser = new DetectionParser(fieldMapperFile);
+        conditionParser = new ConditionParser();
     }
 
     public SigmaRule parseRule(String rule)
         throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
         ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, ParsedSigmaRule.class);
 
+        return parseRule(parsedSigmaRule);
+    }
+
+    public SigmaRule parseRule(ParsedSigmaRule parsedSigmaRule)
+        throws InvalidSigmaRuleException, SigmaRuleParserException {
         SigmaRule sigmaRule = new SigmaRule();
         sigmaRule.copyParsedSigmaRule(parsedSigmaRule);
 
         sigmaRule.setDetection(detectionParser.parseDetections(parsedSigmaRule));
         sigmaRule.setConditionsManager(conditionParser.parseCondition(parsedSigmaRule));
+
         return sigmaRule;
     }
+
 
 }

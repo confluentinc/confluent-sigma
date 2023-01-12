@@ -138,23 +138,23 @@ services:
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
 
-  # confluent-sigma-streams:
-  #   image: confluentinc/confluent-sigma:1.3.2
-  #   container_name: confluent-sigma-streams
-  #   depends_on:
-  #     broker:
-  #       condition: service_healthy
-  #   hostname: confluent-sigma-streams
-  #   environment:
-  #     application_id: 'dns-streams-app'
-  #     bootstrap_server: 'broker:29092'
-  #     schema_registry: 'http://schema-registry:8081'
-  #     data_topic: 'dns'
-  #     output_topic: 'dns-detection'
-  #     sigma_rules_topic: 'sigma-rules'
-  #     sigma_rule_filter_product: 'zeek'
-  #     sigma_rule_filter_service: 'dns'
-  #     sigma_rule_first_match: 'false'
+  confluent-sigma-streams:
+    image: confluentinc/confluent-sigma:1.3.2
+    container_name: confluent-sigma-streams
+    depends_on:
+      broker:
+        condition: service_healthy
+    hostname: confluent-sigma-streams
+    environment:
+      application_id: 'dns-streams-app'
+      bootstrap_server: 'broker:29092'
+      schema_registry: 'http://schema-registry:8081'
+      data_topic: 'dns'
+      output_topic: 'dns-detection'
+      sigma_rules_topic: 'sigma-rules'
+      sigma_rule_filter_product: 'zeek'
+      sigma_rule_filter_service: 'dns'
+      sigma_rule_first_match: 'false'
 
   confluent-sigma-ui:
     image: confluentinc/confluent-sigma-ui:1.3.2

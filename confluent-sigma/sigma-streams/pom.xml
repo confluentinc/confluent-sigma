@@ -155,7 +155,45 @@
 
     <build>
       <plugins>
-	      <plugin>
+          <plugin>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-maven-plugin</artifactId>
+              <version>2.7.7</version>
+              <executions>
+                  <execution>
+                      <goals>
+                          <goal>repackage</goal>
+                      </goals>
+                      <configuration>
+                          <classifier>fat</classifier>
+                      </configuration>
+                  </execution>
+              </executions>
+          </plugin>
+          <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>flatten-maven-plugin</artifactId>
+              <version>1.2.5</version>
+              <configuration>
+              </configuration>
+              <executions>
+                  <execution>
+                      <id>flatten</id>
+                      <phase>process-resources</phase>
+                      <goals>
+                          <goal>flatten</goal>
+                      </goals>
+                  </execution>
+                  <execution>
+                      <id>flatten.clean</id>
+                      <phase>clean</phase>
+                      <goals>
+                          <goal>clean</goal>
+                      </goals>
+                  </execution>
+              </executions>
+          </plugin>
+          <plugin>
           <groupId>com.google.code.maven-replacer-plugin</groupId>
           <artifactId>replacer</artifactId>
           <version>1.5.3</version>
@@ -181,24 +219,6 @@
           </configuration>
         </plugin>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.7.7</version>
-                <configuration>
-                    <addResources>true</addResources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>fat</classifier>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
@@ -217,8 +237,16 @@
                         <configuration>
                             <artifactSet>
                             </artifactSet>
-                            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-fat.jar
+                            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-cli.jar
                             </outputFile>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>**/Log4j2Plugins.dat</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>

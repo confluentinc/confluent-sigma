@@ -57,11 +57,11 @@ public class AggregateTopologyViewer {
 
     SigmaRulesFactory srf = new SigmaRulesFactory();;
     srf.setFiltersFromProperties(testProperties);
-    srf.addRule("Simple Http", testRule);
-    srf.addRule("Simple Http2", testRule);
-    srf.addRule("Simple Http3", testRule);
-    srf.addRule("Simple Http4", testRule);
-    srf.addRule("Simple Http5", testRule);
+    //srf.addRule("Simple Http", testRule);
+    //srf.addRule("Simple Http2", testRule);
+    //srf.addRule("Simple Http3", testRule);
+    //srf.addRule("Simple Http4", testRule);
+    //srf.addRule("Simple Http5", testRule);
 
     SigmaStream stream = new SigmaStream(testProperties, srf);
     Topology topology = stream.createTopology();

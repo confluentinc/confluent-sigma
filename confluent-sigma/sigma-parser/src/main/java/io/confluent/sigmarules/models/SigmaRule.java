@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,9 +41,9 @@ public class SigmaRule {
     private String id;
     private String author;
     private List<String> references = new ArrayList<>();
-    private LogSource logsource;
-    private DetectionsManager detectionsManager;
-    private ConditionsManager conditionsManager;
+    private LogSource logsource = new LogSource();
+    private DetectionsManager detectionsManager = new DetectionsManager();
+    private ConditionsManager conditionsManager = new ConditionsManager();
 
     private KafkaRule kafkaRule;
 
@@ -134,7 +135,7 @@ public class SigmaRule {
     }
 
     public void copyParsedSigmaRule(
-        io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule) {
+        ParsedSigmaRule parsedSigmaRule) {
         this.title = parsedSigmaRule.getTitle();
         this.description = parsedSigmaRule.getDescription();
         this.id = parsedSigmaRule.getId();

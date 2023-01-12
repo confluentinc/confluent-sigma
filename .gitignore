@@ -43,6 +43,9 @@ target/*
 .idea
 .idea/* 
 
+# Maven generated
+.flattened-pom.xml
+
 # Log file
 *.log
 

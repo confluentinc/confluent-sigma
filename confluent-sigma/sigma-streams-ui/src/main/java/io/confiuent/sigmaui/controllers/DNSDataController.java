@@ -56,6 +56,10 @@ public class DNSDataController {
     public void consumeDNSData(DNSStreamData dns) {
         synchronized (this.dnsData) {
             this.dnsData.add(dns);
+
+            if (this.dnsData.size() > 500) {
+                sendBufferedData();
+            }
         }
     }
 
@@ -63,6 +67,10 @@ public class DNSDataController {
     public void consumeDetectionData(DetectionResults results) {
         synchronized (this.dnsDetections) {
             this.dnsDetections.add(results);
+
+            if (this.dnsDetections.size() > 500) {
+                sendBufferedData();
+            }
         }
     }
 

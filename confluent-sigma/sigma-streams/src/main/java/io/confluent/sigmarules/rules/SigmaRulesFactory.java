@@ -23,6 +23,7 @@ import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.LogSource;
 import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.streams.StreamManager;
 import java.io.IOException;
@@ -121,9 +122,9 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      */
     // callback from kcache
     @Override
-    public void handleRuleUpdate(String title, String rule) {
+    public void handleRuleUpdate(String title, ParsedSigmaRule rule) {
         try {
-            addRule(title, rule);
+            addRule(title, rulesParser.parseRule(rule));
         } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
             e.printStackTrace();
         }
@@ -137,7 +138,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
 
         this.sigmaRulesStore.getRules().forEach((title, rule) -> {
            try {
-                addRule(title, rule);
+                addRule(title, rulesParser.parseRule(rule));
 
             } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
                logger.error("Exception thrown for rule: " + title + " rule: " + rule);
@@ -150,11 +151,11 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * Checks the rule to see if it matches the filters defined. If it matches, a rule will
      * get parsed and a SigmaRule object will be created.
      * @param title of the rule
-     * @param rule as a string
+     * @param sigmaRule as a string
      */
-    public SigmaRule addRule(String title, String rule)
+    public SigmaRule addRule(String title, SigmaRule sigmaRule)
         throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
-        SigmaRule sigmaRule = rulesParser.parseRule(rule);
+        //SigmaRule sigmaRule = rulesParser.parseRule(rule);
 
         if (shouldBeFiltered(sigmaRule)) {
             logger.info(title + " will not be loaded.  It does not match the filtered rules " +
@@ -211,7 +212,6 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
             service = logsource.getService();
         }
 
-        logger.info("checking product: " + product + " service: " + service);
         logger.info("sigma rule product: " + product + " service: " + service);
 
         boolean validProduct = true;

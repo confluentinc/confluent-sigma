@@ -26,7 +26,10 @@ import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.AggregateParser;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
+import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
@@ -43,6 +46,7 @@ public class AggregateTopology extends SigmaBaseTopology {
     final static Logger logger = LogManager.getLogger(AggregateTopology.class);
 
     private final SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
+    private SigmaRule currentRule = null;
 
     public void createAggregateTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
         String outputTopic, Configuration jsonPathConf) {
@@ -54,7 +58,7 @@ public class AggregateTopology extends SigmaBaseTopology {
         AggregateValues aggregateValues = rule.getConditionsManager().getAggregateCondition().getAggregateValues();
 
         sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData, jsonPathConf))
-            .selectKey((k, v) -> updateKey(aggregateValues))
+            .selectKey((k, v) -> updateKey(rule, aggregateValues))
             .groupByKey()
             .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(windowTimeMS),
                 Duration.ofMillis(windowTimeMS)))
@@ -70,11 +74,12 @@ public class AggregateTopology extends SigmaBaseTopology {
             .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
     }
 
-    private String updateKey(AggregateValues aggregateValues) {
+
+    private String updateKey(SigmaRule rule, AggregateValues aggregateValues) {
         if (aggregateValues.getGroupBy() == null || aggregateValues.getGroupBy().isEmpty()) {
-            return "Counter";
+            return rule.getTitle();
         } else {
-            return aggregateValues.getGroupBy();
+            return rule.getTitle() + "-" + aggregateValues.getGroupBy();
         }
     }
 

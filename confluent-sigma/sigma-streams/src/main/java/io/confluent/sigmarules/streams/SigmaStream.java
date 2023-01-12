@@ -93,6 +93,12 @@ public class SigmaStream extends StreamManager {
         KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
             Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
 
+        // simple rules
+        SimpleTopology simpleTopology = new SimpleTopology();
+        simpleTopology.createSimpleTopology(sigmaStream, ruleFactory, outputTopic,
+            jsonPathConf, firstMatch);
+
+        // aggregate rules
         for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
             SigmaRule rule = entry.getValue();
 
@@ -100,15 +106,7 @@ public class SigmaStream extends StreamManager {
                 AggregateTopology aggregateTopology = new AggregateTopology();
                 aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic,
                     jsonPathConf);
-           } else {
-                simpleRules.add(rule);
             }
-        }
-
-        if (simpleRules.size() > 0) {
-          SimpleTopology simpleTopology = new SimpleTopology();
-          simpleTopology.createSimpleTopology(sigmaStream, simpleRules, outputTopic,
-              jsonPathConf, firstMatch);
         }
 
         return builder.build();
