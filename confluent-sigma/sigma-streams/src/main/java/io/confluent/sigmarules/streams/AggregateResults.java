@@ -32,16 +32,8 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
 public class AggregateResults {
-    private Map<String, Long> results = new HashMap<>();
     private JsonNode sourceData;
-
-    public Map<String, Long> getResults() {
-        return results;
-    }
-
-    public void setResults(Map<String, Long> results) {
-        this.results = results;
-    }
+    private Long count = 0L;
 
     public JsonNode getSourceData() {
         return sourceData;
@@ -51,16 +43,9 @@ public class AggregateResults {
         this.sourceData = sourceData;
     }
 
-    public String toJSON() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+    public Long getCount() { return this.count; }
 
-        return null;
-    }
+    public void setCount(Long count) { this.count = count; }
 
     public static Serde<AggregateResults> getJsonSerde() {
         Map<String, Object> serdeProps = new HashMap<>();

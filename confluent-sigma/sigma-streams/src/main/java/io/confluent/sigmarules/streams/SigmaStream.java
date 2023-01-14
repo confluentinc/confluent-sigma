@@ -112,6 +112,10 @@ public class SigmaStream extends StreamManager {
         return builder.build();
     }
 
+    private void createAggregrateSubStream() {
+
+    }
+    
     public static Configuration createJsonPathConfig() {
         return Configuration.builder()
                 .mappingProvider(new JacksonMappingProvider()) // Required for JsonNode object
