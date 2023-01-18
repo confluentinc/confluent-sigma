@@ -26,6 +26,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import io.confluent.sigmarules.SigmaAppInstanceStore;
 import io.confluent.sigmarules.SigmaPropertyEnum;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
@@ -52,15 +53,16 @@ public class SigmaStream extends StreamManager {
     private String inputTopic;
     private String outputTopic;
     private Boolean firstMatch = false;
+    private SigmaAppInstanceStore instanceStore;
     private final Configuration jsonPathConf = createJsonPathConfig();
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
 
         this.ruleFactory = ruleFactory;
+        this.instanceStore = new SigmaAppInstanceStore(properties,this);
         this.outputTopic = properties.getProperty(SigmaPropertyEnum.OUTPUT_TOPIC.toString());
         this.inputTopic = properties.getProperty(SigmaPropertyEnum.DATA_TOPIC.toString());
-
         this.firstMatch = Boolean.valueOf(
             properties.getProperty(SigmaPropertyEnum.SIGMA_RULE_FIRST_MATCH.toString()));
     }
@@ -74,6 +76,7 @@ public class SigmaStream extends StreamManager {
 
         streams.cleanUp();
         streams.start();
+        instanceStore.register();
 
         // shutdown hook to correctly close the streams application
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
@@ -86,9 +89,6 @@ public class SigmaStream extends StreamManager {
     // iterates through each rule and publishes to output topic for
     // each rule that is a match
     public Topology createTopology() {
-        // container of simple rules
-        List<SigmaRule> simpleRules = new ArrayList<>();
-
         StreamsBuilder builder = new StreamsBuilder();
         KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
             Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
@@ -110,6 +110,14 @@ public class SigmaStream extends StreamManager {
         }
 
         return builder.build();
+    }
+
+    public KafkaStreams getStreams() {
+        return streams;
+    }
+
+    public SigmaRulesFactory getRuleFactory() {
+        return ruleFactory;
     }
 
     public static Configuration createJsonPathConfig() {

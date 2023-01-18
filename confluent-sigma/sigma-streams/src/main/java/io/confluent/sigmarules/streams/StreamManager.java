@@ -19,7 +19,6 @@
 
 package io.confluent.sigmarules.streams;
 
-import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

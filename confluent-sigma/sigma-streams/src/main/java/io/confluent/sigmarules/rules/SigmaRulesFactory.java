@@ -134,8 +134,6 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
      * Pulls in all rules that is currently stored in the Sigma Rules topic
      */
     private void getRulesfromStore() {
-        List<String> kafkaOutputTopics = new ArrayList<>();
-
         this.sigmaRulesStore.getRules().forEach((title, rule) -> {
            try {
                 addRule(title, rulesParser.parseRule(rule));
