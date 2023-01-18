@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
+import io.confluent.sigmarules.models.SigmaRule;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -32,8 +33,17 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
 public class AggregateResults {
+    private SigmaRule rule = new SigmaRule();
     private JsonNode sourceData;
     private Long count = 0L;
+
+    public SigmaRule getRule() {
+        return rule;
+    }
+
+    public void setRule(SigmaRule rule) {
+        this.rule = rule;
+    }
 
     public JsonNode getSourceData() {
         return sourceData;

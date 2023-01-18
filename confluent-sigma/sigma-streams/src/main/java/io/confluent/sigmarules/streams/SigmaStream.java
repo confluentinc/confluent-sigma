@@ -28,6 +28,7 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.confluent.sigmarules.SigmaPropertyEnum;
 import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.rules.SigmaRuleFactoryObserver;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ public class SigmaStream extends StreamManager {
     private String outputTopic;
     private Boolean firstMatch = false;
     private final Configuration jsonPathConf = createJsonPathConfig();
+    KStream<String, JsonNode> sigmaStream = null;
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
@@ -63,6 +65,33 @@ public class SigmaStream extends StreamManager {
 
         this.firstMatch = Boolean.valueOf(
             properties.getProperty(SigmaPropertyEnum.SIGMA_RULE_FIRST_MATCH.toString()));
+
+        // if the new or updated rule has an aggregate condition, we must either add a new
+        // substream (for a new rule) or restart the topology if a rule has been changed
+        // FF has been entered for dynamic changes to substreams
+        ruleFactory.addObserver(new SigmaRuleFactoryObserver() {
+            @Override
+            public void processRuleUpdate(SigmaRule rule, Boolean newRule) {
+/*
+                if (rule.getConditionsManager().hasAggregateCondition()) {
+                    if (newRule) {
+                        logger.info("New aggregate rule: " + rule.getTitle());
+                        createAggregateSubStream(sigmaStream, rule);
+                    } else {
+                        logger.info(rule.getTitle() +
+                            " aggregate rule has been modified. Restarting topology");
+                    }
+                }
+*/
+
+                // if we run out of filter predicates, we need to increase the array size
+                // and rebuild the topology
+                //                if (streams != null && (currentSigmaRuleCount % INITIAL_NUMBER_SIGMA_RULES == 0)) {
+                //                    streams.close();
+                //                    startStream();
+                //                }
+            }
+        }, false);
     }
 
     public void startStream() {
@@ -90,7 +119,7 @@ public class SigmaStream extends StreamManager {
         List<SigmaRule> simpleRules = new ArrayList<>();
 
         StreamsBuilder builder = new StreamsBuilder();
-        KStream<String, JsonNode> sigmaStream = builder.stream(inputTopic,
+        sigmaStream = builder.stream(inputTopic,
             Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
 
         // simple rules
@@ -98,24 +127,32 @@ public class SigmaStream extends StreamManager {
         simpleTopology.createSimpleTopology(sigmaStream, ruleFactory, outputTopic,
             jsonPathConf, firstMatch);
 
+        AggregateTopology aggregateTopology = new AggregateTopology();
+        aggregateTopology.createAggregateTopology(sigmaStream, ruleFactory, outputTopic,
+            jsonPathConf);
+
+       /*
         // aggregate rules
         for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
             SigmaRule rule = entry.getValue();
 
             if (rule.getConditionsManager().hasAggregateCondition()) {
-                AggregateTopology aggregateTopology = new AggregateTopology();
-                aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic,
-                    jsonPathConf);
+                createAggregateSubStream(sigmaStream, rule);
             }
         }
+        */
 
         return builder.build();
     }
 
-    private void createAggregrateSubStream() {
-
+    /*
+    private void createAggregateSubStream(KStream<String, JsonNode> sigmaStream, SigmaRule rule) {
+        AggregateTopology aggregateTopology = new AggregateTopology();
+        aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic,
+            jsonPathConf);
     }
-    
+    */
+
     public static Configuration createJsonPathConfig() {
         return Configuration.builder()
                 .mappingProvider(new JacksonMappingProvider()) // Required for JsonNode object
