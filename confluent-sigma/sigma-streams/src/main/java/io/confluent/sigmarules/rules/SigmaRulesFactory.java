@@ -162,6 +162,10 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
         });
     }
 
+    public SigmaRule addRule(String title, String sigmaRule)
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+        return addRule(title, rulesParser.parseRule(sigmaRule));
+    }
     /**
      * Checks the rule to see if it matches the filters defined. If it matches, a rule will
      * get parsed and a SigmaRule object will be created.
