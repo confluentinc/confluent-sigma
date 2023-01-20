@@ -34,6 +34,7 @@ import java.util.Map;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
@@ -48,104 +49,163 @@ public class AggregateTopology extends SigmaBaseTopology {
     private final SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
     private SigmaRule currentRule = null;
 
+    public void createAggregateTopology(KStream<String, JsonNode> sigmaStream,
+        SigmaRulesFactory ruleFactory,
+        String outputTopic, Configuration jsonPathConf) {
+
+        final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
+        Long windowTimeMS = 10000L; //rule.getDetectionsManager().getWindowTimeMS();
+
+        sigmaStream.flatMap((key, sourceData) -> {
+                List<KeyValue<String, AggregateResults>> results = new ArrayList<>();
+                for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
+                    SigmaRule rule = entry.getValue();
+
+                    if (true == rule.getConditionsManager().hasAggregateCondition()) {
+                        logger.info("check rule " + rule.getTitle());
+                        if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
+                            AggregateResults aggResults = new AggregateResults();
+                            aggResults.setRule(rule);
+                            aggResults.setSourceData(sourceData);
+                            results.add(new KeyValue<>(updateKey(rule, sourceData), aggResults));
+                        }
+                    }
+                }
+                return results;
+        })
+        .selectKey((k, sourceData) -> updateKey(sourceData.getRule(), sourceData.getSourceData()))
+        .groupByKey(Grouped.with(
+                Serdes.String(), /* key */
+                aggregateSerde))
+        .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(getWindowTime()),
+            Duration.ofMillis(getWindowTime())))
+        .aggregate(
+            () -> new AggregateResults(),
+            (key, source, aggregate) -> {
+                 aggregate.setRule(source.getRule());
+                aggregate.setSourceData(source.getSourceData());
+                aggregate.setCount(aggregate.getCount() + 1);
+              return aggregate;
+            },
+            Materialized.with(Serdes.String(), aggregateSerde)
+        )
+        .toStream()
+        .filter((k, results) -> doStreamFiltering(results.getRule(), results))
+        .map((key, value) ->
+            new KeyValue<>("", buildResults(value.getRule(), value.getSourceData())))
+        .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+    }
+
+    public AggregateResults updateValues(AggregateResults results) {
+        results.setCount(results.getCount() + 1);
+        return results;
+    }
+
+    /*
     public void createAggregateTopology(KStream<String, JsonNode> sigmaStream, SigmaRule rule,
         String outputTopic, Configuration jsonPathConf) {
 
         final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
         Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
-        logger.info("window time: " + windowTimeMS);
 
-        AggregateValues aggregateValues = rule.getConditionsManager().getAggregateCondition().getAggregateValues();
+        AggregateValues aggregateValues =
+            rule.getConditionsManager().getAggregateCondition().getAggregateValues();
 
         sigmaStream.filter((k, sourceData) -> ruleCheck.isValid(rule, sourceData, jsonPathConf))
-            .selectKey((k, v) -> updateKey(rule, aggregateValues))
+            .selectKey((k, sourceData) -> updateKey(rule, aggregateValues, sourceData))
             .groupByKey()
             .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(windowTimeMS),
                 Duration.ofMillis(windowTimeMS)))
             .aggregate(
                 () -> new AggregateResults(),
-                (key, source, totals) -> updateValues(aggregateValues, source, totals),
+                (key, source, aggregate) -> {
+                    aggregate.setSourceData(source);
+                    aggregate.setCount(aggregate.getCount() + 1);
+                    return aggregate;
+                },
                 Materialized.with(Serdes.String(), aggregateSerde)
             )
             .toStream()
-            .filter((k, results) -> doStreamFiltering(aggregateValues, results))
+            .filter((k, results) -> doStreamFiltering(k.key(), rule, aggregateValues, results))
             .map((Windowed<String> key, AggregateResults value) ->
                 new KeyValue<>("", buildResults(rule, value.getSourceData())))
             .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
     }
+*/
 
-
-    private String updateKey(SigmaRule rule, AggregateValues aggregateValues) {
-        if (aggregateValues.getGroupBy() == null || aggregateValues.getGroupBy().isEmpty()) {
-            return rule.getTitle();
-        } else {
-            return rule.getTitle() + "-" + aggregateValues.getGroupBy();
+    private Long getWindowTime() {
+        Long time = 1L;
+        if (currentRule != null) {
+            time = currentRule.getDetectionsManager().getWindowTimeMS();
         }
+        return time;
     }
 
-    private AggregateResults updateValues(AggregateValues aggregateValues, JsonNode source,
-        AggregateResults balance) {
+    private String updateKey(SigmaRule rule, JsonNode source) {
+        // make the key the title + groupBy + distinctValue, so we have 1 unique stream
+        AggregateValues aggregateValues = rule.getConditionsManager().getAggregateCondition()
+            .getAggregateValues();
 
-        AggregateResults results = new AggregateResults();
-        results.setResults(balance.getResults());
-        results.setSourceData(source);
+        String newKey = rule.getTitle();
+        String groupBy = aggregateValues.getGroupBy();
+        if (groupBy != null && groupBy.isEmpty() == false && source.get(groupBy) != null) {
+            newKey = newKey + "-" + source.get(aggregateValues.getGroupBy()).asText();
+        }
 
-        long newValue = 1L;
         String distinctValue = aggregateValues.getDistinctValue();
-        if (distinctValue == null || distinctValue.isEmpty()) {
-            distinctValue = "CurrentCount";
+        if (distinctValue != null && distinctValue.isEmpty() == false &&
+            source.get(distinctValue) != null) {
+            newKey = newKey + "-" +  source.get(distinctValue).asText();
         }
 
-        if (results.getResults().containsKey(distinctValue)) {
-            newValue = results.getResults().get(distinctValue) + 1;
-        }
-        results.getResults().put(distinctValue, newValue);
-        logger.info(" update " + distinctValue + " to " + newValue);
-
-        return results;
+        currentRule = rule;
+        return newKey;
     }
 
-    private Boolean doStreamFiltering(AggregateValues aggregateValues, AggregateResults tableValues) {
+    private Boolean doStreamFiltering(SigmaRule rule, AggregateResults results) {
+        AggregateValues aggregateValues = rule.getConditionsManager().getAggregateCondition()
+            .getAggregateValues();
         long operationValue = Long.parseLong(aggregateValues.getOperationValue());
         boolean matchFound = false;
 
-        for (Map.Entry<String, Long> results : tableValues.getResults().entrySet()) {
-            switch (aggregateValues.getOperation()) {
-                case AggregateParser.EQUALS:
-                    if (results.getValue() == operationValue) {
-                        matchFound = true;
-                    }
-                    break;
-                case AggregateParser.GREATER_THAN:
-                    if (results.getValue() > operationValue) {
-                        matchFound = true;
-                    }
-                    break;
-                case AggregateParser.GREATER_THAN_EQUAL:
-                    if (results.getValue() >= operationValue) {
-                        matchFound = true;
-                    }
-                    break;
-                case AggregateParser.LESS_THAN:
-                    if (results.getValue() < operationValue) {
-                        matchFound = true;
-                    }
-                    break;
-                case AggregateParser.LESS_THAN_EQUAL:
-                    if (results.getValue() <= operationValue) {
-                        matchFound = true;
-                    }
-                    break;
-                default:
-                    System.out.println("Unhandled operation");
-                    break;
-            }
+        switch (aggregateValues.getOperation()) {
+            case AggregateParser.EQUALS:
+                if (results.getCount() == operationValue) {
+                    matchFound = true;
+                }
+                break;
+            case AggregateParser.GREATER_THAN:
+                if (results.getCount() > operationValue) {
+                    matchFound = true;
+                }
+                break;
+            case AggregateParser.GREATER_THAN_EQUAL:
+                if (results.getCount() >= operationValue) {
+                    matchFound = true;
+                }
+                break;
+            case AggregateParser.LESS_THAN:
+                if (results.getCount() < operationValue) {
+                    matchFound = true;
+                }
+                break;
+            case AggregateParser.LESS_THAN_EQUAL:
+                if (results.getCount() <= operationValue) {
+                    matchFound = true;
+                }
+                break;
+            default:
+                System.out.println("Unhandled operation");
+                break;
+        }
 
-            if (matchFound) {
-                logger.info("Found a match Key: " + results.getKey() + " Value: " + results.getValue() +
-                        " Comp Value " + operationValue);
-                return true;
-            }
+        if (matchFound) {
+            logger.info("Found a match Title: " + rule.getTitle() +
+                " (" + results.getCount() +
+                " " + aggregateValues.getOperation() +
+                " " + operationValue + ")");
+
+            return true;
         }
 
         return false;

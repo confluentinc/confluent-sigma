@@ -59,10 +59,13 @@ public class StreamManager {
 
     }
 
+    public String getApplicationId() {
+        return this.properties.getProperty(StreamsConfig.APPLICATION_ID_CONFIG);
+    }
+
     public Properties getStreamProperties() {
         return this.properties;
     }
-
 
     public void createTopic(String topicName) {
         if (client != null) {

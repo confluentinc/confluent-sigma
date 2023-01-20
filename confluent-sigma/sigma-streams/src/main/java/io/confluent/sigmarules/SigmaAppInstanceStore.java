@@ -24,6 +24,7 @@ import io.kcache.Cache;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,12 +34,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-public class SigmaAppInstanceStore {
+public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
     final static Logger logger = LogManager.getLogger(SigmaAppInstanceStore.class);
 
     public static final String KEY_CONVERTER_SCHEMA_REGISTRY_URL = "key.converter.schema.registry.url";
     public static final String VALUE_CONVERTER_SCHEMA_REGISTRY_URL = "value.converter.schema.registry.url";
+    private static final long STATE_POLL_SLEEP = 30000;
 
+    private volatile Poller poller;
     private SigmaStream sigmaStreamApp;
     private SigmaAppInstanceState state;
     private Properties props;
@@ -56,8 +59,10 @@ public class SigmaAppInstanceStore {
         Properties kcacheProps = new Properties(properties);
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
                 properties.getProperty(SigmaPropertyEnum.BOOTSTRAP_SERVER.toString()));
-        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG,
-                properties.getProperty(SigmaPropertyEnum.SIGMA_APP_TOPIC.toString()));
+
+        String sigmaAppTopic = properties.getProperty(SigmaPropertyEnum.SIGMA_APP_TOPIC.toString());
+        if (sigmaAppTopic == null) sigmaAppTopic = SigmaPropertyEnum.SIGMA_APP_TOPIC.getDefaultValue();
+        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG, sigmaAppTopic);
 
         // optional config parameters
         if (properties.containsKey(SigmaPropertyEnum.SECURITY_PROTOCOL.toString()))
@@ -92,23 +97,73 @@ public class SigmaAppInstanceStore {
 
     }
 
+    private void createThread()
+    {
+        poller = new Poller();
+    }
+
     public void update()
     {
-        Collection<StreamsMetadata> metadataCollection =
-                sigmaStreamApp.getStreams().metadataForAllStreamsClients();
-        List<String> hostList = new ArrayList<String>();
+        KafkaStreams kStreams = sigmaStreamApp.getStreams();
 
-        for (StreamsMetadata metadata : metadataCollection)
-        {
-            hostList.add(metadata.hostInfo().toString());
+        state.setApplicationId(sigmaStreamApp.getApplicationId());
+        KafkaStreams.State streamsState = kStreams.state();
+        state.setKafkaStreamsState(streamsState.toString());
+
+        if (streamsState.isRunningOrRebalancing()) {
+            Collection<StreamsMetadata> metadataCollection =
+                    kStreams.metadataForAllStreamsClients();
+            List<String> hostList = new ArrayList<String>();
+            for (StreamsMetadata metadata : metadataCollection) {
+                hostList.add(metadata.hostInfo().toString());
+            }
+            state.setHosts(hostList);
+        } else {
+            state.setHosts(null);
         }
-        state.setHosts(hostList);
+
         state.setNumRules(sigmaStreamApp.getRuleFactory().getSigmaRules().size());
-        sigmaAppInstanceStateCache.put(state.getKey(),state);
+        push();
     }
 
     public void register()
     {
+        sigmaStreamApp.getStreams().setStateListener(this);
+        createThread();
+    }
+
+    private void push()
+    {
+        sigmaAppInstanceStateCache.put(state.getKey(),state);
+    }
+
+    @Override
+    public void onChange(KafkaStreams.State newState, KafkaStreams.State oldState) {
         update();
+    }
+
+    private class Poller {
+        private Thread pollThread;
+        private boolean running = true;
+
+        public Poller() {
+            pollThread = new Thread(new Runnable() {
+                public void run() {
+                    while (running) {
+                        try {
+                            Thread.sleep(STATE_POLL_SLEEP); // sleep for 1 second
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        update();
+                    }
+                }
+            });
+            pollThread.start();
+        }
+
+        public void stop() {
+            running = false;
+        }
     }
 }

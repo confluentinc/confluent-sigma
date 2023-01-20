@@ -37,6 +37,7 @@ import java.util.Map;
 public class SigmaAppInstanceState {
 
     private String applicationId;
+    private String kafkaStreamsState;
     private List<String> hosts;
     private Integer numRules;
     private String sigmaRulesTopic;
@@ -69,6 +70,14 @@ public class SigmaAppInstanceState {
 
     public Integer getNumRules() {
         return numRules;
+    }
+
+    public String getKafkaStreamsState() {
+        return kafkaStreamsState;
+    }
+
+    public void setKafkaStreamsState(String kafkaStreamsState) {
+        this.kafkaStreamsState = kafkaStreamsState;
     }
 
     public void setNumRules(Integer numRules) {

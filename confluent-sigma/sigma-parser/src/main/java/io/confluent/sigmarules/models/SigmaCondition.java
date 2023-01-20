@@ -32,6 +32,8 @@ public class SigmaCondition {
     private Boolean aggregateCondition = false;
     private AggregateValues aggregateValues = null;
 
+    public SigmaCondition() {}
+
     public SigmaCondition(String conditionName) {
         this.conditionName = conditionName;
     }

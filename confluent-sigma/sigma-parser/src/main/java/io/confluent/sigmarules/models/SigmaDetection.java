@@ -19,6 +19,7 @@
 
 package io.confluent.sigmarules.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;

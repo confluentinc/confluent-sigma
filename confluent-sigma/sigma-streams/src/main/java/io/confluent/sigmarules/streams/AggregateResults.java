@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
+import io.confluent.sigmarules.models.SigmaRule;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -32,15 +33,16 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
 public class AggregateResults {
-    private Map<String, Long> results = new HashMap<>();
+    private SigmaRule rule = new SigmaRule();
     private JsonNode sourceData;
+    private Long count = 0L;
 
-    public Map<String, Long> getResults() {
-        return results;
+    public SigmaRule getRule() {
+        return rule;
     }
 
-    public void setResults(Map<String, Long> results) {
-        this.results = results;
+    public void setRule(SigmaRule rule) {
+        this.rule = rule;
     }
 
     public JsonNode getSourceData() {
@@ -51,16 +53,9 @@ public class AggregateResults {
         this.sourceData = sourceData;
     }
 
-    public String toJSON() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+    public Long getCount() { return this.count; }
 
-        return null;
-    }
+    public void setCount(Long count) { this.count = count; }
 
     public static Serde<AggregateResults> getJsonSerde() {
         Map<String, Object> serdeProps = new HashMap<>();
