@@ -43,7 +43,6 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
 
     private volatile Poller poller;
     private SigmaStream sigmaStreamApp;
-    private SigmaAppInstanceState state;
     private Properties props;
 
     private Cache<String, SigmaAppInstanceState> sigmaAppInstanceStateCache;
@@ -51,7 +50,6 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
     public SigmaAppInstanceStore(Properties properties, SigmaStream sigmaStreamApp) {
         this.sigmaStreamApp = sigmaStreamApp;
         this.props = properties;
-        state = new SigmaAppInstanceState();
         initialize(properties);
     }
 
@@ -104,26 +102,9 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
 
     public void update()
     {
-        KafkaStreams kStreams = sigmaStreamApp.getStreams();
-
-        state.setApplicationId(sigmaStreamApp.getApplicationId());
-        KafkaStreams.State streamsState = kStreams.state();
-        state.setKafkaStreamsState(streamsState.toString());
-
-        if (streamsState.isRunningOrRebalancing()) {
-            Collection<StreamsMetadata> metadataCollection =
-                    kStreams.metadataForAllStreamsClients();
-            List<String> hostList = new ArrayList<String>();
-            for (StreamsMetadata metadata : metadataCollection) {
-                hostList.add(metadata.hostInfo().toString());
-            }
-            state.setHosts(hostList);
-        } else {
-            state.setHosts(null);
-        }
-
-        state.setNumRules(sigmaStreamApp.getRuleFactory().getSigmaRules().size());
-        push();
+        SigmaAppInstanceState state = new SigmaAppInstanceState();
+        state.popuplate(sigmaStreamApp);
+        push(state);
     }
 
     public void register()
@@ -132,7 +113,7 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
         createThread();
     }
 
-    private void push()
+    private void push(SigmaAppInstanceState state)
     {
         sigmaAppInstanceStateCache.put(state.getKey(),state);
     }
