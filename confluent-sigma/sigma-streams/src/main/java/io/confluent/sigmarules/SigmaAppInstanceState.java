@@ -30,7 +30,6 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsMetadata;
 import org.apache.kafka.streams.ThreadMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,18 +38,21 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
+@SuppressWarnings("rawtypes")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SigmaAppInstanceState {
 
+    public static final String[] STRIPPED_PROPERTIES = new String[] {"security.protocol","sasl.jaas.config", "sasl.mechanism"};
     final static Logger logger = LogManager.getLogger(SigmaAppInstanceState.class);
 
     private String applicationId;
     private String kafkaStreamsState;
-    //private List<String> hosts;
     private Integer numRules;
     private Long sampleTimestamp;
     private List<Map<String,String>> threadMetadata;
     private String appHostName;
+    private Map appProperties;
+
     public SigmaAppInstanceState()
     {
     }
@@ -64,30 +66,26 @@ public class SigmaAppInstanceState {
         }
 
         KafkaStreams kStreams = sigmaStreamApp.getStreams();
-
         setApplicationId(sigmaStreamApp.getApplicationId());
         KafkaStreams.State streamsState = kStreams.state();
         setKafkaStreamsState(streamsState.toString());
-//        if (streamsState.isRunningOrRebalancing()) {
-//            Collection<StreamsMetadata> metadataCollection =
-//                    kStreams.metadataForAllStreamsClients();
-//            List<String> hostList = new ArrayList<String>();
-//            for (StreamsMetadata metadata : metadataCollection) {
-//                hostList.add(metadata.hostInfo().toString());
-//            }
-//            setHosts(hostList);
-//        } else {
-//            setHosts(null);
-//        }
 
         setNumRules(sigmaStreamApp.getRuleFactory().getSigmaRules().size());
 
         Set<ThreadMetadata> threadMedataSet = kStreams.metadataForLocalThreads();
         List<Map<String, String>> tmList = new ArrayList<>();
 
+        Properties props = (Properties) sigmaStreamApp.getStreamProperties().clone();
+
+        for (String key : STRIPPED_PROPERTIES) {
+            props.remove(key);
+        }
+
+        appProperties = props;
+
         for (ThreadMetadata tm : threadMedataSet)
         {
-            Map<String, String> map = new HashMap<String,String>();
+            Map<String, String> map = new HashMap<>();
             map.put("clientId", tm.consumerClientId());
             map.put("threadState", tm.threadState());
             map.put("numTasks", String.valueOf(tm.activeTasks().size()));
@@ -97,7 +95,6 @@ public class SigmaAppInstanceState {
         }
 
         setThreadMetadata(tmList);
-        //setHostName("foo");
     }
 
     /**
@@ -109,13 +106,6 @@ public class SigmaAppInstanceState {
         return getApplicationId();
     }
 
-//    public List<String> getHosts() {
-//        return hosts;
-//    }
-//
-//    public void setHosts(List<String> hosts) {
-//        this.hosts = hosts;
-//    }
 
     public String getApplicationId() {
         return applicationId;
@@ -163,6 +153,14 @@ public class SigmaAppInstanceState {
 
     public void setAppHostName(String appHostName) {
         this.appHostName = appHostName;
+    }
+
+    public Map getAppProperties() {
+        return appProperties;
+    }
+
+    public void setAppProperties(Map appProperties) {
+        this.appProperties = appProperties;
     }
 
     public String toString() {

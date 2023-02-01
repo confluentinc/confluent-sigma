@@ -25,13 +25,9 @@ import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 
 public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
@@ -39,9 +35,9 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
 
     public static final String KEY_CONVERTER_SCHEMA_REGISTRY_URL = "key.converter.schema.registry.url";
     public static final String VALUE_CONVERTER_SCHEMA_REGISTRY_URL = "value.converter.schema.registry.url";
-    private static final long STATE_POLL_SLEEP = 30000;
 
     private volatile Poller poller;
+    private long statePollSleep;
     private SigmaStream sigmaStreamApp;
     private Properties props;
 
@@ -86,10 +82,23 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
                 properties.getProperty(SigmaPropertyEnum.SCHEMA_REGISTRY.toString()));
         }
 
-        sigmaAppInstanceStateCache = new KafkaCache<String, SigmaAppInstanceState>(
-            new KafkaCacheConfig(kcacheProps),
-            Serdes.String(),
-            SigmaAppInstanceState.getJsonSerde());
+        // Initialize with default so that even if an exception occurs parsing passed in parameter
+        // we have the right value
+        statePollSleep = Long.parseLong(SigmaPropertyEnum.SIGMA_APP_STATE_POLL_SLEEP.getDefaultValue());
+        if (properties.contains(SigmaPropertyEnum.SIGMA_APP_STATE_POLL_SLEEP)) {
+            try {
+                statePollSleep = Long.
+                        parseLong(properties.getProperty(SigmaPropertyEnum.SIGMA_APP_STATE_POLL_SLEEP.toString()));
+            } catch (Exception e) {
+                logger.warn("Unable to parse value for " + SigmaPropertyEnum.SIGMA_APP_STATE_POLL_SLEEP +
+                        ". Using default " + SigmaPropertyEnum.SIGMA_APP_STATE_POLL_SLEEP , e);
+            }
+        }
+
+        sigmaAppInstanceStateCache = new KafkaCache<>(
+                new KafkaCacheConfig(kcacheProps),
+                Serdes.String(),
+                SigmaAppInstanceState.getJsonSerde());
 
         sigmaAppInstanceStateCache.init();
 
@@ -102,6 +111,7 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
 
     public void update()
     {
+        logger.debug("Updating Sigma App Instance registration");
         SigmaAppInstanceState state = new SigmaAppInstanceState();
         state.popuplate(sigmaStreamApp);
         push(state);
@@ -127,17 +137,16 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
         private Thread pollThread;
         private boolean running = true;
 
+        @SuppressWarnings("BusyWait")
         public Poller() {
-            pollThread = new Thread(new Runnable() {
-                public void run() {
-                    while (running) {
-                        try {
-                            Thread.sleep(STATE_POLL_SLEEP); // sleep for 1 second
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        update();
+            pollThread = new Thread(() -> {
+                while (running) {
+                    try {
+                        Thread.sleep(statePollSleep);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
+                    update();
                 }
             });
             pollThread.start();
