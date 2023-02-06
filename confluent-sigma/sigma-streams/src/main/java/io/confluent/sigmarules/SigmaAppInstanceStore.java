@@ -20,9 +20,7 @@
 package io.confluent.sigmarules;
 
 import io.confluent.sigmarules.streams.SigmaStream;
-import io.kcache.Cache;
-import io.kcache.KafkaCache;
-import io.kcache.KafkaCacheConfig;
+import io.kcache.*;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.logging.log4j.LogManager;
@@ -105,6 +103,19 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
 
         sigmaAppInstanceStateCache.init();
 
+        cleanZombieState();
+    }
+
+    private void cleanZombieState() {
+        logger.debug("cleaning up zombie state");
+        String applicationId = sigmaStreamApp.getApplicationId();
+        KeyValueIterator<String, SigmaAppInstanceState> iterator = sigmaAppInstanceStateCache.all();
+        while (iterator.hasNext()) {
+            KeyValue<String, SigmaAppInstanceState> next = iterator.next();
+            SigmaAppInstanceState state = next.value;
+            logger.warn("Found zombie state with key " + next.key);
+            if (state.getApplicationId() == applicationId) sigmaAppInstanceStateCache.remove(next.key);
+        }
     }
 
     private void createThread()
@@ -126,7 +137,6 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
     }
 
     private void cleanState() {
-        System.out.println("CLEANING STATE");
         logger.info("Cleaning up sigma app instance state");
         SigmaAppInstanceState state = createSigmaAppInstanceState();
         sigmaAppInstanceStateCache.remove(state.getKey());
