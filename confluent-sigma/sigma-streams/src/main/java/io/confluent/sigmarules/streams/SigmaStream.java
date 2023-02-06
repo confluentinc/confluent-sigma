@@ -32,10 +32,9 @@ import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleFactoryObserver;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.utilities.JsonUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+
+import java.util.*;
+
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -47,13 +46,14 @@ import org.apache.logging.log4j.Logger;
 
 public class SigmaStream extends StreamManager {
     final static Logger logger = LogManager.getLogger(SigmaStream.class);
+    final static String instanceId =  UUID.randomUUID().toString();
 
     private KafkaStreams streams;
     private SigmaRulesFactory ruleFactory;
     private ObjectMapper jsonMapper = new ObjectMapper(new JsonFactory());
     private String inputTopic;
     private String outputTopic;
-    private Boolean firstMatch = false;
+    private Boolean firstMatch;
     private SigmaAppInstanceStore instanceStore;
     private final Configuration jsonPathConf = createJsonPathConfig();
     KStream<String, JsonNode> sigmaStream = null;
@@ -149,6 +149,8 @@ public class SigmaStream extends StreamManager {
     public KafkaStreams getStreams() {
         return streams;
     }
+
+    public String getInstanceId() { return instanceId; }
 
     public SigmaRulesFactory getRuleFactory() {
         return ruleFactory;

@@ -36,6 +36,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @SuppressWarnings("rawtypes")
@@ -49,9 +52,11 @@ public class SigmaAppInstanceState {
     private String kafkaStreamsState;
     private Integer numRules;
     private Long sampleTimestamp;
+    private String sampleTimestampHr;
     private List<Map<String,String>> threadMetadata;
     private String appHostName;
     private Map appProperties;
+    private String applicationInstanceId;
 
     public SigmaAppInstanceState()
     {
@@ -59,14 +64,21 @@ public class SigmaAppInstanceState {
 
     protected void popuplate(SigmaStream sigmaStreamApp) {
         sampleTimestamp = System.currentTimeMillis();
+        Instant instant = Instant.ofEpochMilli(sampleTimestamp);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(ZoneId.of("UTC"));
+        sampleTimestampHr = instant.atZone(ZoneId.of("UTC")).format(formatter);
+
         try {
             appHostName = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
             logger.warn("Unable to retrieve local host name for KafkaStreams app", e);
         }
 
+
         KafkaStreams kStreams = sigmaStreamApp.getStreams();
         setApplicationId(sigmaStreamApp.getApplicationId());
+        setApplicationInstanceId(getApplicationId() + sigmaStreamApp.getInstanceId());
         KafkaStreams.State streamsState = kStreams.state();
         setKafkaStreamsState(streamsState.toString());
 
@@ -103,7 +115,7 @@ public class SigmaAppInstanceState {
      */
     public String getKey()
     {
-        return getApplicationId();
+        return getApplicationInstanceId();
     }
 
 
@@ -113,6 +125,14 @@ public class SigmaAppInstanceState {
 
     public void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
+    }
+
+    public String getApplicationInstanceId() {
+        return applicationInstanceId;
+    }
+
+    public void setApplicationInstanceId(String applicationInstanceId) {
+        this.applicationInstanceId = applicationInstanceId;
     }
 
     public Integer getNumRules() {
@@ -161,6 +181,14 @@ public class SigmaAppInstanceState {
 
     public void setAppProperties(Map appProperties) {
         this.appProperties = appProperties;
+    }
+
+    public String getSampleTimestampHr() {
+        return sampleTimestampHr;
+    }
+
+    public void setSampleTimestampHr(String sampleTimestampHr) {
+        this.sampleTimestampHr = sampleTimestampHr;
     }
 
     public String toString() {

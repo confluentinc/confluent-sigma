@@ -47,6 +47,9 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
         this.sigmaStreamApp = sigmaStreamApp;
         this.props = properties;
         initialize(properties);
+
+        // Perform cleanup operations here, such as closing database connections, file handles, etc.
+        Runtime.getRuntime().addShutdownHook(new Thread(this::cleanState));
     }
 
     public void initialize(Properties properties) {
@@ -109,12 +112,25 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
         poller = new Poller();
     }
 
+    private SigmaAppInstanceState createSigmaAppInstanceState() {
+        SigmaAppInstanceState state = new SigmaAppInstanceState();
+        state.popuplate(sigmaStreamApp);
+        return state;
+    }
+
     public void update()
     {
         logger.debug("Updating Sigma App Instance registration");
-        SigmaAppInstanceState state = new SigmaAppInstanceState();
-        state.popuplate(sigmaStreamApp);
+        SigmaAppInstanceState state = createSigmaAppInstanceState();
         push(state);
+    }
+
+    private void cleanState() {
+        System.out.println("CLEANING STATE");
+        logger.info("Cleaning up sigma app instance state");
+        SigmaAppInstanceState state = createSigmaAppInstanceState();
+        sigmaAppInstanceStateCache.remove(state.getKey());
+        sigmaAppInstanceStateCache.flush();
     }
 
     public void register()
