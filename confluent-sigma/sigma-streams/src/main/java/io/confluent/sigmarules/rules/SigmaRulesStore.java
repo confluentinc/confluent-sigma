@@ -148,7 +148,7 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
         TopicPartition tp, long offset, long timestamp) {
         if (!value.equals(oldValue)) {
             if (observer != null) {
-                observer.handleRuleUpdate(key, sigmaRulesCache.get(key));
+                observer.handleRuleUpdate(key, value, oldValue);
             }
         }
     }

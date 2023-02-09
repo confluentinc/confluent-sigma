@@ -134,8 +134,7 @@ public class SigmaRule {
         return Serdes.serdeFrom(sigmaRuleSer, sigmaRuleDes);
     }
 
-    public void copyParsedSigmaRule(
-        ParsedSigmaRule parsedSigmaRule) {
+    public void copyParsedSigmaRule(ParsedSigmaRule parsedSigmaRule) {
         this.title = parsedSigmaRule.getTitle();
         this.description = parsedSigmaRule.getDescription();
         this.id = parsedSigmaRule.getId();

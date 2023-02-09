@@ -71,25 +71,23 @@ public class SigmaStream extends StreamManager {
         // FF has been entered for dynamic changes to substreams
         ruleFactory.addObserver(new SigmaRuleFactoryObserver() {
             @Override
-            public void processRuleUpdate(SigmaRule rule, Boolean newRule) {
-/*
-                if (rule.getConditionsManager().hasAggregateCondition()) {
-                    if (newRule) {
-                        logger.info("New aggregate rule: " + rule.getTitle());
-                        createAggregateSubStream(sigmaStream, rule);
+            public void processRuleUpdate(SigmaRule newRule, SigmaRule oldRule, Boolean newRuleAdded) {
+                if (newRule.getConditionsManager().hasAggregateCondition()) {
+                    if (newRuleAdded) {
+                        logger.info("New aggregate rule: " + newRule.getTitle());
+                        streams.close();
+                        startStream();
                     } else {
-                        logger.info(rule.getTitle() +
-                            " aggregate rule has been modified. Restarting topology");
+                        // we only need to restart the topology if the window time has changed
+                        if (newRule.getDetectionsManager().getWindowTimeMS().equals(
+                            oldRule.getDetectionsManager().getWindowTimeMS()) == false) {
+                            logger.info(newRule.getTitle() +
+                                " window time has been modified. Restarting topology");
+                            streams.close();
+                            startStream();
+                        }
                     }
                 }
-*/
-
-                // if we run out of filter predicates, we need to increase the array size
-                // and rebuild the topology
-                //                if (streams != null && (currentSigmaRuleCount % INITIAL_NUMBER_SIGMA_RULES == 0)) {
-                //                    streams.close();
-                //                    startStream();
-                //                }
             }
         }, false);
     }
@@ -127,31 +125,13 @@ public class SigmaStream extends StreamManager {
         simpleTopology.createSimpleTopology(sigmaStream, ruleFactory, outputTopic,
             jsonPathConf, firstMatch);
 
+        // aggregate rules
         AggregateTopology aggregateTopology = new AggregateTopology();
         aggregateTopology.createAggregateTopology(sigmaStream, ruleFactory, outputTopic,
             jsonPathConf);
 
-       /*
-        // aggregate rules
-        for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
-            SigmaRule rule = entry.getValue();
-
-            if (rule.getConditionsManager().hasAggregateCondition()) {
-                createAggregateSubStream(sigmaStream, rule);
-            }
-        }
-        */
-
         return builder.build();
     }
-
-    /*
-    private void createAggregateSubStream(KStream<String, JsonNode> sigmaStream, SigmaRule rule) {
-        AggregateTopology aggregateTopology = new AggregateTopology();
-        aggregateTopology.createAggregateTopology(sigmaStream, rule, outputTopic,
-            jsonPathConf);
-    }
-    */
 
     public static Configuration createJsonPathConfig() {
         return Configuration.builder()

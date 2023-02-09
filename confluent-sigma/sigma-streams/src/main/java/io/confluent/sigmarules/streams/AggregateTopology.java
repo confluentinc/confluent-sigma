@@ -50,50 +50,54 @@ public class AggregateTopology extends SigmaBaseTopology {
     private SigmaRule currentRule = null;
 
     public void createAggregateTopology(KStream<String, JsonNode> sigmaStream,
-        SigmaRulesFactory ruleFactory,
-        String outputTopic, Configuration jsonPathConf) {
+        SigmaRulesFactory ruleFactory, String outputTopic, Configuration jsonPathConf) {
 
         final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
-        Long windowTimeMS = 10000L; //rule.getDetectionsManager().getWindowTimeMS();
 
-        sigmaStream.flatMap((key, sourceData) -> {
-                List<KeyValue<String, AggregateResults>> results = new ArrayList<>();
-                for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
-                    SigmaRule rule = entry.getValue();
+        for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
+            SigmaRule rule = entry.getValue();
+            if (rule.getConditionsManager().hasAggregateCondition()) {
+                Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
 
-                    if (true == rule.getConditionsManager().hasAggregateCondition()) {
-                        logger.info("check rule " + rule.getTitle());
-                        if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
-                            AggregateResults aggResults = new AggregateResults();
-                            aggResults.setRule(rule);
-                            aggResults.setSourceData(sourceData);
-                            results.add(new KeyValue<>(updateKey(rule, sourceData), aggResults));
-                        }
+                sigmaStream.flatMap((key, sourceData) -> {
+                    List<KeyValue<String, AggregateResults>> results = new ArrayList<>();
+                    logger.info("check rule " + rule.getTitle());
+                    SigmaRule currentRule = ruleFactory.getRule(rule.getTitle());
+                    if (ruleCheck.isValid(currentRule, sourceData, jsonPathConf)) {
+                        AggregateResults aggResults = new AggregateResults();
+                        aggResults.setRule(currentRule);
+                        aggResults.setSourceData(sourceData);
+                        results.add(new KeyValue<>(updateKey(currentRule, sourceData), aggResults));
                     }
-                }
-                return results;
-        })
-        .selectKey((k, sourceData) -> updateKey(sourceData.getRule(), sourceData.getSourceData()))
-        .groupByKey(Grouped.with(
-                Serdes.String(), /* key */
-                aggregateSerde))
-        .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(getWindowTime()),
-            Duration.ofMillis(getWindowTime())))
-        .aggregate(
-            () -> new AggregateResults(),
-            (key, source, aggregate) -> {
-                 aggregate.setRule(source.getRule());
-                aggregate.setSourceData(source.getSourceData());
-                aggregate.setCount(aggregate.getCount() + 1);
-              return aggregate;
-            },
-            Materialized.with(Serdes.String(), aggregateSerde)
-        )
-        .toStream()
-        .filter((k, results) -> doStreamFiltering(results.getRule(), results))
-        .map((key, value) ->
-            new KeyValue<>("", buildResults(value.getRule(), value.getSourceData())))
-        .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+                    return results;
+                })
+                .selectKey((k, sourceData) -> updateKey(sourceData.getRule(),
+                    sourceData.getSourceData()))
+                .groupByKey(Grouped.with(
+                    Serdes.String(), /* key */
+                    aggregateSerde))
+                .windowedBy(
+                    SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(windowTimeMS),
+                        Duration.ofMillis(windowTimeMS)))
+                .aggregate(
+                    () -> new AggregateResults(),
+                    (key, source, aggregate) -> {
+                        aggregate.setRule(source.getRule());
+                        aggregate.setSourceData(source.getSourceData());
+                        aggregate.setCount(aggregate.getCount() + 1);
+                        return aggregate;
+                    },
+                    Materialized.with(Serdes.String(), aggregateSerde)
+                )
+                .toStream()
+                .filter((k, results) -> doStreamFiltering(results.getRule(), results))
+                .map((key, value) ->
+                    new KeyValue<>("", buildResults(value.getRule(), value.getSourceData())))
+                .to(outputTopic,
+                    Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+
+            }
+        }
     }
 
     public AggregateResults updateValues(AggregateResults results) {
@@ -132,14 +136,6 @@ public class AggregateTopology extends SigmaBaseTopology {
             .to(outputTopic, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
     }
 */
-
-    private Long getWindowTime() {
-        Long time = 1L;
-        if (currentRule != null) {
-            time = currentRule.getDetectionsManager().getWindowTimeMS();
-        }
-        return time;
-    }
 
     private String updateKey(SigmaRule rule, JsonNode source) {
         // make the key the title + groupBy + distinctValue, so we have 1 unique stream

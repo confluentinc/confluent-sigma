@@ -121,7 +121,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
 
         if (immediateCallback) {
             for (Map.Entry<String, SigmaRule> entry : sigmaRules.entrySet()) {
-                observer.processRuleUpdate(entry.getValue(), true);
+                observer.processRuleUpdate(entry.getValue(), null,true);
             }
         }
     }
@@ -129,18 +129,23 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     /**
      * Handles any new rules that are added to the Sigma Rules topic
      * @param title of the rule
-     * @param rule as a string
+     * @param newRule as a string
+     * @param oldRule as a string
      */
     // callback from kcache
     @Override
-    public void handleRuleUpdate(String title, ParsedSigmaRule rule) {
+    public void handleRuleUpdate(String title, ParsedSigmaRule newRule, ParsedSigmaRule oldRule) {
         try {
             // check to see if the rule currently exists
-            boolean newRule = !sigmaRules.containsKey(title);
-            SigmaRule addedRule = addRule(title, rulesParser.parseRule(rule));
+            boolean newRuleAdded = !sigmaRules.containsKey(title);
+            SigmaRule newSigmaRule = addRule(title, rulesParser.parseRule(newRule));
+            SigmaRule oldSigmaRule = null;
+            if (oldRule != null) {
+                oldSigmaRule = rulesParser.parseRule(oldRule);
+            }
 
-            if (addedRule != null && observer != null)
-                observer.processRuleUpdate(addedRule, newRule);
+            if (newSigmaRule != null && observer != null)
+                observer.processRuleUpdate(newSigmaRule, oldSigmaRule, newRuleAdded);
 
         } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
             e.printStackTrace();

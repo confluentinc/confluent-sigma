@@ -23,5 +23,5 @@ package io.confluent.sigmarules.rules;
 import io.confluent.sigmarules.models.SigmaRule;
 
 public interface SigmaRuleFactoryObserver {
-  void processRuleUpdate(SigmaRule rule, Boolean newRule);
+  void processRuleUpdate(SigmaRule newRule, SigmaRule oldRule, Boolean newRuleAdded);
 }

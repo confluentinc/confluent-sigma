@@ -23,5 +23,5 @@ import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 
 interface SigmaRuleObserver {
-    void handleRuleUpdate(String title, ParsedSigmaRule rule);
+    void handleRuleUpdate(String title, ParsedSigmaRule newRule, ParsedSigmaRule oldRule);
 }
