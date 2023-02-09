@@ -36,7 +36,9 @@ public enum SigmaPropertyEnum {
     SCHEMA_REGISTRY("schema.registry", false, "localhost:8081"),
     SECURITY_PROTOCOL("security.protocol", false, null),
     SASL_MECHANISM("sasl.mechanism", false, null),
-    SIGMA_RULE_FIRST_MATCH("sigma.rule.first.match", false, null);
+    SIGMA_RULE_FIRST_MATCH("sigma.rule.first.match", false, null),
+    SIGMA_APP_TOPIC("sigma.app.topic",false, "sigma-app-instances" ),
+    SIGMA_APP_STATE_POLL_SLEEP("sigma.app.state.poll.sleep", false, "30000");
 
     private final String defaultValue;
     private final String name;

@@ -19,7 +19,6 @@
 
 package io.confluent.sigmarules.streams;
 
-import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,10 +59,13 @@ public class StreamManager {
 
     }
 
+    public String getApplicationId() {
+        return this.properties.getProperty(StreamsConfig.APPLICATION_ID_CONFIG);
+    }
+
     public Properties getStreamProperties() {
         return this.properties;
     }
-
 
     public void createTopic(String topicName) {
         if (client != null) {
