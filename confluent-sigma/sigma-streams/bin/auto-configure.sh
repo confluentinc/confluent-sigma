@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# define the default sigma properties file name
+# define the default sigma properties file name. This is needed becasue we need the props dir separate from the file
+# to mount to docker in case of docker execution
+
 export SIGMA_PROPS_FILENAME="sigma.properties"
 
 SIGMA_PROPS=
