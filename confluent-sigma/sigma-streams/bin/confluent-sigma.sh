@@ -40,13 +40,13 @@ fi
 if [ -f "$SIGMA_PROPS" ] ; then
   echo "Using properties $SIGMA_PROPS"
   if [ -f "$SIGMA_JAR" ] ; then
-    java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp -c $SIGMA_PROPS
+    java -jar $SIGMA_JAR -c $SIGMA_PROPS
   else
     docker run -v $SIGMA_PROPS_DIR:/conf confluentinc/confluent-sigma:1.3.0 -c /conf/$SIGMA_PROPS_FILENAME
   fi
 else
   if [ -f "$SIGMA_JAR" ] ; then
-    java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp
+    java -jar $SIGMA_JAR
   else
     docker run -it confluentinc/confluent-sigma:1.3.0
   fi
