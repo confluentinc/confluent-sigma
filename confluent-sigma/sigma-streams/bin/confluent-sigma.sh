@@ -17,36 +17,49 @@
 
 # Script for launching the sigma streams app.  The only parameter that should be passed in is a properties file.  If
 # this is not passed in then auto-configure.sh will find one in the default locations
+#
+# passing in -i to this script executes in interactive mode where you are prompted for parameters
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-echo "SCRIPT DIR $SCRIPT_DIR"
+echo "Script dir is $SCRIPT_DIR"
 
 if [ -f "$SCRIPT_DIR/auto-configure.sh" ] ; then
   source $SCRIPT_DIR/auto-configure.sh
+fi
+
+if [ -f "$SIGMA_JAR" ] ; then
+  echo "Found $SIGMA_JAR.  Using this for execution"
 fi
 
 # After running auto-configure we will check and see if a properties file is passed in as the parameter
 # if so then this should be used rather than whats found in the path
 if [ $# -gt 0 ] ; then
   if [ "$1" = '-i' ] ; then
-    docker run -it confluentinc/confluent-sigma:1.3.0
-    exit
+    if [ -f "$SIGMA_JAR" ] ; then
+      java -jar $SIGMA_JAR -c $SIGMA_PROPS
+      exit
+    else
+      docker run -it confluentinc/confluent-sigma:1.3.0
+      exit
+    fi
   elif [ -f "$1" ] ; then
     SIGMA_PROPS=$1
+    SIGMA_PROPS_DIR="$(dirname "$SIGMA_PROPS")"
+    SIGMA_PROPS_FILENAME="$(basename "$SIGMA_PROPS")"
   fi
 fi
 
 if [ -f "$SIGMA_PROPS" ] ; then
   echo "Using properties $SIGMA_PROPS"
   if [ -f "$SIGMA_JAR" ] ; then
-    java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp -c $SIGMA_PROPS
+    java -jar $SIGMA_JAR -c $SIGMA_PROPS
   else
     docker run -v $SIGMA_PROPS_DIR:/conf confluentinc/confluent-sigma:1.3.0 -c /conf/$SIGMA_PROPS_FILENAME
   fi
 else
   if [ -f "$SIGMA_JAR" ] ; then
-    java -cp $SIGMA_JAR io.confluent.sigmarules.SigmaStreamsApp
+    java -jar $SIGMA_JAR
   else
     docker run -it confluentinc/confluent-sigma:1.3.0
   fi

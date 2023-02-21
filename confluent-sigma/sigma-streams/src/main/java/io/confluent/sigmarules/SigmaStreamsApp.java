@@ -69,9 +69,10 @@ public class SigmaStreamsApp {
     }
 
     public static void main(String[] args) {
+        logger.info("Starting SigmaStreamsApp");
         if (logger.getLevel().isLessSpecificThan(Level.INFO))
         {
-            String message = "Starting SigmaSteamsApp with arguments: ";
+            String message = "Passed in arguments: ";
             for (int i = 0; i < args.length; i++)
                 message = message + args[i] + " ";
             logger.log(Level.INFO, message);
