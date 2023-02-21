@@ -21,18 +21,6 @@
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>2.7.3</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <profiles>
         <profile>
             <id>no-docker</id>
@@ -83,12 +71,6 @@
             <groupId>io.confluent</groupId>
             <artifactId>kafka-json-serializer</artifactId>
             <version>6.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <version>2.7.5</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
@@ -156,21 +138,6 @@
     <build>
       <plugins>
           <plugin>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-maven-plugin</artifactId>
-              <version>2.7.7</version>
-              <executions>
-                  <execution>
-                      <goals>
-                          <goal>repackage</goal>
-                      </goals>
-                      <configuration>
-                          <classifier>fat</classifier>
-                      </configuration>
-                  </execution>
-              </executions>
-          </plugin>
-          <plugin>
               <groupId>org.codehaus.mojo</groupId>
               <artifactId>flatten-maven-plugin</artifactId>
               <version>1.2.5</version>
@@ -235,18 +202,13 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <artifactSet>
-                            </artifactSet>
-                            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-cli.jar
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>io.confluent.sigmarules.SigmaStreamsApp</mainClass>
+                                </transformer>
+                            </transformers>
+                            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-fat.jar
                             </outputFile>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>**/Log4j2Plugins.dat</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
                         </configuration>
                     </execution>
                 </executions>

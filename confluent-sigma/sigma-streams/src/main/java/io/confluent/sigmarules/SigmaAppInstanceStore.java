@@ -27,7 +27,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Properties;
-import org.springframework.boot.autoconfigure.integration.IntegrationProperties.Poller;
 
 public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
     final static Logger logger = LogManager.getLogger(SigmaAppInstanceStore.class);

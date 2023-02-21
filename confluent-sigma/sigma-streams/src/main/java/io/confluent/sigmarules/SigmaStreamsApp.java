@@ -17,43 +17,33 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.component;
+package io.confluent.sigmarules;
 
+import io.confluent.sigmarules.config.SigmaOptions;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import io.confluent.sigmarules.streams.StreamManager;
-import java.util.Arrays;
+import java.io.File;
 import java.util.Properties;
-import java.util.stream.StreamSupport;
-import javax.annotation.PostConstruct;
-import io.confluent.sigmarules.config.SigmaOptions;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.AbstractEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.stereotype.Component;
 
-@Component
-public class SigmaStreamsComponent {
-    final static Logger logger = LogManager.getLogger(SigmaStreamsComponent.class);
 
-    @Autowired
-    Environment springEnv;
+public class SigmaStreamsApp {
+    final static Logger logger = LogManager.getLogger(SigmaStreamsApp.class);
 
     private StreamManager streamManager;
     private SigmaRulesFactory ruleFactory;
     private SigmaStream sigmaStream;
 
-    @PostConstruct
-    private void initialize() {
+    // this will initialize using environment variable (i.e. from Docker)
+    private void initializeWithEnv() {
         Properties properties = getPropertiesFromEnv();
         initializeWithProps(properties);
     }
 
+    // this will initialize using arguments passed in (i.e. -c arg)
     private void initializeWithProps(Properties properties) {
         this.streamManager = new StreamManager(properties);
         this.ruleFactory = new SigmaRulesFactory(streamManager.getStreamProperties());
@@ -62,14 +52,18 @@ public class SigmaStreamsComponent {
         sigmaStream.startStream();
     }
 
+    public boolean isDockerized() {
+        File f = new File("/.dockerenv");
+        return f.exists();
+    }
+
     private Properties getPropertiesFromEnv() {
         Properties props = new Properties();
-        MutablePropertySources propSrcs = ((AbstractEnvironment) springEnv).getPropertySources();
-        StreamSupport.stream(propSrcs.spliterator(), false)
-            .filter(ps -> ps instanceof EnumerablePropertySource)
-            .map(ps -> ((EnumerablePropertySource) ps).getPropertyNames())
-            .flatMap(Arrays::<String>stream)
-            .forEach(propName -> props.setProperty(propName, springEnv.getProperty(propName)));
+        System.getenv().forEach((k, v) -> {
+            String newKey = k.replace("_", ".");
+            System.out.println(newKey + ": " + v);
+            props.setProperty(newKey, v);
+        });
 
         return props;
     }
@@ -83,9 +77,15 @@ public class SigmaStreamsComponent {
             logger.log(Level.INFO, message);
         }
 
-        SigmaOptions sigmaOptions = new SigmaOptions(args);
-        SigmaStreamsComponent sigma = new SigmaStreamsComponent();
-        sigma.initializeWithProps(sigmaOptions.getProperties());
+        SigmaStreamsApp sigma = new SigmaStreamsApp();
+        if (sigma.isDockerized()) {
+            logger.info("Initialize SigmaStreamsApp from environment variables");
+            sigma.initializeWithEnv();
+        } else {
+            logger.info("Initialize SigmaStreamsApp from properties file");
+            SigmaOptions sigmaOptions = new SigmaOptions(args);
+            sigma.initializeWithProps(sigmaOptions.getProperties());
+        }
     }
 }
 
