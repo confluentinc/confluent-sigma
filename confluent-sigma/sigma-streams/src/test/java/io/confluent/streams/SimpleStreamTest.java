@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.models.DetectionResults;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import java.io.IOException;
@@ -54,6 +55,7 @@ public class SimpleStreamTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
 
+
     Properties getProperties() {
         Properties testProperties = new Properties();
         //TODO should be bootstrap.serverS -- use defined variable in place of string
@@ -66,6 +68,7 @@ public class SimpleStreamTest {
         testProperties.setProperty("schema.registry", "localhost:8888");
         testProperties.setProperty("output.topic", "test-output");
         testProperties.setProperty("data.topic", "test-input");
+        testProperties.setProperty("skip.app.registration", "true");
 
         return testProperties;
     }

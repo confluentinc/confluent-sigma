@@ -25,8 +25,10 @@ import com.jayway.jsonpath.Configuration;
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
+import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
@@ -39,19 +41,24 @@ public class SimpleTopology extends SigmaBaseTopology {
   private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
 
   public void createSimpleTopology(KStream<String, JsonNode> sigmaStream,
-      List<SigmaRule> rules, String outputTopic, Configuration jsonPathConf,
+      SigmaRulesFactory ruleFactory, String outputTopic, Configuration jsonPathConf,
       Boolean firstMatch) {
 
     setDefaultOutputTopic(outputTopic);
 
     sigmaStream.flatMapValues(sourceData -> {
           List<DetectionResults> results = new ArrayList<>();
-          for (int i = 0; i < rules.size(); i++) {
-            if (ruleCheck.isValid(rules.get(i), sourceData, jsonPathConf)) {
-              results.add(buildResults(rules.get(i), sourceData));
+          for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
+            SigmaRule rule = entry.getValue();
 
-              if (firstMatch)
-                break;
+            if (false == rule.getConditionsManager().hasAggregateCondition()) {
+              logger.info("check rule " + rule.getTitle());
+              if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
+                results.add(buildResults(rule, sourceData));
+
+                if (firstMatch)
+                  break;
+              }
             }
           }
           return results;

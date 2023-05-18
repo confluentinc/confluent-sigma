@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,14 +14,14 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.    
+ * under the License.
+ *
  */
 
 package io.confluent.sigmarules.rules;
 
 import io.confluent.sigmarules.models.SigmaRule;
-import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 
-interface SigmaRuleObserver {
-    void handleRuleUpdate(String title, ParsedSigmaRule newRule, ParsedSigmaRule oldRule);
+public interface SigmaRuleFactoryObserver {
+  void processRuleUpdate(SigmaRule newRule, SigmaRule oldRule, Boolean newRuleAdded);
 }

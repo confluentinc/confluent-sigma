@@ -57,8 +57,7 @@ public class DetectionParser {
         this.fieldMapper = fieldMapper;
     }
 
-    public DetectionsManager parseDetections(
-        io.confluent.sigmarules.parsers.ParsedSigmaRule sigmaRule)
+    public DetectionsManager parseDetections(ParsedSigmaRule sigmaRule)
         throws InvalidSigmaRuleException, SigmaRuleParserException {
         DetectionsManager detectionsManager = new DetectionsManager();
 
