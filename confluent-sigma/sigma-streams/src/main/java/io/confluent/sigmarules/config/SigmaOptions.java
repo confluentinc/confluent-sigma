@@ -94,7 +94,7 @@ public class SigmaOptions {
             if (sigProp.isRequired())
                 if (properties.getProperty(sigProp.getName()) == null ||
                         properties.getProperty(sigProp.getName()).isEmpty()) {
-                    System.out.print(sigProp.getName() + ": <" + sigProp.getDefaultValue() + "> : ");
+                        System.out.print(sigProp.getName() + ": <" + sigProp.getDefaultValue() + "> : ");
                     String line = scanner.nextLine();
 
                     if (line == null || line.isEmpty())
