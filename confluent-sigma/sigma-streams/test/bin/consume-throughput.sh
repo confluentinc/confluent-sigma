@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Script to test the consumer throughput to get a baseline for the test.
+
 if [ -f /tmp/ccloud-env.sh ] ; then
   source /tmp/ccloud-env.sh
 elif [ -f ~/tmp/ccloud-env.sh ] ; then
