@@ -30,7 +30,8 @@ fi
 
 if [ -f "$SIGMA_JAR" ] ; then
   echo "Found $SIGMA_JAR.  Using this for execution"
-fi
+elif
+  echo "Unable to find sigma-streams jar.  Will attempt to run docker image"
 
 # After running auto-configure we will check and see if a properties file is passed in as the parameter
 # if so then this should be used rather than whats found in the path
