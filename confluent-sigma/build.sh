@@ -15,6 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# script to remove default topics
+# Usage build.sh VERSION
 
-kafka-topics --bootstrap-server localhost:9092 --delete --topic sigma-rules dns-detection http-detection
+# Skipping tests and docker stuff
+# mvn -Dmaven.test.skip=true -Drevision=$1 -P no-docker package
+
+mvn -Drevision=$1 package

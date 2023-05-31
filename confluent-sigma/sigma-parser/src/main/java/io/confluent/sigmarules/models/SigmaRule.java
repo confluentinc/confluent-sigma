@@ -19,10 +19,12 @@
 
 package io.confluent.sigmarules.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,15 +34,18 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SigmaRule {
     private String title;
     private String description;
     private String id;
     private String author;
     private List<String> references = new ArrayList<>();
-    private LogSource logsource;
-    private DetectionsManager detectionsManager;
-    private ConditionsManager conditionsManager;
+    private LogSource logsource = new LogSource();
+    private DetectionsManager detectionsManager = new DetectionsManager();
+    private ConditionsManager conditionsManager = new ConditionsManager();
+
+    private KafkaRule kafkaRule;
 
     public String getTitle() {
         return title;
@@ -98,6 +103,14 @@ public class SigmaRule {
         this.logsource = logsource;
     }
 
+    public KafkaRule getKafkaRule() {
+        return kafkaRule;
+    }
+
+    public void setKafkaRule(KafkaRule kafkaRule) {
+        this.kafkaRule = kafkaRule;
+    }
+
     public String toString() {
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -121,14 +134,14 @@ public class SigmaRule {
         return Serdes.serdeFrom(sigmaRuleSer, sigmaRuleDes);
     }
 
-    public void copyParsedSigmaRule(
-        io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule) {
+    public void copyParsedSigmaRule(ParsedSigmaRule parsedSigmaRule) {
         this.title = parsedSigmaRule.getTitle();
         this.description = parsedSigmaRule.getDescription();
         this.id = parsedSigmaRule.getId();
         this.author = parsedSigmaRule.getAuthor();
         this.references = parsedSigmaRule.getReferences();
         this.logsource = parsedSigmaRule.getLogsource();
+        this.kafkaRule = parsedSigmaRule.getKafka();
     }
 
 }

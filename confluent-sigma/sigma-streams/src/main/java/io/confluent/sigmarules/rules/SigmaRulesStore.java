@@ -19,12 +19,24 @@
 
 package io.confluent.sigmarules.rules;
 
-import io.confluent.sigmarules.SigmaProperties;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.confluent.sigmarules.SigmaPropertyEnum;
+import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
+import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
+import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
+import io.confluent.sigmarules.streams.StreamManager;
 import io.kcache.Cache;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.Set;
 import org.apache.kafka.common.TopicPartition;
@@ -32,15 +44,15 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
-
+public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRule> {
     final static Logger logger = LogManager.getLogger(SigmaRulesStore.class);
 
     public static final String KEY_CONVERTER_SCHEMA_REGISTRY_URL = "key.converter.schema.registry.url";
     public static final String VALUE_CONVERTER_SCHEMA_REGISTRY_URL = "value.converter.schema.registry.url";
 
-    private Cache<String, String> sigmaRulesCache;
+    private Cache<String, ParsedSigmaRule> sigmaRulesCache;
     private SigmaRuleObserver observer = null;
+    private SigmaRuleParser rulesParser = null;
 
     public SigmaRulesStore(Properties properties) {
         initialize(properties);
@@ -49,18 +61,18 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
     public void initialize(Properties properties) {
         Properties kcacheProps = new Properties(properties);
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
-                properties.getProperty(SigmaProperties.BOOTSTRAP_SERVER.toString()));
+                properties.getProperty(SigmaPropertyEnum.BOOTSTRAP_SERVER.toString()));
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG,
-                properties.getProperty(SigmaProperties.SIGMA_RULES_TOPIC.toString()));
+                properties.getProperty(SigmaPropertyEnum.SIGMA_RULES_TOPIC.toString()));
 
         // optional config parameters
-        if (properties.containsKey(SigmaProperties.SECURITY_PROTOCOL.toString()))
+        if (properties.containsKey(SigmaPropertyEnum.SECURITY_PROTOCOL.toString()))
             kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SECURITY_PROTOCOL_CONFIG,
-                    properties.getProperty(SigmaProperties.SECURITY_PROTOCOL.toString()));
+                    properties.getProperty(SigmaPropertyEnum.SECURITY_PROTOCOL.toString()));
 
-        if (properties.containsKey(SigmaProperties.SASL_MECHANISM.toString()))
+        if (properties.containsKey(SigmaPropertyEnum.SASL_MECHANISM.toString()))
             kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SASL_MECHANISM_CONFIG,
-                    properties.getProperty(SigmaProperties.SASL_MECHANISM.toString()));
+                    properties.getProperty(SigmaPropertyEnum.SASL_MECHANISM.toString()));
 
         if (properties.containsKey("sasl.jaas.config"))
             kcacheProps.setProperty("kafkacache.sasl.jaas.config",
@@ -70,17 +82,26 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
             kcacheProps.setProperty("kafkacache.sasl.client.callback.handler.class",
                     properties.getProperty("sasl.client.callback.handler.class"));
 
-        if (properties.containsKey(SigmaProperties.SCHEMA_REGISTRY.toString())) {
+        if (properties.containsKey(SigmaPropertyEnum.SCHEMA_REGISTRY.toString())) {
             kcacheProps.setProperty(KEY_CONVERTER_SCHEMA_REGISTRY_URL,
-                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+                properties.getProperty(SigmaPropertyEnum.SCHEMA_REGISTRY.toString()));
             kcacheProps.setProperty(VALUE_CONVERTER_SCHEMA_REGISTRY_URL,
-                properties.getProperty(SigmaProperties.SCHEMA_REGISTRY.toString()));
+                properties.getProperty(SigmaPropertyEnum.SCHEMA_REGISTRY.toString()));
         }
+
+        FieldMapper fieldMapFile = null;
+        try {
+            if (properties.containsKey("field.mapping.file"))
+                fieldMapFile = new FieldMapper(properties.getProperty("field.mapping.file"));
+        } catch (IllegalArgumentException | IOException e) {
+            logger.info("no field mapping file provided");
+        }
+        rulesParser = new SigmaRuleParser(fieldMapFile);
 
         sigmaRulesCache = new KafkaCache<>(
             new KafkaCacheConfig(kcacheProps),
             Serdes.String(),
-            Serdes.String(),
+            ParsedSigmaRule.getJsonSerde(),
             this,
             null);
 
@@ -92,10 +113,17 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
     }
 
     public void addRule(String ruleName, String rule) {
-        SigmaRule sigmaRule = null;
-        if (rule != null) {
-            System.out.println("adding rule to cache");
-            sigmaRulesCache.put(ruleName, rule);
+        ObjectMapper mapper = new ObjectMapper((JsonFactory)new YAMLFactory());
+        ParsedSigmaRule sigmaRule = null;
+        try {
+            if (rule != null) {
+                sigmaRule = (ParsedSigmaRule)mapper.readValue(rule, ParsedSigmaRule.class);
+                this.sigmaRulesCache.put(ruleName, sigmaRule);
+            }
+        } catch (JsonMappingException e) {
+            e.printStackTrace();
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
         }
     }
 
@@ -108,30 +136,20 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, String> {
     }
 
     public String getRuleAsYaml(String ruleName) {
-        if (sigmaRulesCache.containsKey(ruleName)) {
-            return sigmaRulesCache.get(ruleName);
-        }
-
-        return null;
+        return ((ParsedSigmaRule)this.sigmaRulesCache.get(ruleName)).toString();
     }
 
-    Cache<String, String> getRules() {
+    Cache<String, ParsedSigmaRule> getRules() {
         return this.sigmaRulesCache;
     }
 
     @Override
-    public void cacheInitialized() {
-        CacheUpdateHandler.super.cacheInitialized();
-    }
-
-    @Override
-    public void handleUpdate(String key, String value, String oldValue, TopicPartition tp, long offset, long timestamp) {
-
-        if (oldValue == null || !value.equals(oldValue)) {
+    public void handleUpdate(String key, ParsedSigmaRule value, ParsedSigmaRule oldValue,
+        TopicPartition tp, long offset, long timestamp) {
+        if (!value.equals(oldValue)) {
             if (observer != null) {
-                observer.handleRuleUpdate(key, getRuleAsYaml(key));
+                observer.handleRuleUpdate(key, value, oldValue);
             }
         }
-
     }
 }

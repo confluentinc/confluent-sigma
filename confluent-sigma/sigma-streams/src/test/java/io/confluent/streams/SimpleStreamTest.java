@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.models.DetectionResults;
+import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import org.junit.After;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SimpleStreamTest {
@@ -51,6 +53,7 @@ public class SimpleStreamTest {
     private TestInputTopic<String, String> inputTopic;
     private TestOutputTopic<String, String> outputTopic;
     private ObjectMapper objectMapper = new ObjectMapper();
+
 
 
     Properties getProperties() {
@@ -65,6 +68,7 @@ public class SimpleStreamTest {
         testProperties.setProperty("schema.registry", "localhost:8888");
         testProperties.setProperty("output.topic", "test-output");
         testProperties.setProperty("data.topic", "test-input");
+        testProperties.setProperty("skip.app.registration", "true");
 
         return testProperties;
     }
@@ -336,6 +340,63 @@ public class SimpleStreamTest {
         logger.info("title: " + results.getSigmaMetaData().getTitle());
         assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
             results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(outputTopic.isEmpty());
+
+        // Should be empty
+        inputTopic.pipeInput("{\"foo\" : \"bc\"}");
+        assertTrue(outputTopic.isEmpty());
+
+    }
+
+    @Test
+    public void checkMultipleRulesFirstMatch()
+        throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
+
+        String testRule = "title: Simple Http\n"
+            + "logsource:\n"
+            + "  product: zeek\n"
+            + "  service: http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo: 'ab*'\n"
+            + "  condition: test";
+
+        String testRule2 = "title: Another Simple Http\n"
+            + "logsource:\n"
+            + "  product: zeek\n"
+            + "  service: http\n"
+            + "detection:\n"
+            + "  test:\n"
+            + "   - foo: 'ab*'\n"
+            + "  condition: test";
+
+        Properties properties = getProperties();
+        properties.setProperty("sigma.rule.first.match", "true");
+
+        SigmaRulesFactory srf = new SigmaRulesFactory();;
+        srf.setFiltersFromProperties(properties);
+        srf.addRule("Simple Http", testRule);
+        srf.addRule("Another Simple Http", testRule2);
+
+        SigmaStream stream = new SigmaStream(properties, srf);
+        topology = stream.createTopology();
+        td = new TopologyTestDriver(topology, properties);
+
+        inputTopic = td.createInputTopic("test-input", Serdes.String().serializer(),
+            Serdes.String().serializer());
+        outputTopic = td.createOutputTopic("test-output", Serdes.String().deserializer(),
+            Serdes.String().deserializer());
+
+        assertTrue(outputTopic.isEmpty());
+
+        // Should be 1 matche (titles)
+        inputTopic.pipeInput("{\"foo\" : \"abc\"}");
+        DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
+        logger.info("title: " + results.getSigmaMetaData().getTitle());
+        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
+            results.getSigmaMetaData().getTitle().equals("Simple Http"));
+
+        // Should not contain other rules with first match set
         assertTrue(outputTopic.isEmpty());
 
         // Should be empty

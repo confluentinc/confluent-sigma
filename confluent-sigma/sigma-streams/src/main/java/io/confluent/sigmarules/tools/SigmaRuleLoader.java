@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
-import io.confluent.sigmarules.utilities.SigmaOptions;
+import io.confluent.sigmarules.config.SigmaOptions;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;

@@ -33,37 +33,36 @@ public class SigmaRuleParser {
     final static Logger logger = LogManager.getLogger(SigmaRuleParser.class);
     ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
-    private io.confluent.sigmarules.parsers.DetectionParser detectionParser;
-    private io.confluent.sigmarules.parsers.ConditionParser conditionParser;
+    private DetectionParser detectionParser;
+    private ConditionParser conditionParser;
 
     public SigmaRuleParser() {
-        detectionParser = new io.confluent.sigmarules.parsers.DetectionParser();
-        conditionParser = new io.confluent.sigmarules.parsers.ConditionParser();
+        detectionParser = new DetectionParser();
+        conditionParser = new ConditionParser();
     }
 
     public SigmaRuleParser(FieldMapper fieldMapperFile) {
-        detectionParser = new io.confluent.sigmarules.parsers.DetectionParser(fieldMapperFile);
-        conditionParser = new io.confluent.sigmarules.parsers.ConditionParser();
+        detectionParser = new DetectionParser(fieldMapperFile);
+        conditionParser = new ConditionParser();
     }
 
     public SigmaRule parseRule(String rule)
         throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
-        io.confluent.sigmarules.parsers.ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, io.confluent.sigmarules.parsers.ParsedSigmaRule.class);
+        ParsedSigmaRule parsedSigmaRule = yamlMapper.readValue(rule, ParsedSigmaRule.class);
 
+        return parseRule(parsedSigmaRule);
+    }
+
+    public SigmaRule parseRule(ParsedSigmaRule parsedSigmaRule)
+        throws InvalidSigmaRuleException, SigmaRuleParserException {
         SigmaRule sigmaRule = new SigmaRule();
         sigmaRule.copyParsedSigmaRule(parsedSigmaRule);
 
         sigmaRule.setDetection(detectionParser.parseDetections(parsedSigmaRule));
         sigmaRule.setConditionsManager(conditionParser.parseCondition(parsedSigmaRule));
+
         return sigmaRule;
     }
 
-    /*
-    public Boolean filterDetections(JsonNode data) {
-        // Filter the Stream
-        //logger.info("Checking conditions for: " + ruleTitle);
-        return conditions.checkConditions(detections, data);
-    }
 
-     */
 }

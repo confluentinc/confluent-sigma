@@ -1,0 +1,194 @@
+---
+version: '3'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-server:latest
+    hostname: broker
+    container_name: broker
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 100
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: 'false'
+      KAFKA_CONFLUENT_BALANCER_ENABLE: 'false'
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - broker
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
+
+  connect:
+    image: cnfldemos/cp-server-connect-datagen:0.5.3-7.1.0
+    hostname: connect
+    container_name: connect
+    user: root
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - "8083:8083"
+      - "9997:9997"
+      - "5140:5140/udp"
+    healthcheck:
+      interval: 10s
+      retries: 20
+      test: curl -f http://localhost:8083 || exit 1
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: _docker-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _docker-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _docker-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: control-center
+    container_name: control-center
+    user: root
+    depends_on:
+      - broker
+      - schema-registry
+      - connect
+      - ksqldb-server
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
+      CONTROL_CENTER_CONNECT_CONNECT-DEFAULT_CLUSTER: 'connect:8083'
+      # The control center server connects to ksqlDB through the docker network
+      CONTROL_CENTER_KSQL_KSQLDB1_URL: "http://ksqldb-server:8088"
+      CONTROL_CENTER_KSQL_KSQLDB1_ADVERTISED_URL: https://localhost:8088
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MODE_ENABLE: "management"
+
+  ksqldb-server:
+    image: confluentinc/cp-ksqldb-server:latest
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    depends_on:
+      - broker
+      - connect
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./ksqlDB/ksql-extension:/etc/ksql-extension/
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_KSQL_EXTENSION_DIR: "/etc/ksql-extension"
+      KSQL_BOOTSTRAP_SERVERS: "broker:29092"
+      KSQL_HOST_NAME: ksqldb-server
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_KSQL_CONNECT_URL: "http://connect:8083"
+      KSQL_KSQL_HIDDEN_TOPICS: '^_.*'
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+
+  confluent-sigma-streams:
+    image: confluentinc/confluent-sigma:1.3.2
+    container_name: confluent-sigma-streams
+    depends_on:
+      broker:
+        condition: service_healthy
+    hostname: confluent-sigma-streams
+    environment:
+      application_id: 'dns-streams-app'
+      bootstrap_server: 'broker:29092'
+      schema_registry: 'http://schema-registry:8081'
+      data_topic: 'dns'
+      output_topic: 'dns-detection'
+      sigma_rules_topic: 'sigma-rules'
+      sigma_rule_filter_product: 'zeek'
+      sigma_rule_filter_service: 'dns'
+      sigma_rule_first_match: 'false'
+
+  confluent-sigma-ui:
+    image: confluentinc/confluent-sigma-ui:1.3.2
+    container_name: confluent-sigma-ui
+    depends_on:
+      broker:
+        condition: service_healthy
+    hostname: confluent-sigma-ui
+    ports:
+      - 8080:8080
+    environment:
+      bootstrap_server: 'broker:29092'
+      schema_registry: 'http://schema-registry:8081'
+      sigma_rules_topic: 'sigma-rules'
+      confluent_regex_applicationID: 'regex-application'
+      confluent_regex_inputTopic: 'splunk-s2s-events'
+      confluent_regex_ruleTopic: 'regex-rules'
+      confluent_regex_filterField: 'sourcetype'
+      confluent_regex_regexField: 'event'
+
+  dns-load-data:
+    image: edenhill/kcat:1.7.1
+    container_name: dns-load-data
+    hostname: dns-load-data
+    depends_on:
+      broker:
+        condition: service_healthy
+    volumes:
+      - ./demo/data:/tmp/data
+    command:
+      - -b
+      - broker:29092
+      - -t
+      - dns
+      - -P
+      - -l
+      - /tmp/data/dns.txt

@@ -74,7 +74,6 @@ public class ConditionParser {
                     case AGG_SEP:
                         // aggregate condition
                         String aggString = StringUtils.substringAfter(condition, "| ");
-                        logger.info("creating aggregate: " + aggString);
                         SigmaCondition aggregateCondition = new SigmaCondition(aggString);
                         aggregateCondition.setAggregateCondition(true);
                         aggregateCondition.setAggregateValues(aggregateParser.parseCondition(aggString));

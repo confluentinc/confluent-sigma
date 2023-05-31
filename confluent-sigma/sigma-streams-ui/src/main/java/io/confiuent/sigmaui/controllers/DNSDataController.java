@@ -20,6 +20,7 @@
 package io.confiuent.sigmaui.controllers;
 
 import io.confiuent.sigmaui.models.DNSStreamData;
+import io.confluent.sigmarules.models.DetectionResults;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +28,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.annotation.PostConstruct;
 
-import io.confiuent.sigmaui.models.DetectionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -56,6 +56,10 @@ public class DNSDataController {
     public void consumeDNSData(DNSStreamData dns) {
         synchronized (this.dnsData) {
             this.dnsData.add(dns);
+
+            if (this.dnsData.size() > 500) {
+                sendBufferedData();
+            }
         }
     }
 
@@ -63,6 +67,10 @@ public class DNSDataController {
     public void consumeDetectionData(DetectionResults results) {
         synchronized (this.dnsDetections) {
             this.dnsDetections.add(results);
+
+            if (this.dnsDetections.size() > 500) {
+                sendBufferedData();
+            }
         }
     }
 

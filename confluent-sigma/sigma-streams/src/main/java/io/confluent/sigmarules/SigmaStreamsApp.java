@@ -19,55 +19,74 @@
 
 package io.confluent.sigmarules;
 
-import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.config.SigmaOptions;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import io.confluent.sigmarules.streams.StreamManager;
-import io.confluent.sigmarules.utilities.SigmaOptions;
+import java.io.File;
+import java.util.Properties;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SigmaStreamsApp extends StreamManager {
+
+public class SigmaStreamsApp {
     final static Logger logger = LogManager.getLogger(SigmaStreamsApp.class);
 
+    private StreamManager streamManager;
     private SigmaRulesFactory ruleFactory;
     private SigmaStream sigmaStream;
 
-    public SigmaStreamsApp(SigmaOptions options) {
-        super(options.getProperties());
-
-        createSigmaRules();
-        createSigmaStream();
-
-        this.ruleFactory.addObserver((this::handleNewRule), false);
+    // this will initialize using environment variable (i.e. from Docker)
+    private void initializeWithEnv() {
+        Properties properties = getPropertiesFromEnv();
+        initializeWithProps(properties);
     }
 
-    private void handleNewRule(SigmaRule newRule) {
-        logger.info("Received a new rule: " + newRule.getTitle());
+    // this will initialize using arguments passed in (i.e. -c arg)
+    private void initializeWithProps(Properties properties) {
+        this.streamManager = new StreamManager(properties);
+        this.ruleFactory = new SigmaRulesFactory(streamManager.getStreamProperties());
+        this.sigmaStream = new SigmaStream(streamManager.getStreamProperties(), ruleFactory);
 
-        // need to stop the stream and rebuild the topology
-        //                if (streams != null) {
-        //                    streams.close();
-        //                    startStream();
-        //                }
-    }
-
-    private void createSigmaRules() {
-        this.ruleFactory = new SigmaRulesFactory(properties);
-    }
-
-    private void createSigmaStream() {
-        // initialize and start the main sigma stream
-        this.sigmaStream = new SigmaStream(properties, ruleFactory);
-    }
-
-    protected void start()
-    {
         sigmaStream.startStream();
     }
 
+    public boolean isDockerized() {
+        File f = new File("/.dockerenv");
+        return f.exists();
+    }
+
+    private Properties getPropertiesFromEnv() {
+        Properties props = new Properties();
+        System.getenv().forEach((k, v) -> {
+            String newKey = k.replace("_", ".");
+            System.out.println(newKey + ": " + v);
+            props.setProperty(newKey, v);
+        });
+
+        return props;
+    }
+
     public static void main(String[] args) {
-        SigmaStreamsApp sigma = new SigmaStreamsApp(new SigmaOptions(args));
-        sigma.start();
+        logger.info("Starting SigmaStreamsApp");
+        if (logger.getLevel().isLessSpecificThan(Level.INFO))
+        {
+            String message = "Passed in arguments: ";
+            for (int i = 0; i < args.length; i++)
+                message = message + args[i] + " ";
+            logger.log(Level.INFO, message);
+        }
+
+        SigmaStreamsApp sigma = new SigmaStreamsApp();
+        if (sigma.isDockerized()) {
+            logger.info("Initialize SigmaStreamsApp from environment variables");
+            sigma.initializeWithEnv();
+        } else {
+            logger.info("Initialize SigmaStreamsApp from properties file");
+            SigmaOptions sigmaOptions = new SigmaOptions(args);
+            sigma.initializeWithProps(sigmaOptions.getProperties());
+        }
     }
 }
+

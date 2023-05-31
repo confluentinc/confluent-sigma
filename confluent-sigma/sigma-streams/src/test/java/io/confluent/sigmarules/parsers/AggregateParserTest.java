@@ -17,36 +17,19 @@
  * under the License.    
  */
 
-package io.confiuent.sigmaui.models;
+package io.confluent.sigmarules.parsers;
 
-public class RuleResults {
-    private String title;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-    private String id;
+import io.confluent.sigmarules.models.AggregateValues;
+import org.junit.jupiter.api.Test;
 
-    private Boolean isAggregateCondition = Boolean.valueOf(false);
+class AggregateParserTest {
 
-    public String getTitle() {
-        return this.title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Boolean getAggregateCondition() {
-        return this.isAggregateCondition;
-    }
-
-    public void setAggregateCondition(Boolean aggregateCondition) {
-        this.isAggregateCondition = aggregateCondition;
+    @Test
+    void parseCondition() {
+        AggregateParser parser = new AggregateParser();
+        AggregateValues results = parser.parseCondition("count() > 15");
+        assertTrue(results.getOperation() != null);
     }
 }

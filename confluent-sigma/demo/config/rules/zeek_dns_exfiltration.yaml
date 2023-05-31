@@ -1,0 +1,11 @@
+title: Possible DNS exfiltration
+status: test
+description: 'This rule identifies possible data exfiltration through DNS'
+author: Will LaForest
+logsource:
+  product: zeek
+  service: dns
+detection:
+  query_length:
+    query|re: ^.{180}.*$
+  condition: query_length

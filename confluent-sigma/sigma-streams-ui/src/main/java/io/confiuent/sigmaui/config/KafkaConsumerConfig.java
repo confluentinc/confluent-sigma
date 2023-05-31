@@ -20,10 +20,10 @@
 package io.confiuent.sigmaui.config;
 
 import io.confiuent.sigmaui.models.DNSStreamData;
+import io.confluent.sigmarules.models.DetectionResults;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.confiuent.sigmaui.models.DetectionResults;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +38,7 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 @EnableKafka
 @Configuration
 public class KafkaConsumerConfig {
-    @Value("${kafka.bootstrapAddress}")
+    @Value("${bootstrap.server}")
     private String bootstrapAddress;
 
     public ConsumerFactory<String, String> consumerFactory(String groupId) {

@@ -61,6 +61,7 @@ public class AggregateStreamTest {
         testProperties.setProperty("schema.registry", "localhost:8888");
         testProperties.setProperty("output.topic", "test-output");
         testProperties.setProperty("data.topic", "test-input");
+        testProperties.setProperty("skip.app.registration", "true");
 
         return testProperties;
     }
