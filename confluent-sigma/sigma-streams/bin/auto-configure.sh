@@ -15,8 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# define the default sigma properties file name. This is needed becasue we need the props dir separate from the file
-# to mount to docker in case of docker execution
+# This is the auto-configure script.  It will attempt to find the sigma.properties file in the default paths as well
+# as finding a sigma jar file to use.  The end result should be exporting
+
+# SIGMA_PROPS_FILENAME (the default name of the sigma properties file this script is looking for)
+# SIGMA_PROPS (path to the properties file)
+# SIGMA_PROPS_DIR (the directory the property files resides in)
+# SIGMA_JAR (the jar files to use for running sigma)
 
 export SIGMA_PROPS_FILENAME="sigma.properties"
 
