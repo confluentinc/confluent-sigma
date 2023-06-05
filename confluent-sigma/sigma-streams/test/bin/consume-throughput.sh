@@ -13,8 +13,8 @@ if [ $# -ne $EXPECTED_ARGS ]; then
     echo "Usage: $(basename "$0") <topic> <number-threads>"
     exit -1
 else
-  $TOPIC=$1
-  $NUM_THREADS=$2
+  TOPIC=$1
+  NUM_THREADS=$2
 fi
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
