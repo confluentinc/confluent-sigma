@@ -1,6 +1,18 @@
 #!/bin/bash
 
 # These scripts are intended to be run from the test directory
+#
+# This script takes two arguments
+# Argument 1 is the topic to read from
+# Argument 2 is how many simultaneous kafka-consumer-perf-tests should I run.
+
+
+EXPECTED_ARGS=2
+
+if [ $# -ne $EXPECTED_ARGS ]; then
+    echo "Usage: $(basename "$0") <topic> <concurrent-consumers>"
+    exit -1
+fi
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
