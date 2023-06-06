@@ -34,10 +34,6 @@ fi
 
 bootstrap_key="bootstrap.server"
 bootstrap_value=$(grep "^$bootstrap_key=" "$SIGMA_PROPS" | cut -d'=' -f2-)
-
-# Export the property value
-export "$bootstrap_key=$bootstrap_value"
-
 CGROUP="CONSUMER-PERF-$TOPIC-$RANDOM"
 
 # Consume 4 million records

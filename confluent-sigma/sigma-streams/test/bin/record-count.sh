@@ -1,6 +1,22 @@
 #!/bin/bash
 
-source bin/auto-configure.sh
+# only one parameter which is the topic
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+echo "Script dir is $SCRIPT_DIR"
+
+if [ -f "$SCRIPT_DIR/../../bin/auto-configure.sh" ] ; then
+  source $SCRIPT_DIR/../../bin/auto-configure.sh
+fi
+
+if [ ! -f $SIGMA_PROPS ] ; then
+  echo "sigma properties not found.  Suggested path from auto-configure is $SIGMA_PROPS"
+  exit -1
+fi
+
+bootstrap_key="bootstrap.server"
+BOOTSTRAP_SERVER=$(grep "^$bootstrap_key=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 
 CGROUP="COUNT-$1-$RANDOM"
 
