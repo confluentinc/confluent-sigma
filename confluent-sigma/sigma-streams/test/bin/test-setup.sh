@@ -22,7 +22,8 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 echo "Script dir is $SCRIPT_DIR"
 
 if [ -f "$SCRIPT_DIR/../../bin/auto-configure.sh" ] ; then
-  source $SCRIPT_DIR/../../bin/auto-configure.sh
+  SIGMA_STREAMS_BIN="$SCRIPT_DIR/../../bin"
+  source $SIGMA_STREAMS_BIN/auto-configure.sh
 fi
 
 if [ ! -f $SIGMA_PROPS ] ; then
@@ -34,4 +35,4 @@ bootstrap_key="bootstrap.server"
 BOOTSTRAP_SERVER=$(grep "^$bootstrap_key=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 
 kafka-topics --bootstrap-server $BOOTSTRAP_SERVER --command-config $SIGMA_PROPS --delete --topic sigma-rules
-bin/sigma-loader.sh -dir test/rules/$1
+"$SIGMA_STREAMS_BIN"/sigma-loader.sh -dir test/rules/$1
