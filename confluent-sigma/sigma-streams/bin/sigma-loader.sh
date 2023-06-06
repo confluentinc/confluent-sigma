@@ -30,4 +30,16 @@ then
     exit 1
 fi
 
-java -cp sigma-streams-1.3.0-fat.jar io.confluent.sigmarules.tools.SigmaRuleLoader $*
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+echo "Script dir is $SCRIPT_DIR"
+
+if [ -f "$SCRIPT_DIR/auto-configure.sh" ] ; then
+  source $SCRIPT_DIR/auto-configure.sh
+fi
+
+if [ -f "$SIGMA_JAR" ] ; then
+  echo "Found $SIGMA_JAR.  Using this for execution"
+fi
+
+java -cp $SIGMA_JAR io.confluent.sigmarules.tools.SigmaRuleLoader $*
