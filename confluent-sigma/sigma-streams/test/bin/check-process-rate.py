@@ -29,15 +29,9 @@ end_time = current_datetime.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
 # Calculate the datetime one hour ago
 one_hour_ago = current_datetime - timedelta(hours=1)
 start_time = one_hour_ago.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
-
-print("Formatted: ", start_time)
-print("Formatted: ", end_time)
-
-#start_time = "2023-06-07T15:28:00-04:00"
-#end_time = "2023-06-07T16:28:00-04:00"
 resource_id = "lkc-7yyp22"
 
-data = {
+requestBytesJson = {
     "aggregations": [{"metric": "io.confluent.kafka.server/sent_bytes"}],
     "filter": {
         "filters": [
@@ -48,10 +42,22 @@ data = {
     },
     "granularity": "PT1M",
     "intervals": [start_time + "/" + end_time],
-    "limit": 1000
+    "limit": 10
 }
 
-print(json.dumps(data) + '\n')
+requestRecordsJson = {
+    "aggregations": [{"metric": "io.confluent.kafka.server/sent_records"}],
+    "filter": {
+        "filters": [
+            {"field": "resource.kafka.id", "op": "EQ", "value": resource_id},
+            {"field": "metric.topic", "op": "EQ", "value": "test2"}
+        ],
+        "op": "AND"
+    },
+    "granularity": "PT1M",
+    "intervals": [start_time + "/" + end_time],
+    "limit": 10
+}
 
 headers = {
     "Content-Type": "application/json",
@@ -59,6 +65,16 @@ headers = {
 }
 
 
-response = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query", data=json.dumps(data), headers=headers)
+bytesResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query", data=json.dumps(requestBytesJson), headers=headers)
+recordsResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query", data=json.dumps(requestRecordsJson), headers=headers)
 
-print(response.text)
+
+# Parse the JSON data
+bytesJson = json.loads(bytesResponse.text)
+recordsJson = json.loads(recordsResponse.text)
+
+# Pretty print the parsed JSON data
+print("bytes sent from cluster to Confluent Sigma")
+print(json.dumps(bytesJson, indent=4, sort_keys=True))
+print('\n' + "records sent from cluster to Confluent Sigma")
+print(json.dumps(recordsJson, indent=4, sort_keys=True))
