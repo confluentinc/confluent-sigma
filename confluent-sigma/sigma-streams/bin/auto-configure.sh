@@ -63,4 +63,11 @@ if [ ! -f "$SIGMA_JAR" ] ; then
   done
 fi
 
+if [ ! -f "$SIGMA_JAR" ] ; then
+  for TEST_FILE in ../target/sigma-streams-*-fat.jar
+  do
+    export SIGMA_JAR=$TEST_FILE
+  done
+fi
+
 shopt -u nullglob

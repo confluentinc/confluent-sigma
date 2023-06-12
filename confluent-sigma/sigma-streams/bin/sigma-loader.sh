@@ -40,6 +40,13 @@ fi
 
 if [ -f "$SIGMA_JAR" ] ; then
   echo "Found $SIGMA_JAR.  Using this for execution"
+else
+  echo "Sigma jar not found"
+  exit -1
 fi
 
-java -cp $SIGMA_JAR io.confluent.sigmarules.tools.SigmaRuleLoader $*
+if [ -f $SIGMA_PROPS ] ; then
+  java -cp $SIGMA_JAR io.confluent.sigmarules.tools.SigmaRuleLoader -c $SIGMA_PROPS $*
+else
+  java -cp $SIGMA_JAR io.confluent.sigmarules.tools.SigmaRuleLoader $*
+fi

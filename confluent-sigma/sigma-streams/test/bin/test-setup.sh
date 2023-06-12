@@ -35,4 +35,4 @@ bootstrap_key="bootstrap.server"
 BOOTSTRAP_SERVER=$(grep "^$bootstrap_key=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 
 kafka-topics --bootstrap-server $BOOTSTRAP_SERVER --command-config $SIGMA_PROPS --delete --topic sigma-rules
-"$SIGMA_STREAMS_BIN"/sigma-loader.sh -dir test/rules/$1
+"$SIGMA_STREAMS_BIN"/sigma-loader.sh -d "$SCRIPT_DIR"/../rules/$1
