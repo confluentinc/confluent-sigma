@@ -1,26 +1,101 @@
-import os
-import subprocess
+#!python3
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
 import requests
 import pytz
+import statistics
 
 from datetime import datetime, timedelta
 
-SIGMA_CC_ADMIN = os.environ.get('SIGMA_CC_ADMIN')
+import os
 
-if not os.path.isfile(SIGMA_CC_ADMIN):
+SIGMA_PROPS_FILENAME = "sigma.properties"
+SIGMA_CC_ADMIN_FILENAME = "sigma-cc-admin.properties"
+
+
+# This function is the equivalent of the auto-configure bash shell script.  We may want to rework that script to use
+# this python routine, so we maintain the location searching in one place.
+def get_sigma_config_variables():
+    # Set variables
+
+    sigma_props_path = None
+    cc_admin_path = None
+
+    # Check for sigma.properties file in default paths
+    if os.path.isfile(os.path.expanduser("~/.config/" + SIGMA_PROPS_FILENAME)):
+        sigma_props_path = os.path.expanduser("~/.config/" + SIGMA_PROPS_FILENAME)
+    elif os.path.isfile(os.path.expanduser("~/.confluent/" + SIGMA_PROPS_FILENAME)):
+        sigma_props_path = os.path.expanduser("~/.confluent/" + SIGMA_PROPS_FILENAME)
+    elif os.path.isfile(os.path.expanduser("~/tmp/" + SIGMA_PROPS_FILENAME)):
+        sigma_props_path = os.path.expanduser("~/tmp/" + SIGMA_PROPS_FILENAME)
+
+    # Check for sigma-cc-admin.properties file in default paths
+    if os.path.isfile(os.path.expanduser("~/.config/" + SIGMA_CC_ADMIN_FILENAME)):
+        cc_admin_path = os.path.expanduser("~/.config/" + SIGMA_CC_ADMIN_FILENAME)
+    elif os.path.isfile(os.path.expanduser("~/.confluent/" + SIGMA_CC_ADMIN_FILENAME)):
+        cc_admin_path = os.path.expanduser("~/.confluent/" + SIGMA_CC_ADMIN_FILENAME)
+    elif os.path.isfile(os.path.expanduser("~/tmp/" + SIGMA_CC_ADMIN_FILENAME)):
+        cc_admin_path = os.path.expanduser("~/tmp/" + SIGMA_CC_ADMIN_FILENAME)
+
+    return sigma_props_path, cc_admin_path
+
+
+def calculate_values(json_metrics):
+
+    values = [item['value'] for item in json_metrics['data']]
+
+    if values is None or len(values) < 3:
+        print("Error: Either metrics API returned no data points or there was less than three. Most likely cause is "
+              "that Confluent Sigma is not running")
+        exit()
+
+    # Calculate the maximum, minimum, and average per second
+    max_value = max(values[1:-1])/60
+    min_value = min(values[1:-1])/60
+    avg_value = sum(values[1:-1]) / len(values[1:-1])/60
+    std_deviation = statistics.stdev(values[1:-1])
+    range = max_value - min_value
+    
+    return {'maximum': max_value, 'maximum_human': format(max_value, ",.2f"),
+            'minimum': min_value, 'minimum_human': format(min_value, ",.2f"),
+            'average': avg_value, 'average_human': format(avg_value, ",.2f"),
+            'std_deviation_min': std_deviation,
+            'std_deviation_min_human': format(std_deviation, ",.2f"),
+            'range_min': range, 'range_min_human': format(range, ",.2f"),
+            '1orig': json_metrics}
+
+
+config_paths = get_sigma_config_variables()
+
+sigma_cc_admin = config_paths[1]
+
+if not os.path.isfile(sigma_cc_admin):
     print("sigma cc admin properties not found.")
     exit(-1)
 
-with open(SIGMA_CC_ADMIN) as f:
+with open(sigma_cc_admin) as f:
     for line in f:
         if line.startswith("rest.auth.token="):
-            AUTH_TOKEN = line.split("=")[1].strip()
+            auth_token = line.split("=")[1].strip()
             break
 
 
 current_datetime = datetime.now(pytz.timezone("America/New_York"))
-
 offset = current_datetime.strftime("%z")
 offset_formatted = f"{offset[:-2]}:{offset[-2:]}"
 
@@ -61,20 +136,25 @@ requestRecordsJson = {
 
 headers = {
     "Content-Type": "application/json",
-    "Authorization": "Basic " + AUTH_TOKEN
+    "Authorization": "Basic " + auth_token
 }
 
 
-bytesResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query", data=json.dumps(requestBytesJson), headers=headers)
-recordsResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query", data=json.dumps(requestRecordsJson), headers=headers)
+bytesResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query",
+                              data=json.dumps(requestBytesJson), headers=headers)
+recordsResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query",
+                                data=json.dumps(requestRecordsJson), headers=headers)
 
 
 # Parse the JSON data
 bytesJson = json.loads(bytesResponse.text)
 recordsJson = json.loads(recordsResponse.text)
 
+bytes_result = calculate_values(bytesJson)
+records_results = calculate_values(recordsJson)
+
 # Pretty print the parsed JSON data
 print("bytes sent from cluster to Confluent Sigma")
-print(json.dumps(bytesJson, indent=4, sort_keys=True))
+print(json.dumps(bytes_result, indent=4, sort_keys=True))
 print('\n' + "records sent from cluster to Confluent Sigma")
-print(json.dumps(recordsJson, indent=4, sort_keys=True))
+print(json.dumps(records_results, indent=4, sort_keys=True))
