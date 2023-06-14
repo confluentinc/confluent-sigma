@@ -60,7 +60,7 @@ public class SimpleTopology extends SigmaBaseTopology {
               if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
                 results.add(buildResults(rule, sourceData));
 
-                if (logger.getLevel().isMoreSpecificThan(Level.WARN)) {
+                if (logger.getLevel().isLessSpecificThan(Level.WARN)) {
                     matches++;
                     long currentTime = System.currentTimeMillis();
                     if (currentTime - lastCallTime > MINUTE_IN_MILLIS) {
