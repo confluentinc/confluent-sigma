@@ -71,17 +71,25 @@ def calculate_values(json_metrics):
     std_deviation = statistics.stdev(values[1:-1])
     range = max_value - min_value
     
-    return {'maximum': max_value, 'maximum_human': format(max_value, ",.2f"),
-            'minimum': min_value, 'minimum_human': format(min_value, ",.2f"),
-            'average': avg_value, 'average_human': format(avg_value, ",.2f"),
-            'std_deviation_min': std_deviation,
-            'std_deviation_min_human': format(std_deviation, ",.2f"),
-            'range_min': range, 'range_min_human': format(range, ",.2f"),
-            '1orig': json_metrics}
+    return {'maximum': max_value, 'minimum': min_value, 'average': avg_value,
+            'std_deviation': std_deviation, 'range': range}
+
+def build_human_summary(bytes_result, records_results):
+    human_summary = \
+        "Average bytes per second " + format(bytes_result["average"], ",.2f") + '\n' +\
+        "Max bytes per second " + format(bytes_result["maximum"], ",.2f") + '\n' +\
+        "Min bytes per second " + format(bytes_result["minimum"], ",.2f") + '\n' +\
+        "Bytes Standard deviation " + format(bytes_result["std_deviation"], ",.2f") + '\n' + \
+        "Bytes range delta " + format(bytes_result["range"], ",.2f") + '\n\n' + \
+        "Average records per second " + format(records_results["average"], ",.2f") + '\n' + \
+        "Max records per second " + format(records_results["maximum"], ",.2f") + '\n' + \
+        "Min records per second " + format(records_results["minimum"], ",.2f") + '\n' + \
+        "Records Standard deviation " + format(records_results["std_deviation"], ",.2f") + '\n' + \
+        "Records range delta " + format(records_results["range"], ",.2f")
+    return human_summary
 
 
 config_paths = get_sigma_config_variables()
-
 sigma_cc_admin = config_paths[1]
 
 if not os.path.isfile(sigma_cc_admin):
@@ -102,7 +110,7 @@ offset_formatted = f"{offset[:-2]}:{offset[-2:]}"
 end_time = current_datetime.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
 
 # Calculate the datetime one hour ago
-one_hour_ago = current_datetime - timedelta(hours=1)
+one_hour_ago = current_datetime - timedelta(minutes=10)
 start_time = one_hour_ago.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
 resource_id = "lkc-7yyp22"
 
@@ -152,9 +160,11 @@ recordsJson = json.loads(recordsResponse.text)
 
 bytes_result = calculate_values(bytesJson)
 records_results = calculate_values(recordsJson)
+print( build_human_summary(bytes_result, records_results) )
 
-# Pretty print the parsed JSON data
-print("bytes sent from cluster to Confluent Sigma")
-print(json.dumps(bytes_result, indent=4, sort_keys=True))
-print('\n' + "records sent from cluster to Confluent Sigma")
-print(json.dumps(records_results, indent=4, sort_keys=True))
+return_json = {}
+return_json["bytes"] = { "raw_metrics": bytesJson, "calculations": bytes_result }
+return_json["records"] = { "raw_metrics": recordsJson, "calculations": records_results }
+
+print(json.dumps(return_json, indent=4, sort_keys=True))
+print(build_human_summary(bytes_result, records_results))
