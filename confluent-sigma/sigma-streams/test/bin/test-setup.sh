@@ -41,4 +41,4 @@ cp "$SCRIPT_DIR"/../benchmarks/configs/$1/benchmark.properties "$SIGMA_PROPS_DIR
 echo "$bootstrap_key=$BOOTSTRAP_SERVER" >> "$SIGMA_PROPS_DIR"/benchmark.properties
 grep "^sasl.jaas.config" "$SIGMA_PROPS" >> "$SIGMA_PROPS_DIR"/benchmark.properties
 datetime=$(date +"%Y%m%d%H%M%S")
-echo "application.id=confluent-streams-benchmark-$datetime"
+echo "application.id=confluent-streams-benchmark-$1-$datetime" >> "$SIGMA_PROPS_DIR"/benchmark.properties
