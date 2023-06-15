@@ -35,4 +35,10 @@ bootstrap_key="bootstrap.server"
 BOOTSTRAP_SERVER=$(grep "^$bootstrap_key=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 
 kafka-topics --bootstrap-server $BOOTSTRAP_SERVER --command-config $SIGMA_PROPS --delete --topic sigma-rules
-"$SIGMA_STREAMS_BIN"/sigma-loader.sh -d "$SCRIPT_DIR"/../rules/$1
+"$SIGMA_STREAMS_BIN"/sigma-loader.sh -d "$SCRIPT_DIR"/../benchmarks/rules/$1
+
+cp "$SCRIPT_DIR"/../benchmarks/configs/$1/benchmark.properties "$SIGMA_PROPS_DIR"
+echo "$bootstrap_key=$BOOTSTRAP_SERVER" >> "$SIGMA_PROPS_DIR"/benchmark.properties
+grep "^sasl.jaas.config" "$SIGMA_PROPS" >> "$SIGMA_PROPS_DIR"/benchmark.properties
+datetime=$(date +"%Y%m%d%H%M%S")
+echo "application.id=confluent-streams-benchmark-$datetime"
