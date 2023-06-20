@@ -109,7 +109,9 @@ def count_records(bootstrap_servers, sasl_username, sasl_password, topic):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Provide a record count for messages in a topic")
+    parser = argparse.ArgumentParser(description="Provide an estimated record count for messages in a topic based " +
+                                     "on minimum offset and water marks.  Currently built to work on Confluent Cloud " +
+                                     "based on SASL_SSL authentication but could easily be adapted for other auths")
 
     # Required parameters
     parser.add_argument("bootstrap_servers", help="boostrap server for kafka cluster")
@@ -119,7 +121,8 @@ if __name__ == "__main__":
 
     # Optional flag argument
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose mode")
-    parser.add_argument("-p", "--poll_time", type=int, default=TIMEOUT)
+    parser.add_argument("-p", "--poll_time", type=int, help="specify the poll timeout to fetch the first message",
+                        default=TIMEOUT)
 
     args = parser.parse_args()
 
