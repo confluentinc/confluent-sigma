@@ -1,13 +1,17 @@
 #!/bin/bash
 
-# only one parameter which is the topic
+# These scripts are intended to be run from the test directory
+#
+# This script takes one argument.  The topic to get a record count from
+#
+# Argument 1 is the topic to read from
+# Argument 2 is the number of threads.
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-echo "Script dir is $SCRIPT_DIR"
-
 if [ -f "$SCRIPT_DIR/../../bin/auto-configure.sh" ] ; then
-  source $SCRIPT_DIR/../../bin/auto-configure.sh
+  SIGMA_STREAMS_BIN="$SCRIPT_DIR/../../bin"
+  source $SIGMA_STREAMS_BIN/auto-configure.sh
 fi
 
 if [ ! -f $SIGMA_PROPS ] ; then
@@ -15,18 +19,19 @@ if [ ! -f $SIGMA_PROPS ] ; then
   exit -1
 fi
 
-bootstrap_key="bootstrap.server"
-BOOTSTRAP_SERVER=$(grep "^$bootstrap_key=" "$SIGMA_PROPS" | cut -d'=' -f2-)
+BOOTSTRAP_KEY="bootstrap.server"
+BOOTSTRAP=$(grep "^$BOOTSTRAP_KEY=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 
-CGROUP="COUNT-$1-$RANDOM"
+KAFKA_SASL_USERNAME=$(grep -Eo "username='(.*?)'" "$SIGMA_PROPS"  | sed -E "s/username='//g")
+KAFKA_SASL_USERNAME=$(echo $KAFKA_SASL_USERNAME | tr -d "'")
 
-docker run --rm --network=host edenhill/kcat:1.7.1  \
-  kafkacat -b ${BOOTSTRAP_SERVER} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
-  -X sasl.username=${KAFKA_SASL_USERNAME} -X sasl.password=${KAFKA_SASL_PASSWORD} -o beginning -G $CGROUP  -c 50000 $1 > /dev/null
+KAFKA_SASL_PASSWORD=$(grep -Eo "password='(.*?)'" "$SIGMA_PROPS" | sed -E "s/password='//g")
+KAFKA_SASL_PASSWORD=$(echo $KAFKA_SASL_PASSWORD | tr -d "'")
 
-docker run -v ${PROPS}:/mnt/config --rm --network=host confluentinc/cp-server:latest \
-  kafka-consumer-groups --describe --group $CGROUP --bootstrap-server ${BOOTSTRAP_SERVER} \
-  --command-config /mnt/config/sigma.properties
-
-
+# Check if the second argument is true
+if [[ "$2" = true ]]; then
+  python3 "$SCRIPT_DIR"/record-count.py -v "$BOOTSTRAP" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
+else
+  python3 "$SCRIPT_DIR"/record-count.py "$BOOTSTRAP" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
+fi
 
