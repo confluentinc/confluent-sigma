@@ -19,6 +19,7 @@ import json
 import requests
 import pytz
 import statistics
+import argparse
 
 from datetime import datetime, timedelta
 
@@ -88,83 +89,92 @@ def build_human_summary(bytes_result, records_results):
         "Records range delta " + format(records_results["range"], ",.2f")
     return human_summary
 
+if __name__ == "__main__":
 
-config_paths = get_sigma_config_variables()
-sigma_cc_admin = config_paths[1]
+    parser = argparse.ArgumentParser(description="retrieve bytes and record send data")
 
-if not os.path.isfile(sigma_cc_admin):
-    print("sigma cc admin properties not found.")
-    exit(-1)
+    # Required parameters
+    parser.add_argument("resourceId", help="topic you want a record count for")
+    parser.add_argument("topic", help="topic you want a record count for")
 
-with open(sigma_cc_admin) as f:
-    for line in f:
-        if line.startswith("rest.auth.token="):
-            auth_token = line.split("=")[1].strip()
-            break
+    args = parser.parse_args()
 
+    config_paths = get_sigma_config_variables()
+    sigma_cc_admin = config_paths[1]
 
-current_datetime = datetime.now(pytz.timezone("America/New_York"))
-offset = current_datetime.strftime("%z")
-offset_formatted = f"{offset[:-2]}:{offset[-2:]}"
+    if not os.path.isfile(sigma_cc_admin):
+        print("sigma cc admin properties not found.")
+        exit(-1)
 
-end_time = current_datetime.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
-
-# Calculate the datetime one hour ago
-one_hour_ago = current_datetime - timedelta(minutes=10)
-start_time = one_hour_ago.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
-resource_id = "lkc-7yyp22"
-
-requestBytesJson = {
-    "aggregations": [{"metric": "io.confluent.kafka.server/sent_bytes"}],
-    "filter": {
-        "filters": [
-            {"field": "resource.kafka.id", "op": "EQ", "value": resource_id},
-            {"field": "metric.topic", "op": "EQ", "value": "test2"}
-        ],
-        "op": "AND"
-    },
-    "granularity": "PT1M",
-    "intervals": [start_time + "/" + end_time],
-    "limit": 10
-}
-
-requestRecordsJson = {
-    "aggregations": [{"metric": "io.confluent.kafka.server/sent_records"}],
-    "filter": {
-        "filters": [
-            {"field": "resource.kafka.id", "op": "EQ", "value": resource_id},
-            {"field": "metric.topic", "op": "EQ", "value": "test2"}
-        ],
-        "op": "AND"
-    },
-    "granularity": "PT1M",
-    "intervals": [start_time + "/" + end_time],
-    "limit": 10
-}
-
-headers = {
-    "Content-Type": "application/json",
-    "Authorization": "Basic " + auth_token
-}
+    with open(sigma_cc_admin) as f:
+        for line in f:
+            if line.startswith("rest.auth.token="):
+                auth_token = line.split("=")[1].strip()
+                break
 
 
-bytesResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query",
-                              data=json.dumps(requestBytesJson), headers=headers)
-recordsResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query",
-                                data=json.dumps(requestRecordsJson), headers=headers)
+    current_datetime = datetime.now(pytz.timezone("America/New_York"))
+    offset = current_datetime.strftime("%z")
+    offset_formatted = f"{offset[:-2]}:{offset[-2:]}"
+
+    end_time = current_datetime.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
+
+    # Calculate the datetime one hour ago
+    one_hour_ago = current_datetime - timedelta(minutes=10)
+    start_time = one_hour_ago.strftime("%Y-%m-%dT%H:%M:%S") + offset_formatted
 
 
-# Parse the JSON data
-bytesJson = json.loads(bytesResponse.text)
-recordsJson = json.loads(recordsResponse.text)
+    requestBytesJson = {
+        "aggregations": [{"metric": "io.confluent.kafka.server/sent_bytes"}],
+        "filter": {
+            "filters": [
+                {"field": "resource.kafka.id", "op": "EQ", "value": args.resourceId},
+                {"field": "metric.topic", "op": "EQ", "value": args.topic}
+            ],
+            "op": "AND"
+        },
+        "granularity": "PT1M",
+        "intervals": [start_time + "/" + end_time],
+        "limit": 10
+    }
 
-bytes_result = calculate_values(bytesJson)
-records_results = calculate_values(recordsJson)
-print( build_human_summary(bytes_result, records_results) )
+    requestRecordsJson = {
+        "aggregations": [{"metric": "io.confluent.kafka.server/sent_records"}],
+        "filter": {
+            "filters": [
+                {"field": "resource.kafka.id", "op": "EQ", "value": args.resourceId},
+                {"field": "metric.topic", "op": "EQ", "value":  args.topic}
+            ],
+            "op": "AND"
+        },
+        "granularity": "PT1M",
+        "intervals": [start_time + "/" + end_time],
+        "limit": 10
+    }
 
-return_json = {}
-return_json["bytes"] = { "raw_metrics": bytesJson, "calculations": bytes_result }
-return_json["records"] = { "raw_metrics": recordsJson, "calculations": records_results }
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Basic " + auth_token
+    }
 
-print(json.dumps(return_json, indent=4, sort_keys=True))
-print(build_human_summary(bytes_result, records_results))
+
+    bytesResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query",
+                                  data=json.dumps(requestBytesJson), headers=headers)
+    recordsResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query",
+                                    data=json.dumps(requestRecordsJson), headers=headers)
+
+
+    # Parse the JSON data
+    bytesJson = json.loads(bytesResponse.text)
+    recordsJson = json.loads(recordsResponse.text)
+
+    bytes_result = calculate_values(bytesJson)
+    records_results = calculate_values(recordsJson)
+    print( build_human_summary(bytes_result, records_results) )
+
+    return_json = {}
+    return_json["bytes"] = { "raw_metrics": bytesJson, "calculations": bytes_result }
+    return_json["records"] = { "raw_metrics": recordsJson, "calculations": records_results }
+
+    print(json.dumps(return_json, indent=4, sort_keys=True))
+    print(build_human_summary(bytes_result, records_results))
