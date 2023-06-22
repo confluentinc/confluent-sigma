@@ -61,7 +61,7 @@ public class AggregateTopology extends SigmaBaseTopology {
 
                 sigmaStream.flatMap((key, sourceData) -> {
                     List<KeyValue<String, AggregateResults>> results = new ArrayList<>();
-                    logger.info("check rule " + rule.getTitle());
+                    logger.debug("check rule " + rule.getTitle());
                     SigmaRule currentRule = ruleFactory.getRule(rule.getTitle());
                     if (ruleCheck.isValid(currentRule, sourceData, jsonPathConf)) {
                         AggregateResults aggResults = new AggregateResults();

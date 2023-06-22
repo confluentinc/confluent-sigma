@@ -32,13 +32,17 @@ import java.util.Map;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SimpleTopology extends SigmaBaseTopology {
-  final static Logger logger = LogManager.getLogger(SimpleTopology.class);
+    private static final long MINUTE_IN_MILLIS = 60 * 1000;
+    final static Logger logger = LogManager.getLogger(SimpleTopology.class);
 
   private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
+  private long matches = 0;
+  private long lastCallTime = 0;
 
   public void createSimpleTopology(KStream<String, JsonNode> sigmaStream,
       SigmaRulesFactory ruleFactory, String outputTopic, Configuration jsonPathConf,
@@ -52,9 +56,18 @@ public class SimpleTopology extends SigmaBaseTopology {
             SigmaRule rule = entry.getValue();
 
             if (false == rule.getConditionsManager().hasAggregateCondition()) {
-              logger.info("check rule " + rule.getTitle());
+              logger.debug("check rule " + rule.getTitle());
               if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
                 results.add(buildResults(rule, sourceData));
+
+                if (logger.getLevel().isLessSpecificThan(Level.WARN)) {
+                    matches++;
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastCallTime > MINUTE_IN_MILLIS) {
+                        lastCallTime = currentTime;
+                        logger.log(Level.INFO, "Number of matches " + matches);
+                    }
+                }
 
                 if (firstMatch)
                   break;

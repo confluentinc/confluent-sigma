@@ -1,16 +1,37 @@
 #!/bin/bash
 
-source bin/auto-configure.sh
+# These scripts are intended to be run from the test directory
+#
+# This script takes one argument.  The topic to get a record count from
+#
+# Argument 1 is the topic to read from
+# Argument 2 is the number of threads.
 
-CGROUP="COUNT-$1-$RANDOM"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-docker run --rm --network=host edenhill/kcat:1.7.1  \
-  kafkacat -b ${BOOTSTRAP_SERVER} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
-  -X sasl.username=${KAFKA_SASL_USERNAME} -X sasl.password=${KAFKA_SASL_PASSWORD} -o beginning -G $CGROUP  -c 50000 $1 > /dev/null
+if [ -f "$SCRIPT_DIR/../../bin/auto-configure.sh" ] ; then
+  SIGMA_STREAMS_BIN="$SCRIPT_DIR/../../bin"
+  source $SIGMA_STREAMS_BIN/auto-configure.sh
+fi
 
-docker run -v ${PROPS}:/mnt/config --rm --network=host confluentinc/cp-server:latest \
-  kafka-consumer-groups --describe --group $CGROUP --bootstrap-server ${BOOTSTRAP_SERVER} \
-  --command-config /mnt/config/sigma.properties
+if [ ! -f $SIGMA_PROPS ] ; then
+  echo "sigma properties not found.  Suggested path from auto-configure is $SIGMA_PROPS"
+  exit -1
+fi
 
+BOOTSTRAP_KEY="bootstrap.server"
+BOOTSTRAP=$(grep "^$BOOTSTRAP_KEY=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 
+KAFKA_SASL_USERNAME=$(grep -Eo "username='(.*?)'" "$SIGMA_PROPS"  | sed -E "s/username='//g")
+KAFKA_SASL_USERNAME=$(echo $KAFKA_SASL_USERNAME | tr -d "'")
+
+KAFKA_SASL_PASSWORD=$(grep -Eo "password='(.*?)'" "$SIGMA_PROPS" | sed -E "s/password='//g")
+KAFKA_SASL_PASSWORD=$(echo $KAFKA_SASL_PASSWORD | tr -d "'")
+
+# Check if the second argument is true
+if [[ "$2" = true ]]; then
+  python3 "$SCRIPT_DIR"/record-count.py -v "$BOOTSTRAP" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
+else
+  python3 "$SCRIPT_DIR"/record-count.py "$BOOTSTRAP" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
+fi
 

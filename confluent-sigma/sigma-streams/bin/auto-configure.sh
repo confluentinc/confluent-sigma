@@ -27,6 +27,7 @@ export SIGMA_PROPS_FILENAME="sigma.properties"
 
 SIGMA_PROPS=
 SIGMA_PROPS_DIR=
+SIGMA_CC_ADMIN=
 
 if [ -f ~/.config/sigma.properties ] ; then
   export SIGMA_PROPS_DIR=~/.config/
@@ -39,6 +40,14 @@ elif [ -f ~/tmp/sigma.properties ] ; then
   export SIGMA_PROPS=~/tmp/$SIGMA_PROPS_FILENAME
 fi
 
+if [ -f ~/.config/sigma-cc-admin.properties ] ; then
+  export SIGMA_CC_ADMIN=~/.config/sigma-cc-admin.properties
+elif [ -f ~/.confluent/sigma-cc-admin.properties ] ; then
+  export SIGMA_CC_ADMIN=~/.confluent/sigma-cc-admin.properties
+elif [ -f ~/tmp/sigma-cc-admin.properties ] ; then
+  export SIGMA_CC_ADMIN=~/tmp/sigma-cc-admin.properties
+fi
+
 shopt -s nullglob
 
 SIGMA_JAR=
@@ -49,6 +58,13 @@ done
 
 if [ ! -f "$SIGMA_JAR" ] ; then
   for TEST_FILE in target/sigma-streams-*-fat.jar
+  do
+    export SIGMA_JAR=$TEST_FILE
+  done
+fi
+
+if [ ! -f "$SIGMA_JAR" ] ; then
+  for TEST_FILE in ../target/sigma-streams-*-fat.jar
   do
     export SIGMA_JAR=$TEST_FILE
   done
