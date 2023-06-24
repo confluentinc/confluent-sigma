@@ -298,7 +298,7 @@ const Header = ({ classes, isSidebarOpened, toggleSidebar, ...props }) => (
 
 const styles = theme => ({
   logotype: {
-    color: "white",
+    color: "#45C5E8",
     marginLeft: theme.spacing.unit * 2.5,
     marginRight: theme.spacing.unit * 2.5,
     fontWeight: 500,
