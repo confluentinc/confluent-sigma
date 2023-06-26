@@ -29,6 +29,11 @@ import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * This class is responsible for taking either a raw sigma rules in a string or a ParsedSigmaRule (the POJO that is
+ * used for jackson to parse from raw YAML and is part of teh sigma-parse module) and then creating an actual
+ * SigmaRule.  SigmaRules are part of the SigmaStreams module that actaully has the logic for determining matches.
+ */
 public class SigmaRuleParser {
     final static Logger logger = LogManager.getLogger(SigmaRuleParser.class);
     ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
