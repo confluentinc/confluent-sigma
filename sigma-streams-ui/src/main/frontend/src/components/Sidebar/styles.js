@@ -28,7 +28,7 @@ export default makeStyles(theme => ({
       duration: theme.transitions.duration.leavingScreen,
     }),
     overflowX: "hidden",
-    width: theme.spacing(7) + 40,
+    width: 80,
     [theme.breakpoints.down("sm")]: {
       width: drawerWidth,
     },

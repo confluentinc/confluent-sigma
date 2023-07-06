@@ -10,8 +10,9 @@ import {
   Settings as SettingsIcon
 } from "@material-ui/icons";
 import { useTheme } from "@material-ui/styles";
-import { withRouter } from "react-router-dom";
+import withRouter from "../Wrappers/withRouter"
 import classNames from "classnames";
+import {useLocation} from 'react-router-dom';
 
 // styles
 import useStyles from "./styles";
@@ -57,9 +58,10 @@ const structure = [
   },
 ];
 
-function Sidebar({ location }) {
+function Sidebar() {
   var classes = useStyles();
   var theme = useTheme();
+  var location = useLocation();
 
   // global
   var { isSidebarOpened } = useLayoutState();

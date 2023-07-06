@@ -1,5 +1,5 @@
 import { makeStyles } from "@material-ui/styles";
-import { alpha } from "@material-ui/core/styles/colorManipulator";
+import { alpha } from "@mui/material/styles";
 
 export default makeStyles(theme => ({
   logotype: {

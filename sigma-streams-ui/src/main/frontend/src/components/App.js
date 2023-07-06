@@ -1,76 +1,64 @@
-import React from "react";
-import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
+import React, {Fragment} from "react";
+import { HashRouter, Route, Routes, Navigate } from "react-router-dom";
 
 // components
-import Layout from "./Layout";
+import Header from "./Header";
+import Sidebar from "./Sidebar";
 
 // pages
 import Error from "../pages/error";
 import Login from "../pages/login";
+import Dashboard from "../pages/dashboard";
+import Layout from "./Layout/Layout"
+import { LayoutProvider } from "../context/LayoutContext";
+import { UserProvider } from "../context/UserContext";
+import { ThemeProvider } from "@material-ui/styles";
+import { CssBaseline } from "@material-ui/core";
+import Themes from "../themes";
+import Typography from "../pages/typography";
+import Notifications from "../pages/notifications";
+import Maps from "../pages/maps";
+import Tables from "../pages/tables";
+import Icons from "../pages/icons";
+import Charts from "../pages/charts";
+import SigmaRules from "../pages/sigmarules";
+import SigmaRuleEditor from "../pages/sigmaruleeditor";
 
-// context
-import { useUserState } from "../context/UserContext";
+import useStyles from "../components/Layout/styles";
+import { useLayoutState } from "../context/LayoutContext";
+import classnames from "classnames";
 
 export default function App() {
-  // global
-  var { isAuthenticated } = useUserState();
+  var classes = useStyles();
+  var layoutState = useLayoutState();
 
   return (
-    <HashRouter>
-      <Switch>
-        <Route exact path="/" render={() => <Redirect to="/app/dashboard" />} />
-        <Route
-          exact
-          path="/app"
-          render={() => <Redirect to="/app/dashboard" />}
-        />
-        <PrivateRoute path="/app" component={Layout} />
-        <PublicRoute path="/login" component={Login} />
-        <Route component={Error} />
-      </Switch>
-    </HashRouter>
-  );
-
-  // #######################################################################
-
-  function PrivateRoute({ component, ...rest }) {
-    return (
-      <Route
-        {...rest}
-        render={props =>
-          isAuthenticated ? (
-            React.createElement(component, props)
-          ) : (
-            <Redirect
-              to={{
-                pathname: "/login",
-                state: {
-                  from: props.location,
-                },
-              }}
-            />
-          )
-        }
-      />
-    );
-  }
-
-  function PublicRoute({ component, ...rest }) {
-    return (
-      <Route
-        {...rest}
-        render={props =>
-          isAuthenticated ? (
-            <Redirect
-              to={{
-                pathname: "/",
-              }}
-            />
-          ) : (
-            React.createElement(component, props)
-          )
-        }
-      />
-    );
-  }
+          <div className={classes.root}>
+            <>
+              <Header />
+              <Sidebar />
+              <div
+                className={classnames(classes.content, {
+                  [classes.contentShift]: layoutState.isSidebarOpened,
+                })}
+              >
+              <div className={classes.fakeToolbar} />
+              <Routes>
+                <Route path="/" element={<SigmaRules />} />
+                <Route path="/app/sigmarules" element={<SigmaRules />} />
+                <Route path="/app/dashboard" element={<Dashboard />} />
+                <Route path="/app/typography" element={<Typography />} />
+                <Route path="/app/tables" element={<Tables />} />
+                <Route path="/app/notifications" element={<Notifications />} />
+                <Route path="/app/sigmarules" element={<SigmaRules />} />
+                <Route path="/app/sigmaruleeditor" element={<SigmaRuleEditor />} />
+                <Route path="/app/ui" element={() => <Navigate to="/app/ui/icons" />} />
+                <Route path="/app/ui/maps" element={<Maps />} />
+                <Route path="/app/ui/icons" element={<Icons />} />
+                <Route path="/app/ui/charts" element={<Charts />} />
+              </Routes>
+              </div>
+            </>
+          </div>
+  )
 }

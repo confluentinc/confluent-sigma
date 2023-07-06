@@ -1,10 +1,10 @@
 import React from "react";
 import {
   Route,
-  Switch,
-  Redirect,
-  withRouter,
+  Routes,
+  Navigate
 } from "react-router-dom";
+import withRouter from "../Wrappers/withRouter"
 import classnames from "classnames";
 import {Box, IconButton, Link} from '@material-ui/core'
 import Icon from '@mdi/react'
@@ -16,21 +16,13 @@ import useStyles from "./styles";
 // components
 import Header from "../Header";
 import Sidebar from "../Sidebar";
-
-// pages
-import Dashboard from "../../pages/dashboard";
 import Typography from "../../pages/typography";
-import Notifications from "../../pages/notifications";
-import Maps from "../../pages/maps";
-import Tables from "../../pages/tables";
-import Icons from "../../pages/icons";
-import Charts from "../../pages/charts";
-import SigmaRules from "../../pages/sigmarules";
+
 
 // context
 import { useLayoutState } from "../../context/LayoutContext";
 
-function Layout(props) {
+function Layout() {
   var classes = useStyles();
 
   // global
@@ -39,7 +31,7 @@ function Layout(props) {
   return (
     <div className={classes.root}>
         <>
-          <Header history={props.history} />
+          <Header />
           <Sidebar />
           <div
             className={classnames(classes.content, {
@@ -47,22 +39,6 @@ function Layout(props) {
             })}
           >
             <div className={classes.fakeToolbar} />
-            <Switch>
-              <Route path="/app/dashboard" component={Dashboard} />
-              <Route path="/app/typography" component={Typography} />
-              <Route path="/app/tables" component={Tables} />
-              <Route path="/app/notifications" component={Notifications} />
-              <Route path="/app/sigmarules" component={SigmaRules} />
-              <Route
-                exact
-                path="/app/ui"
-                render={() => <Redirect to="/app/ui/icons" />}
-              />
-              <Route path="/app/ui/maps" component={Maps} />
-              <Route path="/app/ui/icons" component={Icons} />
-              <Route path="/app/ui/charts" component={Charts} />
-            </Switch>
-
           </div>
         </>
     </div>

@@ -1,7 +1,13 @@
 import React from "react";
-import { Grid } from "@material-ui/core";
+import { 
+  Grid,
+  Button } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import MUIDataTable from "mui-datatables";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import CustomToolbarSelect from "./CustomToolbarSelect";
+
 
 // components
 import PageTitle from "../../components/PageTitle/PageTitle";
@@ -11,24 +17,17 @@ import Table from "../dashboard/components/Table/Table";
 // data
 import mock from "../dashboard/mock";
 
+var columns = [
+  {label: "Title", name: "title"},
+  {label: "Description", name: "description"},
+  {label: "Author", name: "author"},
+  {label: "Product", name: "product"},
+  {label: "Service", name: "service"}
+];
+
 const datatableData = [
-  ["Joe James", "Example Inc.", "Yonkers", "NY"],
-  ["John Walsh", "Example Inc.", "Hartford", "CT"],
-  ["Bob Herm", "Example Inc.", "Tampa", "FL"],
-  ["James Houston", "Example Inc.", "Dallas", "TX"],
-  ["Prabhakar Linwood", "Example Inc.", "Hartford", "CT"],
-  ["Kaui Ignace", "Example Inc.", "Yonkers", "NY"],
-  ["Esperanza Susanne", "Example Inc.", "Hartford", "CT"],
-  ["Christian Birgitte", "Example Inc.", "Tampa", "FL"],
-  ["Meral Elias", "Example Inc.", "Hartford", "CT"],
-  ["Deep Pau", "Example Inc.", "Yonkers", "NY"],
-  ["Sebastiana Hani", "Example Inc.", "Dallas", "TX"],
-  ["Marciano Oihana", "Example Inc.", "Yonkers", "NY"],
-  ["Brigid Ankur", "Example Inc.", "Dallas", "TX"],
-  ["Anna Siranush", "Example Inc.", "Yonkers", "NY"],
-  ["Avram Sylva", "Example Inc.", "Hartford", "CT"],
-  ["Serafima Babatunde", "Example Inc.", "Tampa", "FL"],
-  ["Gaston Festus", "Example Inc.", "Tampa", "FL"],
+  {"title": "My Title", "description": "My Description", "author": "My Author", "product": "My Product", "service": "My Service"},
+  {"title": "My Title2", "description": "My Description2", "author": "My Author2", "product": "My Product2", "service": "My Service2"},
 ];
 
 const useStyles = makeStyles(theme => ({
@@ -37,26 +36,58 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function Tables() {
+export default function SigmaRules() {
+  const [title, setTitle] = useState("test");
+  
+  const handleRowClick = (rowData, rowState) => {
+    console.log(rowData, rowState);
+  }
+
+  const options= {
+    filterType: "checkbox",
+    selectableRows: 'single',
+    onRowClick: handleRowClick,
+  }
+
+  const selectedTitle = () => {
+    setTitle("New Title.");
+    console.log("in selectedTitle");
+  }
+
+  const components = {
+    icons: {
+    }
+  };
+
   const classes = useStyles();
   return (
     <>
       <PageTitle title="Sigma Rules" />
+      <div className="child">
+        <Link
+          to={{
+          pathname: "/app/sigmaruleeditor",
+          title
+          }}
+        >
+          <Button 
+            variant="contained"
+            color="primary"
+            size="large" 
+            onClick={() => selectedTitle()}>
+              Edit Rule
+          </Button>
+        </Link>
+      </div>
       <Grid container spacing={4}>
         <Grid item xs={12}>
           <MUIDataTable
             title="Employee List"
             data={datatableData}
-            columns={["Name", "Company", "City", "State"]}
-            options={{
-              filterType: "checkbox",
-            }}
+            columns={columns}
+            options={options}
+            components={components}
           />
-        </Grid>
-        <Grid item xs={12}>
-          <Widget title="Material-UI Table" upperTitle noBodyPadding bodyClass={classes.tableOverflow}>
-            <Table data={mock.table} />
-          </Widget>
         </Grid>
       </Grid>
     </>

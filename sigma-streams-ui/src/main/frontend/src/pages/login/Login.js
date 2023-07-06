@@ -9,7 +9,7 @@ import {
   TextField,
   Fade,
 } from "@material-ui/core";
-import { withRouter } from "react-router-dom";
+import withRouter from "../../components/Wrappers/withRouter"
 import classnames from "classnames";
 
 // styles
