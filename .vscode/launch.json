@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "java",
+            "name": "Application",
+            "request": "launch",
+            "mainClass": "io.confiuent.sigmaui.Application",
+            "projectName": "sigma-streams-ui"
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",

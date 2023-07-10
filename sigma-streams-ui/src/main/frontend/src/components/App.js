@@ -1,20 +1,12 @@
-import React, {Fragment} from "react";
-import { HashRouter, Route, Routes, Navigate } from "react-router-dom";
+import React from "react";
+import { Route, Routes, Navigate } from "react-router-dom";
 
 // components
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
 // pages
-import Error from "../pages/error";
-import Login from "../pages/login";
 import Dashboard from "../pages/dashboard";
-import Layout from "./Layout/Layout"
-import { LayoutProvider } from "../context/LayoutContext";
-import { UserProvider } from "../context/UserContext";
-import { ThemeProvider } from "@material-ui/styles";
-import { CssBaseline } from "@material-ui/core";
-import Themes from "../themes";
 import Typography from "../pages/typography";
 import Notifications from "../pages/notifications";
 import Maps from "../pages/maps";
@@ -22,7 +14,7 @@ import Tables from "../pages/tables";
 import Icons from "../pages/icons";
 import Charts from "../pages/charts";
 import SigmaRules from "../pages/sigmarules";
-import SigmaRuleEditor from "../pages/sigmaruleeditor";
+import SigmaRuleEditor from "../pages/sigmarules/SigmaRuleEditor";
 
 import useStyles from "../components/Layout/styles";
 import { useLayoutState } from "../context/LayoutContext";

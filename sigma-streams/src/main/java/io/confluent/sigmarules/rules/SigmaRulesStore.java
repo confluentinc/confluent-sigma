@@ -37,6 +37,8 @@ import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import org.apache.kafka.common.TopicPartition;
@@ -139,8 +141,12 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
         return ((ParsedSigmaRule)this.sigmaRulesCache.get(ruleName)).toString();
     }
 
-    Cache<String, ParsedSigmaRule> getRules() {
+    public Cache<String, ParsedSigmaRule> getRules() {
         return this.sigmaRulesCache;
+    }
+
+    public List<ParsedSigmaRule> getRulesList() {
+        return new ArrayList<ParsedSigmaRule>(this.sigmaRulesCache.values());
     }
 
     @Override

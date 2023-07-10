@@ -26,9 +26,11 @@ import io.confiuent.sigmaui.rules.SigmaUIRulesStore;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.models.SigmaRule;
+import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,11 @@ public class SigmaRuleController {
     @GetMapping({"/sigmaTitles"})
     public Set<String> getSigmaTitles() {
         return this.rules.getRulesStore().getRuleNames();
+    }
+
+    @GetMapping({"/sigmaRules"})
+    public List<ParsedSigmaRule> getSigmaRules() {
+        return this.rules.getRulesStore().getRulesList();
     }
 
     @GetMapping({"sigmaRule/{ruleTitle}"})

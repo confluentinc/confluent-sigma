@@ -91,28 +91,28 @@ services:
   #     CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
   #     CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
 
-  # control-center:
-  #   image: confluentinc/cp-enterprise-control-center:latest
-  #   hostname: control-center
-  #   container_name: control-center
-  #   user: root
-  #   depends_on:
-  #     - broker
-  #     - schema-registry
-  #     - connect
-  #     - ksqldb-server
-  #   ports:
-  #     - "9021:9021"
-  #   environment:
-  #     CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
-  #     CONTROL_CENTER_CONNECT_CONNECT-DEFAULT_CLUSTER: 'connect:8083'
-  #     # The control center server connects to ksqlDB through the docker network
-  #     CONTROL_CENTER_KSQL_KSQLDB1_URL: "http://ksqldb-server:8088"
-  #     CONTROL_CENTER_KSQL_KSQLDB1_ADVERTISED_URL: https://localhost:8088
-  #     CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-  #     CONTROL_CENTER_REPLICATION_FACTOR: 1
-  #     CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
-  #     CONTROL_CENTER_MODE_ENABLE: "management"
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: control-center
+    container_name: control-center
+    user: root
+    depends_on:
+      - broker
+#      - schema-registry
+#      - connect
+#      - ksqldb-server
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
+      CONTROL_CENTER_CONNECT_CONNECT-DEFAULT_CLUSTER: 'connect:8083'
+      # The control center server connects to ksqlDB through the docker network
+      CONTROL_CENTER_KSQL_KSQLDB1_URL: "http://ksqldb-server:8088"
+      CONTROL_CENTER_KSQL_KSQLDB1_ADVERTISED_URL: https://localhost:8088
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MODE_ENABLE: "management"
 
   # ksqldb-server:
   #   image: confluentinc/cp-ksqldb-server:latest

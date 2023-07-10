@@ -1,44 +1,38 @@
-import React from "react";
-import { 
-  Grid,
-  Button } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
+import React, { useState, useEffect } from "react";
+import { Grid } from "@material-ui/core";
 import MUIDataTable from "mui-datatables";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import CustomToolbarSelect from "./CustomToolbarSelect";
-
+import SigmaRuleSelect from "./SigmaRuleSelect";
+import UpdateIcon from "@mui/icons-material/Update";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
 
 // components
 import PageTitle from "../../components/PageTitle/PageTitle";
-import Widget from "../../components/Widget/Widget";
-import Table from "../dashboard/components/Table/Table";
-
-// data
-import mock from "../dashboard/mock";
 
 var columns = [
   {label: "Title", name: "title"},
   {label: "Description", name: "description"},
   {label: "Author", name: "author"},
-  {label: "Product", name: "product"},
-  {label: "Service", name: "service"}
+  {label: "Product", name: "logsource.product"},
+  {label: "Service", name: "logsource.service"}
 ];
 
-const datatableData = [
-  {"title": "My Title", "description": "My Description", "author": "My Author", "product": "My Product", "service": "My Service"},
-  {"title": "My Title2", "description": "My Description2", "author": "My Author2", "product": "My Product2", "service": "My Service2"},
-];
+export default function SigmaRules(props) {
+  //const { classes } = props;
+  const [tableData, setTableData] = useState([])
 
-const useStyles = makeStyles(theme => ({
-  tableOverflow: {
-    overflow: 'auto'
+  const refreshTable = async () => {
+    try {
+        const data = await (await fetch(`http://localhost:8080/sigmaRules`)).json()
+        setTableData(data);
+        console.log(tableData);
+    } catch (err) {
+        console.log(err.message)
+    }
   }
-}))
 
-export default function SigmaRules() {
-  const [title, setTitle] = useState("test");
-  
+  useEffect(() => { refreshTable() }, []);
+
   const handleRowClick = (rowData, rowState) => {
     console.log(rowData, rowState);
   }
@@ -46,44 +40,37 @@ export default function SigmaRules() {
   const options= {
     filterType: "checkbox",
     selectableRows: 'single',
+    enableNestedDataAccess: '.',
     onRowClick: handleRowClick,
-  }
-
-  const selectedTitle = () => {
-    setTitle("New Title.");
-    console.log("in selectedTitle");
+    customToolbarSelect: (selectedRows, displayData, setSelectedRows) => (
+      <SigmaRuleSelect selectedRows={selectedRows} displayData={displayData} setSelectedRows={setSelectedRows} />
+    ),
+    customToolbar: () => {
+      return (
+        <Tooltip title={"Refresh Table"}>
+          <IconButton className={props.iconButton} onClick={refreshTable}>
+            <UpdateIcon className={props.deleteIcon} />
+          </IconButton>
+        </Tooltip>
+      );
+    }
   }
 
   const components = {
     icons: {
+      UpdateIcon
     }
   };
 
-  const classes = useStyles();
+  //refreshTable();
   return (
     <>
       <PageTitle title="Sigma Rules" />
-      <div className="child">
-        <Link
-          to={{
-          pathname: "/app/sigmaruleeditor",
-          title
-          }}
-        >
-          <Button 
-            variant="contained"
-            color="primary"
-            size="large" 
-            onClick={() => selectedTitle()}>
-              Edit Rule
-          </Button>
-        </Link>
-      </div>
       <Grid container spacing={4}>
         <Grid item xs={12}>
           <MUIDataTable
-            title="Employee List"
-            data={datatableData}
+            title=""
+            data={tableData}
             columns={columns}
             options={options}
             components={components}
