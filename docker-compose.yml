@@ -175,20 +175,20 @@ services:
   #     confluent_regex_filterField: 'sourcetype'
   #     confluent_regex_regexField: 'event'
 
-  # dns-load-data:
-  #   image: edenhill/kcat:1.7.1
-  #   container_name: dns-load-data
-  #   hostname: dns-load-data
-  #   depends_on:
-  #     broker:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./demo/data:/tmp/data
-  #   command:
-  #     - -b
-  #     - broker:29092
-  #     - -t
-  #     - dns
-  #     - -P
-  #     - -l
-  #     - /tmp/data/dns.txt
+  dns-load-data:
+    image: edenhill/kcat:1.7.1
+    container_name: dns-load-data
+    hostname: dns-load-data
+    depends_on:
+      broker:
+        condition: service_healthy
+    volumes:
+      - ./demo/data:/tmp/data
+    command:
+      - -b
+      - broker:29092
+      - -t
+      - dns
+      - -P
+      - -l
+      - /tmp/data/dns.txt

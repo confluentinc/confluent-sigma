@@ -7,7 +7,8 @@ import {
   FilterNone as UIElementsIcon,
   BorderAll as TableIcon,
   ArrowBack as ArrowBackIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  BarChart as ChartIcon, 
 } from "@material-ui/icons";
 import { useTheme } from "@material-ui/styles";
 import withRouter from "../Wrappers/withRouter"
@@ -28,16 +29,11 @@ import {
 } from "../../context/LayoutContext";
 
 const structure = [
-  { id: 0, label: "Sigma Rule List", link: "/app/sigmarules", icon: <TableIcon /> },
-  { id: 1, label: "Kafka Settings", link: "/app/kafkasettings", icon: <SettingsIcon /> },
+  { id: 0, label: "Home", link: "/app/dashboard", icon: <HomeIcon /> },
+  { id: 1, label: "Sigma Rules", link: "/app/sigmarules", icon: <TableIcon /> },
+  { id: 2, label: "Detections", link: "/app/detections", icon: <ChartIcon /> },
+  { id: 3, label: "Settings", link: "/app/settings", icon: <SettingsIcon /> },
   { id: 9, type: "divider" },
-  { id: 10, label: "Dashboard", link: "/app/dashboard", icon: <HomeIcon /> },
-  {
-    id: 11,
-    label: "Typography",
-    link: "/app/typography",
-    icon: <TypographyIcon />,
-  },
   { id: 12, label: "Tables", link: "/app/tables", icon: <TableIcon /> },
   {
     id: 13,
@@ -56,6 +52,8 @@ const structure = [
       { label: "Maps", link: "/app/ui/maps" },
     ],
   },
+  
+
 ];
 
 function Sidebar() {

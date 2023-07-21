@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AggregateTopologyViewer",
+            "request": "launch",
+            "mainClass": "io.confluent.sigmarules.tools.AggregateTopologyViewer",
+            "projectName": "sigma-streams"
+        },
+        {
+            "type": "java",
+            "name": "SimpleTopologyViewer",
+            "request": "launch",
+            "mainClass": "io.confluent.sigmarules.tools.SimpleTopologyViewer",
+            "projectName": "sigma-streams"
+        },
+        {
+            "type": "java",
             "name": "Application",
             "request": "launch",
             "mainClass": "io.confiuent.sigmaui.Application",

@@ -1,5 +1,6 @@
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
+import { StompSessionProvider } from "react-stomp-hooks";
 
 // components
 import Header from "./Header";
@@ -15,7 +16,10 @@ import Icons from "../pages/icons";
 import Charts from "../pages/charts";
 import SigmaRules from "../pages/sigmarules";
 import SigmaRuleEditor from "../pages/sigmarules/SigmaRuleEditor";
+import Settings from "../pages/settings";
+import Detections from "../pages/detections";
 
+import { CONFIG } from '../constants'
 import useStyles from "../components/Layout/styles";
 import { useLayoutState } from "../context/LayoutContext";
 import classnames from "classnames";
@@ -27,6 +31,10 @@ export default function App() {
   return (
           <div className={classes.root}>
             <>
+            <StompSessionProvider
+              url={CONFIG.URL.SERVER_ENDPOINT + "confluent-sigma-websocket"}
+              //All options supported by @stomp/stompjs can be used here
+            >
               <Header />
               <Sidebar />
               <div
@@ -44,12 +52,15 @@ export default function App() {
                 <Route path="/app/notifications" element={<Notifications />} />
                 <Route path="/app/sigmarules" element={<SigmaRules />} />
                 <Route path="/app/sigmaruleeditor" element={<SigmaRuleEditor />} />
+                <Route path="/app/settings" element={<Settings />} />
+                <Route path="/app/detections" element={<Detections />} />
                 <Route path="/app/ui" element={() => <Navigate to="/app/ui/icons" />} />
                 <Route path="/app/ui/maps" element={<Maps />} />
                 <Route path="/app/ui/icons" element={<Icons />} />
                 <Route path="/app/ui/charts" element={<Charts />} />
               </Routes>
               </div>
+            </StompSessionProvider>
             </>
           </div>
   )

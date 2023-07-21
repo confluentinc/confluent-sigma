@@ -1,33 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { Grid } from "@material-ui/core";
-import Widget from "../../components/Widget";
-import AceEditor from "react-ace";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Grid, Button } from "@material-ui/core";
+import Editor from "@monaco-editor/react";
 import YAML from 'yaml'
-
-import "ace-builds/src-noconflict/mode-yaml";
-import "ace-builds/src-noconflict/theme-monokai";
-import 'ace-builds/src-noconflict/ace';
+import { ToastContainer, toast } from "react-toastify";
 
 // styles
 import useStyles from "./styles";
 
+// components
 import PageTitle from "../../components/PageTitle/PageTitle";
-
-
-// Update with https://github.com/remcohaszing/monaco-yaml
+import Notification from "../../components/Notification";
 
 export default function SigmaRuleEditor(props) {
     var classes = useStyles();
+    const inputRef = useRef(null);
 
     const location = useLocation();
-    console.log(props, " props");
-    console.log(location, " useLocation Hook");
     const title = location.state?.title;
-
+    console.log("title is " + title);
     const [code, setCode] = useState("");
+    const [modifiedCode, setModifiedCode] = useState("");
 
+    const options = {
+        //selectOnLineNumbers: true,
+        //roundedSelection: false,
+        //readOnly: true,
+        //cursorStyle: "line",
+        //automaticLayout: false,
+        "codeLens": false,
+        dragAndDrop: true
+      };
+    
     const getRule = async () => {
+        if (!title) return;
+
         try {
             const rule = await (await fetch(`http://localhost:8080/sigmaRule/${title}`)).json()
             console.log("Rule: " + JSON.stringify(rule));
@@ -35,53 +42,136 @@ export default function SigmaRuleEditor(props) {
             console.log("Rule stringify: " + YAML.stringify(rule));
             console.log("Rule: " + YAML.stringify(rule));
             setCode(YAML.stringify(rule));
+            setModifiedCode(YAML.stringify(rule));
         } catch (err) {
             console.log(err.message)
         }
     }
 
-    useEffect(() => { getRule() }, []);
+    useEffect(() => { getRule() }, [title]);
 
-    const handleChange = (e) => {
-      const files = e.target.files;
-      var reader = new FileReader();
-      reader.readAsText(files[0], "UTF-8");
-  
+    function handleEditorChange(value, event) {
+        console.log("here is the current model value:", value);
+        setModifiedCode(value);
+    }
 
-      reader.onload = function (re) {
-        console.log(re.target.result);
-        setCode(re.target.result.replaceAll("\t", ""));
-      };
+    const handleClick = () => {
+        // 👇️ open file input box on click of another element
+        inputRef.current.click();
     };
-  
-    function onChange(newValue) {
-      setCode(newValue.replaceAll("\t", ""));
+    
+    const handleRuleChange = async () => {
+        console.log("publishing rule: " + code);
+
+        fetch(`http://localhost:8080/addSigmaRule`, {
+            method: 'POST',
+            body: modifiedCode
+        }).then(function(response) {
+            console.log(response)
+            if (response.ok) {
+                console.log("rule successfully submitted");
+                var componentProps = {
+                    type: "shipped",
+                    message: "Rule was submitted",
+                    variant: "contained",
+                    color: "success",
+                  };
+
+                sendNotification(componentProps, {
+                    type: "success",
+                    position: toast.POSITION.TOP_RIGHT,
+                    progressClassName: classes.progress,
+                    className: classes.notification,
+                });
+              
+            } else {
+                console.log("error submitting rule");
+            }
+          })
+          console.log('Form submitted.')
     }
 
-    function onValidate(annotations) {
-        console.log("onValidate", annotations);
-    }
+    function sendNotification(componentProps, options) {
+        return toast(
+          <Notification
+            {...componentProps}
+            className={classes.notificationComponent}
+          />,
+          options,
+        );
+      }
+
+    const openFile = (e) => {
+        const files = e.target.files;
+        var reader = new FileReader();
+        reader.readAsText(files[0], "UTF-8");
+    
+  
+        reader.onload = function (re) {
+          console.log(re.target.result);
+          setCode(re.target.result.replaceAll("\t", ""));
+          setModifiedCode(re.target.result.replaceAll("\t", ""));
+        };
+      };
+  
   
     return (
         <>
         <PageTitle title="Sigma Rule Editor" />
         <Grid container spacing={4}>
+            <ToastContainer
+                className={classes.toastsContainer}
+                closeOnClick={false}
+                progressClassName={classes.notificationProgress}
+            />
             <Grid item xs={8}>
             <div className={classes.ruleViewer}>
-                <input type="file" onChange={handleChange}></input>
-                <AceEditor
-                width="100%"
-                mode="yaml"
-                theme="monokai"
-                value={code}
-                onChange={onChange}
-                //onValidate={onValidate}
-                showGutter={true}
-                name="my_yaml"
-                editorProps={{ $blockScrolling: true }}
-                setOptions={{ useWorker: false }}
+                <Editor
+                    height="90vh"
+                    defaultLanguage="yaml"
+                    defaultValue=""
+                    value={code}
+                    onChange={handleEditorChange}
+                    theme="vs-dark"
+                    options={options}
                     />
             </div>
+            </Grid>
+            <Grid item xs={4}>
+                <Grid container spacing={1}>
+                    <Grid item xs={12}>
+                        { !title &&
+                            <div>
+                                <input 
+                                    type="file" 
+                                    ref={inputRef}
+                                    onChange={openFile} 
+                                    style={{ display: 'none' }}
+                                />
+                                <Button 
+                                    className={classes.button}
+                                    onClick={handleClick}>
+                                    Open File
+                                </Button>
+                            </div>
+                        }               
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Link to="/app/sigmarules">
+                            <Button className={classes.button}>
+                                Cancel Changes
+                            </Button>
+                        </Link>
+                    </Grid>
+                    <Grid item xs={12}> 
+                        <Button 
+                            className={classes.button}
+                            onClick={handleRuleChange}
+                            disabled={!modifiedCode}>
+                            Publish Changes
+                        </Button>
+                    </Grid>
+                </Grid>
             </Grid>
         </Grid>
         </>

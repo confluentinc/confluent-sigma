@@ -5,9 +5,13 @@ import SigmaRuleSelect from "./SigmaRuleSelect";
 import UpdateIcon from "@mui/icons-material/Update";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
+import AddIcon from '@mui/icons-material/Add';
+import { Link } from "react-router-dom";
 
 // components
 import PageTitle from "../../components/PageTitle/PageTitle";
+
+import { CONFIG } from '../../constants'
 
 var columns = [
   {label: "Title", name: "title"},
@@ -22,6 +26,16 @@ export default function SigmaRules(props) {
   const [tableData, setTableData] = useState([])
 
   const refreshTable = async () => {
+    try {
+        const data = await (await fetch(CONFIG.URL.SERVER_ENDPOINT + "sigmaRules")).json()
+        setTableData(data);
+        console.log(tableData);
+    } catch (err) {
+        console.log(err.message)
+    }
+  }
+
+  const addRule = async () => {
     try {
         const data = await (await fetch(`http://localhost:8080/sigmaRules`)).json()
         setTableData(data);
@@ -47,12 +61,21 @@ export default function SigmaRules(props) {
     ),
     customToolbar: () => {
       return (
-        <Tooltip title={"Refresh Table"}>
-          <IconButton className={props.iconButton} onClick={refreshTable}>
-            <UpdateIcon className={props.deleteIcon} />
-          </IconButton>
+        <>
+        <Tooltip title={"Create New Rule"}>
+          <Link to="/app/sigmaruleeditor">
+              <IconButton className={props.iconButton} onClick={addRule}>
+                <AddIcon className={props.deleteIcon} />
+              </IconButton>
+          </Link>
         </Tooltip>
-      );
+        <Tooltip title={"Refresh Table"}>
+        <IconButton className={props.iconButton} onClick={refreshTable}>
+          <UpdateIcon className={props.deleteIcon} />
+        </IconButton>
+      </Tooltip>
+      </>
+    );
     }
   }
 
