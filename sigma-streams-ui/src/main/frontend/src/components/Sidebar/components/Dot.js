@@ -33,7 +33,7 @@ export default function Dot({ size, color }) {
       })}
       style={{
         backgroundColor:
-          color && theme.palette[color] && theme.palette[color].main,
+          color,
       }}
     />
   );

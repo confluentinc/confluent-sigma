@@ -1,6 +1,6 @@
 {
-  "name": "Layout",
+  "name": "DataTable",
   "version": "1.0.0",
   "private": true,
-  "main": "Layout.js"
+  "main": "DataTable.js"
 }

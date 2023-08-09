@@ -4,8 +4,7 @@ import {
   TableRow,
   TableHead,
   TableBody,
-  TableCell,
-  Chip
+  TableCell
 } from "@material-ui/core";
 import useStyles from "../styles";
 import { withStyles } from "@material-ui/core/styles";
@@ -15,10 +14,6 @@ import IconButton from "@mui/material/IconButton";
 import SlidingPane from 'react-sliding-pane';
 import "./react-sliding-pane.css";
 import Editor from "@monaco-editor/react";
-
-// components
-import SigmaRuleEditor from "../../sigmarules/SigmaRuleEditor";
-
 
 export default function TableComponent({ data }) {
   const classes = useStyles();
@@ -47,7 +42,6 @@ export default function TableComponent({ data }) {
     }
   })(TableCell);
 
-  const code = '{"id":0,"name":"Mark Otto","email":"ottoto@wxample.com","product":"ON the Road","price":"$25 224.2","date":"11 May 2017","city":"Otsego","status":"Sent"}';
   return (
     <>
       <Table>

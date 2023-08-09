@@ -1,41 +1,109 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "@material-ui/styles";
 import {
   Grid,
 } from "@material-ui/core";
 import {
   ResponsiveContainer,
-  ComposedChart,
+  AreaChart,
+  Area,
+  LineChart,
   Line,
   YAxis,
   XAxis,
+  Tooltip,
 } from "recharts";
 import { useSubscription } from "react-stomp-hooks";
+import { Button } from "@material-ui/core";
 
 // components
 import PageTitle from "../../components/PageTitle/PageTitle";
 import Widget from "../../components/Widget";
 import { Typography } from "../../components/Wrappers";
 import Dot from "../../components/Sidebar/components/Dot";
-import mock from "../dashboard/mock";
-import Table from "./components/Table";
-import DNSDetections from "./components/DNSDetections/DNSDetections";
+import DataTable from "../../components/DataTable/DataTable"
 
 // styles
 import useStyles from "./styles";
 
-const mainChartData = getMainChartData();
+//const mainChartData = getMainChartData();
+
+function createData(time, data) {
+  return {
+    time,
+    data
+  }
+}
+
+var dnsCounter = 0;
+var dnsData = [];
+var dnsDetectionCounter = 0;
+var dnsDetectionData = [];
 
 export default function Detections(props) {
   var classes = useStyles();
   var theme = useTheme();
-  const [dnsData, setDnsData] = useState()
+  //const [dnsData, setDnsData] = useState([]);
+  const [time, setTime] = useState((new Date().toLocaleTimeString()));
 
+  const initializeChartData = () => {
+    const initialData = [];
+    var currentTime = new Date();
+    for (let i = 0; i < 30; i++) {
+      var iterTime = currentTime.setSeconds(currentTime.getSeconds() - (i * 1000));
+      initialData.unshift({
+        time: formatTime(new Date()),
+        dnsCounter: 0,
+        dnsDetectionCounter: 0
+        })
+    }
+    return initialData; 
+  }
+  const [mainChartData, setMainChartData] = useState(initializeChartData);
 
-  useSubscription("/topic/dns-data", (dns) => {
-    console.log(setDnsData(JSON.parse(dns.body)));
+  useSubscription("/topic/dns-data", (dnsTopic) => {
+    const newDNSData = JSON.parse(dnsTopic.body);
+    
+    newDNSData.forEach(dns => {
+      dnsData.unshift(createData(formatTime(new Date()), JSON.stringify(dns)));
+    });
+    dnsCounter += newDNSData.length;
   });
 
+  useSubscription("/topic/dns-detection", (dnsDetectionTopic) => {
+    const newDNSDetectionData = JSON.parse(dnsDetectionTopic.body);
+    
+    newDNSDetectionData.forEach(detection => {
+      dnsDetectionData.unshift(createData(formatTime(new Date()), JSON.stringify(detection)));
+    });
+    dnsDetectionCounter += newDNSDetectionData.length;
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      var currentTime = new Date();
+      setTime(currentTime.toLocaleTimeString());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    var tableData = mainChartData;
+    tableData.shift();
+    console.log("current count:" + dnsCounter);
+    tableData.push({
+      time: formatTime(new Date()),
+      dnsCounter: dnsCounter,
+      dnsDetectionCounter: dnsDetectionCounter
+    });
+    dnsCounter = 0;
+    dnsDetectionCounter = 0;
+  }, [time]);
+
+  function formatTime(event) {
+    return event.getHours() + ":" + ('0' + event.getMinutes()).slice(-2) + ":" + ('0' + event.getSeconds()).slice(-2);
+  }
 
   return (
     <>
@@ -56,15 +124,15 @@ export default function Detections(props) {
                   </Typography>
                   <div className={classes.mainChartHeaderLabels}>
                     <div className={classes.mainChartHeaderLabel}>
-                      <Dot color="warning" />
+                      <Dot color="#808080" />
                       <Typography className={classes.mainChartLegentElement}>
-                        Tablet
+                        Raw Data
                       </Typography>
                     </div>
                     <div className={classes.mainChartHeaderLabel}>
-                      <Dot color="primary" />
+                      <Dot color="#ff0000" />
                       <Typography className={classes.mainChartLegentElement}>
-                        Mobile
+                        Detections
                       </Typography>
                     </div>
                   </div>
@@ -72,85 +140,41 @@ export default function Detections(props) {
               }
             >
               <ResponsiveContainer width="100%" minWidth={500} height={350}>
-                <ComposedChart
-                  margin={{ top: 0, right: -15, left: -15, bottom: 0 }}
+                <AreaChart
+                  margin={{ top: 15, right: 30, left: -10, bottom: 20 }}
                   data={mainChartData}
                 >
                   <YAxis
-                    //ticks={[0, 2500, 5000, 7500]}
-                    tick={{ fill: theme.palette.text.hint + "80", fontSize: 14 }}
+                    tick={{ fill: theme.palette.text.hint + "80", fontSize: 12 }}
                     stroke={theme.palette.text.hint + "80"}
-                    tickLine={false}
+                    tickLine={true}
                   />
                   <XAxis
-                    //tickFormatter={i => i + 1}
-                    tick={{ fill: theme.palette.text.hint + "80", fontSize: 14 }}
+                    tick={{ fill: theme.palette.text.hint + "80", fontSize: 12 }}
+                    interval={0}
                     stroke={theme.palette.text.hint + "80"}
-                    tickLine={false}
+                    tickLine={true}
+                    dataKey="time"
+                    angle={45}
+                    dx={15}
+                    dy={20}
                   />
-                  <Line
-                    type="natural"
-                    dataKey="mobile"
-                    stroke={theme.palette.primary.main}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={false}
-                  />
-                  <Line
-                    type="linear"
-                    dataKey="tablet"
-                    stroke={theme.palette.warning.main}
-                    strokeWidth={2}
-                    dot={{
-                      stroke: theme.palette.warning.dark,
-                      strokeWidth: 2,
-                      fill: theme.palette.warning.main,
-                    }}
-                  />
-                </ComposedChart>
+                  <Tooltip />
+                  <Area type="monotone" dataKey="dnsCounter" stroke="#808080" strokeOpacity={0.2} fillOpacity={0.2} fill="#808080" />
+                  <Area type="monotone" dataKey="dnsDetectionCounter" stroke="#ff0000" strokeOpacity={0.2} fillOpacity={0.2} fill="#ff0000" />
+                </AreaChart>
               </ResponsiveContainer>
             </Widget>
           </Grid>
-          <DNSDetections dnsData={dnsData} />
+          <Grid item xs={12}>
+            <DataTable title="DNS Detection Data" topicData={dnsDetectionData}/>
+          </Grid>
         </Grid>
-    </>
+        <Grid item xs={12}>
+            <DataTable title="DNS Raw Data" topicData={dnsData}/>
+          </Grid>
+     </>
   );
 }
 
-function getRandomData(length, min, max, multiplier = 10, maxDiff = 10) {
-  var array = new Array(length).fill();
-  let lastValue;
 
-  return array.map((item, index) => {
-    let randomValue = Math.floor(Math.random() * multiplier + 1);
-
-    while (
-      randomValue <= min ||
-      randomValue >= max ||
-      (lastValue && randomValue - lastValue > maxDiff)
-    ) {
-      randomValue = Math.floor(Math.random() * multiplier + 1);
-    }
-
-    lastValue = randomValue;
-
-    return { value: randomValue };
-  });
-}
-
-function getMainChartData() {
-  var resultArray = [];
-  var tablet = getRandomData(31, 3500, 6500, 7500, 1000);
-  var desktop = getRandomData(31, 1500, 7500, 7500, 1500);
-  var mobile = getRandomData(31, 1500, 7500, 7500, 1500);
-
-  for (let i = 0; i < tablet.length; i++) {
-    resultArray.push({
-      tablet: tablet[i].value,
-      desktop: desktop[i].value,
-      mobile: mobile[i].value,
-    });
-  }
-
-  return resultArray;
-}

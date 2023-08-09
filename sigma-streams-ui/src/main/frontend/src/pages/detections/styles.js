@@ -128,4 +128,8 @@ export default makeStyles(theme => ({
     backgroundColor: theme.palette.secondary.main,
     color: '#fff',
   },
+  detection: {
+    backgroundColor: theme.palette.secondary.main,
+    color: '#ff0000',
+  },
 }));

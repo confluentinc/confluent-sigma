@@ -5,6 +5,7 @@ const secondary = "#152952";
 const warning = "#FFC260";
 const success = "#3CD4A0";
 const info = "#9013FE";
+const raw = "#ff0000"
 
 const lightenRate = 7.5;
 const darkenRate = 15;
@@ -115,6 +116,11 @@ const defaultTheme = {
     MuiTableRow: {
       root: {
         height: 56,
+      },
+    },
+    MuiTableHead: {
+      root: {
+        height: 156,
       },
     },
     MuiTableCell: {
