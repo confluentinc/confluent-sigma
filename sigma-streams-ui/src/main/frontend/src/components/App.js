@@ -19,7 +19,6 @@ import SigmaRuleEditor from "../pages/sigmarules/SigmaRuleEditor";
 import Settings from "../pages/settings";
 import Detections from "../pages/detections";
 
-import { CONFIG } from '../constants'
 import useStyles from "../components/Layout/styles";
 import { useLayoutState } from "../context/LayoutContext";
 import classnames from "classnames";
@@ -32,7 +31,7 @@ export default function App() {
           <div className={classes.root}>
             <>
             <StompSessionProvider
-              url={CONFIG.URL.SERVER_ENDPOINT + "confluent-sigma-websocket"}
+              url={process.env.REACT_APP_SERVER_ENDPOINT + "confluent-sigma-websocket"}
               //All options supported by @stomp/stompjs can be used here
             >
               <Header />

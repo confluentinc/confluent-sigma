@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Confluent Sigma UI</title>
+    <link rel="stylesheet" href="css/960.css" type="text/css" /><!-- grid stylesheet -->
+    <link rel="stylesheet" href="css/style.css" type="text/css" /><!-- layout stylesheet -->
+    <link rel="stylesheet" href="css/color-themes/blue.css" type="text/css" /><!-- color theme stylesheet -->
+    <link rel="stylesheet" href="css/textures/crosshatch.css" type="text/css" /><!-- texture stylesheet -->
+    <link rel="stylesheet" href="css/prettyPhoto.css" type="text/css" /><!-- lightbox stylesheet -->
+    <link rel="stylesheet" href="js/markitup/skins/simple/style.css" type="text/css" /><!-- WYSWYG editor stylesheet -->
+    <link rel="stylesheet" href="js/markitup/sets/default/style.css" type="text/css" /><!-- WYSWYG editor stylesheet -->
+    <link rel="stylesheet" href="css/smoothness/jquery-ui-1.8.18.custom.css" type="text/css" /><!-- jQuery UI stylesheet -->
+    <link rel="stylesheet" href="css/font-awesome.css" />
+    <link rel="stylesheet" href="css/font-awesome.less" />
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+<!--    <script src="js/KafkaStomp.js"></script> -->
+
+    <script src="js/excanvas.js"></script><![endif]-->
+
+    <style>
+        #editor {
+            /** Setting height is also important, otherwise editor wont showup**/
+            height: 300px;
+        }
+    </style>
+</head>
+<style>
+    body {
+        background-image: url("images/textures/crosshatch.png");
+        background-repeat: repeat;
+    }
+</style>
+<body>
+<div class="glow"></div><!-- glow effect -->
+<div class="container_16" id="top"><!-- page top with logotype and login options-->
+    <div id="logo"><img style="margin-top: 15px; width:50px;height:50px;" src="images/logo.png" alt="Confluent" /></div>
+    <div id="logout">
+        <img class="grav_default" src="images/grav_default.jpg" alt="Welcome">Welcome <a class="welcome-link" href="#">John Doe</a>
+        <img src="images/icons/lock_large_locked.png" alt="Logout"> <a href="index.html">Logout</a>
+    </div>
+</div>
+<div id="nav-container"><!-- main navigation -->
+    <div class="container_16 sticky" id="navigation"><!-- main navigation -->
+        <ul class="nav-list" id="main-nav">
+            <li class="current_menu_item"><a href="index.html"><span class="nav-icon icon-home"></span> Sigma Rules</a></li>
+        </ul>
+        <ul class="nav-list" id="main-nav2">
+            <li class="current_menu_item"><a href="index.html"><span class="nav-icon icon-home"></span> DNS Data</a></li>
+        </ul>
+        <div class="search"><!-- page search -->
+            <form action="#" method="GET">
+                <input type="text" value="" />
+                <button class="silver" type="submit"><span>Search</span></button>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="clear"></div>
+<div class="container_16 admin-panel background"><!-- main panel container -->
+    <div class="module-box grid_16 alpha"><!-- admin module box -->
+        <h2 class="title show_hide">Sigma Rules</h2><!-- admin module title -->
+        <input type="file" id="openbtn" onchange="openCode(this.files)" value="Open">
+
+        <div class="module-box-inner"><!-- admin module spacing -->
+            <div class="container">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div id="editor"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <script src="js/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script> -->
+<script src="http://ajaxorg.github.io/ace-builds/src/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="http://ajaxorg.github.io/ace-builds/src/ext-modelist.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor", {
+        theme: "ace/theme/monokai",
+        mode: "ace/mode/html",
+        placeholder: "choose file to edit"
+    });
+    function openCode(files) {
+        var file = files[0]
+        if (!file) return;
+        var modelist = ace.require("ace/ext/modelist")
+        var modeName = modelist.getModeForPath(file.name).mode
+        editor.session.setMode(modeName)
+        reader = new FileReader();
+        reader.onload = function() {
+            editor.session.setValue(reader.result)
+        }
+        reader.readAsText(file)
+    }
+</script>
+</body>
+</html>

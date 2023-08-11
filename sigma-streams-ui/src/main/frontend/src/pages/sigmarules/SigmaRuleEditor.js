@@ -16,6 +16,7 @@ export default function SigmaRuleEditor(props) {
     var classes = useStyles();
     const inputRef = useRef(null);
 
+    const SERVER_ENDPOINT = process.env.REACT_APP_SERVER_ENDPOINT;
     const location = useLocation();
     const title = location.state?.title;
     console.log("title is " + title);
@@ -36,7 +37,7 @@ export default function SigmaRuleEditor(props) {
         if (!title) return;
 
         try {
-            const rule = await (await fetch(`http://localhost:8080/sigmaRule/${title}`)).json()
+            const rule = await (await fetch(SERVER_ENDPOINT +  `sigmaRule/${title}`)).json()
             console.log("Rule: " + JSON.stringify(rule));
             console.log("Rule parse: " + YAML.parse(rule));
             console.log("Rule stringify: " + YAML.stringify(rule));
@@ -63,7 +64,7 @@ export default function SigmaRuleEditor(props) {
     const handleRuleChange = async () => {
         console.log("publishing rule: " + code);
 
-        fetch(`http://localhost:8080/addSigmaRule`, {
+        fetch(SERVER_ENDPOINT + `addSigmaRule`, {
             method: 'POST',
             body: modifiedCode
         }).then(function(response) {
@@ -86,6 +87,19 @@ export default function SigmaRuleEditor(props) {
               
             } else {
                 console.log("error submitting rule");
+                var componentProps = {
+                    type: "defence",
+                    message: "Rule was NOT submitted!",
+                    variant: "contained",
+                    color: "error",
+                  };
+
+                sendNotification(componentProps, {
+                    type: "error",
+                    position: toast.POSITION.TOP_RIGHT,
+                    progressClassName: classes.progress,
+                    className: classes.notification,
+                });
             }
           })
           console.log('Form submitted.')

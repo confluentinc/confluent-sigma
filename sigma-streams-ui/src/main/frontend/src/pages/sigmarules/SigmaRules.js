@@ -11,8 +11,6 @@ import { Link } from "react-router-dom";
 // components
 import PageTitle from "../../components/PageTitle/PageTitle";
 
-import { CONFIG } from '../../constants'
-
 var columns = [
   {label: "Title", name: "title"},
   {label: "Description", name: "description"},
@@ -24,10 +22,11 @@ var columns = [
 export default function SigmaRules(props) {
   //const { classes } = props;
   const [tableData, setTableData] = useState([])
-
+  const SERVER_ENDPOINT = process.env.REACT_APP_SERVER_ENDPOINT;
+  console.log("SERVER ENDPOINT " + SERVER_ENDPOINT);
   const refreshTable = async () => {
     try {
-        const data = await (await fetch(CONFIG.URL.SERVER_ENDPOINT + "sigmaRules")).json()
+        const data = await (await fetch(SERVER_ENDPOINT + "sigmaRules")).json()
         setTableData(data);
         console.log(tableData);
     } catch (err) {
@@ -37,7 +36,7 @@ export default function SigmaRules(props) {
 
   const addRule = async () => {
     try {
-        const data = await (await fetch(`http://localhost:8080/sigmaRules`)).json()
+        const data = await (await fetch(SERVER_ENDPOINT + "sigmaRules")).json()
         setTableData(data);
         console.log(tableData);
     } catch (err) {

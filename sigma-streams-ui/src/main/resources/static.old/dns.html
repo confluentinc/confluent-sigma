@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="css/dropdown.css" />
+
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+  <script>
+    $(function(){
+      $("#header").load("header.html");
+    });
+  </script>
+  <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+  <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script></head>
+
+  <style>
+    table {
+      width: 100%;
+      color: #757575;
+      font-family: 'PT Sans', sans-serif;
+    }
+    table, th {
+      text-align: left;
+      table-layout: fixed;
+      position: relative;
+      border-collapse: collapse;
+      border: 1px solid black;
+    }
+
+    th {
+      background: #62BFEA;
+      color: black;
+      text-align: center;
+      position: sticky;
+      top: 0; /* Don't forget this, required for the stickiness */
+      box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    }
+
+    .topic-data-div {
+      position: relative;
+      overflow-x: scroll;
+      z-index: 1;
+      width: 100%;
+      height: 1000px;
+    }
+  </style>
+</head>
+
+<body>
+<div id="header"></div>
+
+<div class="container_16 admin-panel background"><!-- main panel container -->
+  <div class="module-box grid_16 alpha"><!-- admin module box -->
+    <h2 class="title show_hide"> <span class="close-icon""></span>DNS Topic Data</h2><!-- admin module title -->
+    <div class="module-box-inner"><!-- admin module spacing -->
+      <div>
+        <canvas id="myChart" width="900" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="module-box grid_16 alpha"><!-- admin module box -->
+    <h2 class="title show_hide"> <span class="close-icon" onclick="hideDNSData('dns-detections-div')"></span>DNS Detections</h2><!-- admin module title -->
+    <div class="module-box-inner"><!-- admin module spacing -->
+      <div class="topic-data-div" id="dns-detections-div">
+        <table id="dns-detection-table">
+          <tr>
+            <th style="width:150px">Time Stamp</th>
+            <th style="width:150px">Title</th>
+            <th>Topic Data</th>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="module-box grid_16 alpha"><!-- admin module box -->
+    <h2 class="title show_hide"> <span class="close-icon" onclick="hideDNSData('dns-data-div')"></span>DNS Topic Data</h2><!-- admin module title -->
+    <div class="module-box-inner"><!-- admin module spacing -->
+      <div class="topic-data-div" id="dns-data-div">
+        <table id="dns-data-table">
+          <tr>
+            <th style="width:150px">Time Stamp</th>
+            <th>Topic Data</th>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function hideDNSData(divName) {
+   var x = document.getElementById(divName);
+    if (x.style.display === "none") {
+      x.style.display = "block";
+    } else {
+      x.style.display = "none";
+    }
+  }
+</script>
+
+<script type="text/javascript" src="js/dns_chart.js"></script>
+<script src="js/KafkaStomp.js"></script>
+
+</body>
+</html>
