@@ -50,7 +50,6 @@ public class SigmaStream extends StreamManager {
 
     private KafkaStreams streams;
     private SigmaRulesFactory ruleFactory;
-    private ObjectMapper jsonMapper = new ObjectMapper(new JsonFactory());
     private String inputTopic;
     private String outputTopic;
     private Boolean firstMatch;

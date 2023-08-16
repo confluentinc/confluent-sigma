@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.models.DetectionResults;
-import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaStream;
 import java.io.IOException;
@@ -42,7 +41,6 @@ import org.junit.After;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SimpleStreamTest {

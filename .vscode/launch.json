@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "RegexStream",
+            "request": "launch",
+            "mainClass": "io.confiuent.sigmaui.streams.RegexStream",
+            "projectName": "sigma-streams-ui"
+        },
+        {
+            "type": "java",
             "name": "SigmaStreamsApp",
             "request": "launch",
             "mainClass": "io.confluent.sigmarules.SigmaStreamsApp",

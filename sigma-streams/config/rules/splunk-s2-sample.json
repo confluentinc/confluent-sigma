@@ -1,0 +1,11 @@
+{
+    "event": "Aug 11 16:05:52 boundary-fw-1 %ASA-4-106023: Deny udp src inside:192.168.9.20/38524 dst outside:192.168.10.106/514 by access-group \"inside_access_in\" [0x0, 0x0]",
+    "time": 1691769472,
+    "host": "boundary-fw-1",
+    "source": "udp:514",
+    "index": "main",
+    "sourcetype": "cisco:asa",
+    "_savedPort": "3333"
+  }
+
+  ^(?<timestamp>\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2})\s(?<hostname>[^\s]+)\s\%ASA-\d-(?<messageID>[^:]+):\s(?<action>[^\s]+)\s(?<protocol>[^\s]+)\ssrc\sinside:(?<src>[0-9\.]+)\/(?<srcport>[0-9]+)\sdst\soutside:(?<dest>[0-9\.]+)\/(?<destport>[0-9]+)

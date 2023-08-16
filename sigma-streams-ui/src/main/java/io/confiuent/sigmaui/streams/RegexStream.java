@@ -269,10 +269,14 @@ public class RegexStream {
 
         //String json = "{\"sourcetype\":\"pfsense\",\"source\":\"/var/log/messages\",\"time\":\"1622778211\",\"index\":\"main\",\"event\":\"Jun  3 20:43:31 filterlog[15121]: 8,,,1000000103,em0,match,block,in,4,0x0,,43,6291,0,none,6,tcp,44,162.142.125.83,64.71.189.18,16568,12283,0,S,2868024203,,1024,,mss\",\"host\":\"ryzen.ctolab.fabrix.com\"}";
 
-        String json = "{\"event\":\"Aug 09 22:53:26 boundary-fw-1 %ASA-2-106001: Inbound TCP connection denied from 34.215.24.225/443 to 192.168.10.18/10860 flags FIN ACK  on interface outside\",\"time\":1628548712,\"host\":\"boundary-fw-1\",\"source\":\"udp:514\",\"index\":\"main\",\"sourcetype\":\"cisco:asa\",\"_savedPort\":\"3333\"}";
+        String json = "{\"event\":\"Aug 11 16:05:52 boundary-fw-1 %ASA-4-106023: Deny udp src inside:192.168.9.20/38524 dst outside:192.168.10.106/514 by access-group \\\"inside_access_in\\\" [0x0, 0x0]\",\"sourcetype\":\"cisco:asa\"}";
+        //String json = "{\"event\":\"Aug 09 22:53:26 boundary-fw-1 %ASA-2-106001: Inbound TCP connection denied from 34.215.24.225/443 to 192.168.10.18/10860 flags FIN ACK  on interface outside\",\"time\":1628548712,\"host\":\"boundary-fw-1\",\"source\":\"udp:514\",\"index\":\"main\",\"sourcetype\":\"cisco:asa\",\"_savedPort\":\"3333\"}";
         RegexRule rule = new RegexRule();
-        rule.setRegex("^(?<month>\\w{3})\\s(?<day>\\d{2})\\s(?<hour>\\d{2})\\:(?<min>\\d{2})\\:(?<sec>\\d{2})\\s");
+        //rule.setRegex("^(?<month>\\w{3})\\s(?<day>\\d{2})\\s(?<hour>\\d{2})\\:(?<min>\\d{2})\\:(?<sec>\\d{2})\\s");
+        rule.setRegex("^(?<timestamp>\\w{3}\\s\\d{2}\\s\\d{2}:\\d{2}:\\d{2})\\s");
+
         rule.setSourceType("cisco:asa");
+
 
         if (regex.regexFilterTest(json, "cisco:asa") == true) {
             System.out.println("Results: " + regex.buildResultsTest(json, "cisco:asa", rule));
