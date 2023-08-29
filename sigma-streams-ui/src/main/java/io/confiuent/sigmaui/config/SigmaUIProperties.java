@@ -19,6 +19,8 @@
 
 package io.confiuent.sigmaui.config;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,38 +30,13 @@ import org.springframework.context.annotation.Configuration;
 public class SigmaUIProperties {
     private Properties properties = new Properties();
 
-    @Value("${bootstrap.server}")
-    private String bootstrapAddress;
-
-    @Value("${schema.registry}")
-    private String schemaRegistry;
-
-    @Value("${sigma.rules.topic}")
-    private String rulesTopic;
-
-    @Value("${security.protocol:}")
-    private String securityProtocol;
-
-    @Value("${sasl.mechanism:}")
-    private String saslMechanism;
-
-    @Value("${sasl.jaas.config:}")
-    private String saslJaasConfig;
-
     @PostConstruct
     private void initialize() {
-        properties.setProperty("bootstrap.server", bootstrapAddress);
-        properties.setProperty("schema.registry", schemaRegistry);
-        properties.setProperty("sigma.rules.topic", rulesTopic);
-
-        if (!securityProtocol.isEmpty())
-            properties.setProperty("security.protocol", securityProtocol);
-
-        if (!saslMechanism.isEmpty())
-            properties.setProperty("sasl.mechanism", saslMechanism);
-
-        if (!saslJaasConfig.isEmpty())
-            properties.setProperty("sasl.jaas.config", saslJaasConfig);
+         try (InputStream is = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+            properties.load(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public Properties getProperties() {

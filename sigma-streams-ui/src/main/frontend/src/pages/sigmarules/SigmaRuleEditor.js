@@ -115,6 +115,15 @@ export default function SigmaRuleEditor(props) {
         );
       }
 
+    function handleOnDrop(event) {
+        console.log("drop: " + event);
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault();
+        console.log("drag over");
+    }
+
     const openFile = (e) => {
         const files = e.target.files;
         var reader = new FileReader();
@@ -139,7 +148,7 @@ export default function SigmaRuleEditor(props) {
                 progressClassName={classes.notificationProgress}
             />
             <Grid item xs={8}>
-            <div className={classes.ruleViewer}>
+            <div className={classes.ruleViewer} onDrop={handleOnDrop} onDragOver={handleDragOver}>
                 <Editor
                     height="90vh"
                     defaultLanguage="yaml"

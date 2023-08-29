@@ -61,7 +61,7 @@ export default function Detections(props) {
   }
   const [mainChartData, setMainChartData] = useState(initializeChartData);
 
-  useSubscription("/topic/dns-data", (dnsTopic) => {
+  useSubscription("/topic/dns", (dnsTopic) => {
     const newDNSData = JSON.parse(dnsTopic.body);
     
     newDNSData.forEach(dns => {

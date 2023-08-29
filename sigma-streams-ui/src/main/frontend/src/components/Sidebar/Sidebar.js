@@ -10,6 +10,7 @@ import {
   Settings as SettingsIcon,
   BarChart as ChartIcon, 
 } from "@material-ui/icons";
+import {ReactComponent as KafkaIcon} from "./icons/apache-kafka.svg"
 import { useTheme } from "@material-ui/styles";
 import withRouter from "../Wrappers/withRouter"
 import classNames from "classnames";
@@ -31,9 +32,10 @@ import {
 const structure = [
   { id: 0, label: "Home", link: "/app/dashboard", icon: <HomeIcon /> },
   { id: 1, label: "Sigma Rules", link: "/app/sigmarules", icon: <TableIcon /> },
-  { id: 2, label: "Detections", link: "/app/detections", icon: <ChartIcon /> },
-  { id: 3, label: "Settings", link: "/app/settings", icon: <SettingsIcon /> },
+  { id: 2, label: "Detections", link: "/app/detections", icon: <ChartIcon />},
+  { id: 2, label: "Processors", link: "/app/processors", icon: <KafkaIcon />},
   { id: 9, type: "divider" },
+  { id: 10, label: "Settings", link: "/app/settings", icon: <SettingsIcon /> },
   { id: 12, label: "Tables", link: "/app/tables", icon: <TableIcon /> },
   {
     id: 13,

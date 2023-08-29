@@ -19,20 +19,20 @@
 
 package io.confiuent.sigmaui.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confiuent.sigmaui.config.SigmaUIProperties;
-import io.confiuent.sigmaui.rules.SigmaUIRulesStore;
 import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
 import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+
 import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,25 +43,30 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SigmaRuleController {
     @Autowired
-    SigmaUIRulesStore rules;
+    SigmaUIProperties properties;
 
-    private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private SigmaRulesStore rulesStore;
     private SigmaRuleParser parser = new SigmaRuleParser();
 
 
+    @PostConstruct
+    private void initialize() {
+        rulesStore = new SigmaRulesStore(properties.getProperties());
+    }
+
     @GetMapping({"/sigmaTitles"})
     public Set<String> getSigmaTitles() {
-        return this.rules.getRulesStore().getRuleNames();
+        return rulesStore.getRuleNames();
     }
 
     @GetMapping({"/sigmaRules"})
     public List<ParsedSigmaRule> getSigmaRules() {
-        return this.rules.getRulesStore().getRulesList();
+        return rulesStore.getRulesList();
     }
 
     @GetMapping({"sigmaRule/{ruleTitle}"})
     public String getSigmaRule(@PathVariable String ruleTitle) {
-        return this.rules.getRulesStore().getRuleAsYaml(ruleTitle);
+        return rulesStore.getRuleAsYaml(ruleTitle);
     }
 
     @PostMapping({"addSigmaRule"})
@@ -71,7 +76,7 @@ public class SigmaRuleController {
             SigmaRule sigmaRule = parser.parseRule(rule);
             String key = sigmaRule.getTitle();
             System.out.println("Adding sigma rule: " + key);
-            this.rules.getRulesStore().addRule(key, rule);
+            rulesStore.addRule(key, rule);
         } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
             e.printStackTrace();
         }

@@ -25,13 +25,9 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.confluent.sigmarules.SigmaPropertyEnum;
-import io.confluent.sigmarules.exceptions.InvalidSigmaRuleException;
-import io.confluent.sigmarules.exceptions.SigmaRuleParserException;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
-import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
-import io.confluent.sigmarules.streams.StreamManager;
 import io.kcache.Cache;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
@@ -54,8 +50,7 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
 
     private Cache<String, ParsedSigmaRule> sigmaRulesCache;
     private SigmaRuleObserver observer = null;
-    private SigmaRuleParser rulesParser = null;
-
+    
     public SigmaRulesStore(Properties properties) {
         initialize(properties);
     }
@@ -63,7 +58,7 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
     public void initialize(Properties properties) {
         Properties kcacheProps = new Properties(properties);
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
-                properties.getProperty(SigmaPropertyEnum.BOOTSTRAP_SERVER.toString()));
+                properties.getProperty(SigmaPropertyEnum.BOOTSTRAP_SERVERS.toString()));
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG,
                 properties.getProperty(SigmaPropertyEnum.SIGMA_RULES_TOPIC.toString()));
 
@@ -98,7 +93,7 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
         } catch (IllegalArgumentException | IOException e) {
             logger.info("no field mapping file provided");
         }
-        rulesParser = new SigmaRuleParser(fieldMapFile);
+        new SigmaRuleParser(fieldMapFile);
 
         sigmaRulesCache = new KafkaCache<>(
             new KafkaCacheConfig(kcacheProps),

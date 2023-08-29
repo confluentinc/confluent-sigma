@@ -150,10 +150,11 @@ public class SigmaDetection {
 
         if (m.find()) {
             // ...then you can use group() methods.
-            System.out.println("m size: " + m.groupCount());
-            for (int i = 0; i < names.length; i++) {
-                System.out.println(names[i] + ": " + m.group(names[i]));
-                additionalFields.put(names[i], m.group(names[i]));
+            if ((names != null) && (m.groupCount() > 0)) {
+                for (int i = 0; i < names.length; i++) {
+                    System.out.println(names[i] + ": " + m.group(names[i]));
+                    additionalFields.put(names[i], m.group(names[i]));
+                }
             }
 
             return true;

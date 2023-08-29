@@ -22,7 +22,7 @@ package io.confluent.sigmarules;
  * Enum for all the Sigma specific properties
  */
 public enum SigmaPropertyEnum {
-    BOOTSTRAP_SERVER("bootstrap.server", true, "localhost:9092"),
+    BOOTSTRAP_SERVERS("bootstrap.servers", true, "localhost:9092"),
     SIGMA_RULES_TOPIC("sigma.rules.topic", true, "sigma-rules"),
     DATA_TOPIC("data.topic", true, "dns"),
     OUTPUT_TOPIC( "output.topic", true, "dns-detection"),

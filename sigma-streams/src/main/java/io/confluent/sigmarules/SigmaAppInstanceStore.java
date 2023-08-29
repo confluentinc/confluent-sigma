@@ -53,7 +53,7 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
     public void initialize(Properties properties) {
         Properties kcacheProps = new Properties(properties);
         kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
-                properties.getProperty(SigmaPropertyEnum.BOOTSTRAP_SERVER.toString()));
+                properties.getProperty(SigmaPropertyEnum.BOOTSTRAP_SERVERS.toString()));
 
         String sigmaAppTopic = properties.getProperty(SigmaPropertyEnum.SIGMA_APP_TOPIC.toString());
         if (sigmaAppTopic == null) sigmaAppTopic = SigmaPropertyEnum.SIGMA_APP_TOPIC.getDefaultValue();
