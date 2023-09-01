@@ -44,7 +44,7 @@ public class SimpleTopology extends SigmaBaseTopology {
   private long matches = 0;
   private long lastCallTime = 0;
 
-  public void createSimpleTopology(KStream<String, JsonNode> sigmaStream,
+  public void createSimpleTopology(StreamManager streamManager, KStream<String, JsonNode> sigmaStream,
       SigmaRulesFactory ruleFactory, String outputTopic, Configuration jsonPathConf,
       Boolean firstMatch) {
 
@@ -57,6 +57,8 @@ public class SimpleTopology extends SigmaBaseTopology {
 
             if (false == rule.getConditionsManager().hasAggregateCondition()) {
               logger.debug("check rule " + rule.getTitle());
+              streamManager.setRecordsProcessed(streamManager.getRecordsProcessed() + 1);
+
               if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
                 results.add(buildResults(rule, sourceData));
 
@@ -68,6 +70,8 @@ public class SimpleTopology extends SigmaBaseTopology {
                         logger.log(Level.INFO, "Number of matches " + matches);
                     }
                 }
+
+                streamManager.setNumMatches(streamManager.getNumMatches() + 1);
 
                 if (firstMatch)
                   break;

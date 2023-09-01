@@ -16,7 +16,8 @@
             "name": "SigmaStreamsApp",
             "request": "launch",
             "mainClass": "io.confluent.sigmarules.SigmaStreamsApp",
-            "projectName": "sigma-streams"
+            "projectName": "sigma-streams",
+            "args": "-c /Users/michaelpeacock/Development/SIEM/confluent-sigma/sigma-streams/src/main/resources/application.properties"
         },
         {
             "type": "java",

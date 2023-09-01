@@ -18,6 +18,7 @@ import SigmaRules from "../pages/sigmarules";
 import SigmaRuleEditor from "../pages/sigmarules/SigmaRuleEditor";
 import Settings from "../pages/settings";
 import Detections from "../pages/detections";
+import Processors from "../pages/processors";
 
 import useStyles from "../components/Layout/styles";
 import { useLayoutState } from "../context/LayoutContext";
@@ -57,6 +58,7 @@ export default function App() {
                 <Route path="/app/ui/maps" element={<Maps />} />
                 <Route path="/app/ui/icons" element={<Icons />} />
                 <Route path="/app/ui/charts" element={<Charts />} />
+                <Route path="/app/processors" element={<Processors />} />
               </Routes>
               </div>
             </StompSessionProvider>

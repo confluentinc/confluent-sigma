@@ -33,7 +33,7 @@ const structure = [
   { id: 0, label: "Home", link: "/app/dashboard", icon: <HomeIcon /> },
   { id: 1, label: "Sigma Rules", link: "/app/sigmarules", icon: <TableIcon /> },
   { id: 2, label: "Detections", link: "/app/detections", icon: <ChartIcon />},
-  { id: 2, label: "Processors", link: "/app/processors", icon: <KafkaIcon />},
+  { id: 3, label: "Processors", link: "/app/processors", icon: <KafkaIcon />},
   { id: 9, type: "divider" },
   { id: 10, label: "Settings", link: "/app/settings", icon: <SettingsIcon /> },
   { id: 12, label: "Tables", link: "/app/tables", icon: <TableIcon /> },

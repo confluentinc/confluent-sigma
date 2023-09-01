@@ -23,7 +23,7 @@ export default function SigmaRules(props) {
   //const { classes } = props;
   const [tableData, setTableData] = useState([])
   const SERVER_ENDPOINT = process.env.REACT_APP_SERVER_ENDPOINT;
-  console.log("SERVER ENDPOINT " + SERVER_ENDPOINT);
+
   const refreshTable = async () => {
     try {
         const data = await (await fetch(SERVER_ENDPOINT + "sigmaRules")).json()

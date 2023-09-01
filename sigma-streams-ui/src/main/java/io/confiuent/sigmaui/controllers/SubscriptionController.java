@@ -83,17 +83,21 @@ public class SubscriptionController {
                         System.out.printf("partition = %d, topic = %s, timestamp = %d, offset = %d, key = %s, value = %s\n",
                                 record.partition(), record.topic(), record.timestamp(), record.offset(), record.key(), record.value());
 
-                        try {
-                            List<JsonNode> dataList = subscriptionData.get(record.topic());
-                            dataList.add(mapper.readTree(record.value()));
+                        if (record.value() != null) {
+                            try {
+                                List<JsonNode> dataList = subscriptionData.get(record.topic());
+                                dataList.add(mapper.readTree(record.value()));
                             
-                            // if the list is larger, send it right away
-                            if (dataList.size() > 100)
-                                sendBufferedData();
-                        } catch (JsonMappingException e) {
-                            e.printStackTrace();
-                        } catch (JsonProcessingException e) {
-                            e.printStackTrace();
+                                // if the list is larger, send it right away
+                                if (dataList.size() > 100)
+                                    sendBufferedData();
+                            } catch (JsonMappingException e) {
+                                e.printStackTrace();
+                            } catch (JsonProcessingException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            System.out.printf("the value is null");
                         }
                     }
 

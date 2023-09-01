@@ -19,15 +19,14 @@
 
 package io.confluent.sigmarules.streams;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
-import io.confluent.sigmarules.SigmaAppInstanceStore;
-import io.confluent.sigmarules.SigmaPropertyEnum;
+
+import io.confluent.sigmarules.appState.SigmaAppInstanceStore;
+import io.confluent.sigmarules.config.SigmaPropertyEnum;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleFactoryObserver;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
@@ -123,12 +122,12 @@ public class SigmaStream extends StreamManager {
 
         // simple rules
         SimpleTopology simpleTopology = new SimpleTopology();
-        simpleTopology.createSimpleTopology(sigmaStream, ruleFactory, outputTopic,
+        simpleTopology.createSimpleTopology(this, sigmaStream, ruleFactory, outputTopic,
             jsonPathConf, firstMatch);
 
         // aggregate rules
         AggregateTopology aggregateTopology = new AggregateTopology();
-        aggregateTopology.createAggregateTopology(sigmaStream, ruleFactory, outputTopic,
+        aggregateTopology.createAggregateTopology(this, sigmaStream, ruleFactory, outputTopic,
             jsonPathConf);
 
         return builder.build();

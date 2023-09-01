@@ -24,7 +24,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.confluent.sigmarules.SigmaPropertyEnum;
+
+import io.confluent.sigmarules.config.KcacheConfig;
+import io.confluent.sigmarules.config.SigmaPropertyEnum;
 import io.confluent.sigmarules.fieldmapping.FieldMapper;
 import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.parsers.SigmaRuleParser;
@@ -56,36 +58,8 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
     }
 
     public void initialize(Properties properties) {
-        Properties kcacheProps = new Properties(properties);
-        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG,
-                properties.getProperty(SigmaPropertyEnum.BOOTSTRAP_SERVERS.toString()));
-        kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_TOPIC_CONFIG,
-                properties.getProperty(SigmaPropertyEnum.SIGMA_RULES_TOPIC.toString()));
-
-        // optional config parameters
-        if (properties.containsKey(SigmaPropertyEnum.SECURITY_PROTOCOL.toString()))
-            kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SECURITY_PROTOCOL_CONFIG,
-                    properties.getProperty(SigmaPropertyEnum.SECURITY_PROTOCOL.toString()));
-
-        if (properties.containsKey(SigmaPropertyEnum.SASL_MECHANISM.toString()))
-            kcacheProps.setProperty(KafkaCacheConfig.KAFKACACHE_SASL_MECHANISM_CONFIG,
-                    properties.getProperty(SigmaPropertyEnum.SASL_MECHANISM.toString()));
-
-        if (properties.containsKey("sasl.jaas.config"))
-            kcacheProps.setProperty("kafkacache.sasl.jaas.config",
-                properties.getProperty("sasl.jaas.config"));
-
-        if (properties.containsKey("sasl.client.callback.handler.class"))
-            kcacheProps.setProperty("kafkacache.sasl.client.callback.handler.class",
-                    properties.getProperty("sasl.client.callback.handler.class"));
-
-        if (properties.containsKey(SigmaPropertyEnum.SCHEMA_REGISTRY.toString())) {
-            kcacheProps.setProperty(KEY_CONVERTER_SCHEMA_REGISTRY_URL,
-                properties.getProperty(SigmaPropertyEnum.SCHEMA_REGISTRY.toString()));
-            kcacheProps.setProperty(VALUE_CONVERTER_SCHEMA_REGISTRY_URL,
-                properties.getProperty(SigmaPropertyEnum.SCHEMA_REGISTRY.toString()));
-        }
-
+        Properties kcacheProps = KcacheConfig.createConfig(properties, SigmaPropertyEnum.SIGMA_RULES_TOPIC);
+        
         FieldMapper fieldMapFile = null;
         try {
             if (properties.containsKey("field.mapping.file"))
