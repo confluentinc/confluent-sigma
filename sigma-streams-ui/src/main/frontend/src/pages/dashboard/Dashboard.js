@@ -1,45 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Grid,
-  LinearProgress,
-  Select,
-  OutlinedInput,
-  MenuItem,
-  Button
 } from "@material-ui/core";
 import { useTheme } from "@material-ui/styles";
 import {
   ResponsiveContainer,
-  ComposedChart,
   AreaChart,
-  LineChart,
-  Line,
   Area,
-  PieChart,
-  Pie,
-  Cell,
-  YAxis,
-  XAxis,
 } from "recharts";
 
 // styles
 import useStyles from "./styles";
 
 // components
-import mock from "./mock";
 import Widget from "../../components/Widget";
 import PageTitle from "../../components/PageTitle";
 import { Typography } from "../../components/Wrappers";
-import Dot from "../../components/Sidebar/components/Dot";
-import Table from "./components/Table/Table";
-import BigStat from "./components/BigStat/BigStat";
 
-const mainChartData = getMainChartData();
-const PieChartData = [
-  { name: "Group A", value: 400, color: "primary" },
-  { name: "Group B", value: 300, color: "secondary" },
-  { name: "Group C", value: 300, color: "warning" },
-  { name: "Group D", value: 200, color: "success" },
+var lastRecordCount = 0;
+var recordArray = [];
+var lastDetectionCount = 0;
+var detectionArray = new Array(10).fill(0);
+
+var recordCounts = [
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+];
+
+var detectionCounts = [
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
+  { value: 0 },
 ];
 
 export default function Dashboard(props) {
@@ -47,21 +53,124 @@ export default function Dashboard(props) {
   var theme = useTheme();
 
   // local
-  var [mainChartState, setMainChartState] = useState("monthly");
+  const [ruleStats, setRuleStats] = useState([{}])
+  const [processorStats, setProcessorStats] = useState([{}]);
+  const [recordTable, setRecordTable] = useState([{}]);
+  const [detectionTable, setDetectionTable] = useState([{}]);
+
+  const SERVER_ENDPOINT = process.env.REACT_APP_SERVER_ENDPOINT;
+
+  const refreshTable = async () => {
+     updateRules();
+     updateProcessors();
+  }
+
+  const updateRules = async () => {
+    try {
+      const rules = await (await fetch(SERVER_ENDPOINT + "sigmaRules")).json()
+
+      const products = new Map();
+      const services = new Map();
+      const authors = new Map();
+      rules.forEach(rule => {
+        var ruleJson = JSON.parse(JSON.stringify(rule));
+        if (ruleJson.logsource.product != null) {
+          products.set(ruleJson.logsource.product, 1);
+        }
+        if (ruleJson.logsource.service != null) {
+          services.set(ruleJson.logsource.service, 1);
+        }
+        if (ruleJson.author != null) {
+          authors.set(ruleJson.author, 1);
+        }
+
+      });
+
+      var updatedStats = {
+        totalCount: rules.length,
+        totalProducts: products.size,
+        totalServices: services.size,
+        totalAuthors: authors.size
+      }
+
+      setRuleStats(updatedStats);
+    } catch (err) {
+      console.log(err.message)
+    }
+  }
+
+    const updateProcessors = async () => {
+    try {
+      const processors = await (await fetch(SERVER_ENDPOINT + "processorStates")).json()
+
+      var records = 0;
+      var detections = 0;
+      var newRecords = 0;
+      var newDetections = 0;
+
+      processors.forEach(processor => {
+        var processorJson = JSON.parse(JSON.stringify(processor));
+        records += processorJson.recordsProcessed;
+        detections += processorJson.numMatches;
+      });
+      if (lastRecordCount == 0) {
+        lastRecordCount = records;
+      }
+      newRecords = records - lastRecordCount;
+      const newRecordData = [];
+      for (let i = 1; i < 10; i++) {
+        newRecordData.push(recordCounts.at(i));
+      };
+      newRecordData.push({ value: newRecords });
+      recordCounts = newRecordData;
+      setRecordTable(newRecordData);
+
+      if (lastDetectionCount == 0) {
+        lastDetectionCount = detections;
+      }
+      newDetections = detections - lastDetectionCount;
+      const newDetectionData = [];
+      for (let i = 1; i < 10; i++) {
+        newDetectionData.push(detectionCounts.at(i));
+      };
+      newDetectionData.push({ value: newDetections });
+      detectionCounts = newDetectionData;
+      setDetectionTable(newDetectionData);
+
+      var updatedStats = {
+        totalCount: processors.length,
+        totalRecords: records,
+        totalDetections: detections
+      }
+      setProcessorStats(updatedStats);
+
+      lastRecordCount = records;
+      lastDetectionCount = detections;
+    } catch (err) {
+      console.log(err.message)
+    }
+  }
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshTable();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    refreshTable();
+  }, []);
 
   return (
     <>
-      <PageTitle title="Dashboard" button={<Button
-      variant="contained"
-      size="medium"
-      color="secondary"
-    >
-        Latest Reports
-    </Button>} />
+      <PageTitle title="Dashboard"/>
       <Grid container spacing={4}>
-        <Grid item lg={3} md={4} sm={6} xs={12}>
+        <Grid item md={4} sm={6} xs={12}>
           <Widget
-            title="Visits Today"
+            title="Sigma Rules"
             upperTitle
             bodyClass={classes.fullHeightBody}
             className={classes.card}
@@ -69,30 +178,12 @@ export default function Dashboard(props) {
             <div className={classes.visitsNumberContainer}>
               <Grid container item alignItems={"center"}>
                 <Grid item xs={6}>
-              <Typography size="xl" weight="medium" noWrap>
-                12, 678
-              </Typography>
-                </Grid>
-                <Grid item xs={6}>
-              <LineChart
-                width={100}
-                height={30}
-                data={[
-                  { value: 10 },
-                  { value: 15 },
-                  { value: 10 },
-                  { value: 17 },
-                  { value: 18 },
-                ]}
-              >
-                <Line
-                  type="natural"
-                  dataKey="value"
-                  stroke={theme.palette.success.main}
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
+                  <Typography color="text" colorBrightness="secondary" noWrap>
+                    Total Count
+                  </Typography>
+                  <Typography size="xl" weight="medium" noWrap>
+                    {ruleStats.totalCount}
+                  </Typography>
                 </Grid>
               </Grid>
             </div>
@@ -104,322 +195,98 @@ export default function Dashboard(props) {
             >
               <Grid item xs={4}>
                 <Typography color="text" colorBrightness="secondary" noWrap>
-                  Registrations
+                  Products
                 </Typography>
-                <Typography size="md">860</Typography>
+                <Typography size="md">{ruleStats.totalProducts}</Typography>
               </Grid>
               <Grid item xs={4}>
                 <Typography color="text" colorBrightness="secondary" noWrap>
-                  Sign Out
+                  Services
                 </Typography>
-                <Typography size="md">32</Typography>
+                <Typography size="md">{ruleStats.totalServices}</Typography>
               </Grid>
               <Grid item xs={4}>
                 <Typography color="text" colorBrightness="secondary" noWrap>
-                  Rate
+                  Authors
                 </Typography>
-                <Typography size="md">3.25%</Typography>
+                <Typography size="md">{ruleStats.totalAuthors}</Typography>
               </Grid>
             </Grid>
           </Widget>
         </Grid>
-        <Grid item lg={3} md={8} sm={6} xs={12}>
+        <Grid item sm={6} xs={12}>
           <Widget
-            title="App Performance"
+            title="Processor Overview"
             upperTitle
             className={classes.card}
             bodyClass={classes.fullHeightBody}
           >
-            <div className={classes.performanceLegendWrapper}>
-              <div className={classes.legendElement}>
-                <Dot color="warning" />
-                <Typography
-                  color="text"
-                  colorBrightness="secondary"
-                  className={classes.legendElementText}
-                >
-                  Integration
-                </Typography>
-              </div>
-              <div className={classes.legendElement}>
-                <Dot color="primary" />
-                <Typography
-                  color="text"
-                  colorBrightness="secondary"
-                  className={classes.legendElementText}
-                >
-                  SDK
-                </Typography>
-              </div>
-            </div>
-            <div className={classes.progressSection}>
-              <Typography
-                size="md"
-                color="text"
-                colorBrightness="secondary"
-                className={classes.progressSectionTitle}
-              >
-                Integration
+            <Grid item xs={6}>
+              <Typography color="text" colorBrightness="secondary" noWrap>
+                Total Count
               </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={77}
-                classes={{ barColorPrimary: classes.progressBarPrimary }}
-                className={classes.progress}
-              />
-            </div>
-            <div>
-              <Typography
-                size="md"
-                color="text"
-                colorBrightness="secondary"
-                className={classes.progressSectionTitle}
-              >
-                SDK
+              <Typography size="xl" weight="medium" noWrap>
+                {processorStats.totalCount}
               </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={73}
-                classes={{ barColorPrimary: classes.progressBarWarning }}
-                className={classes.progress}
-              />
-            </div>
-          </Widget>
-        </Grid>
-        <Grid item lg={3} md={8} sm={6} xs={12}>
-          <Widget
-            title="Server Overview"
-            upperTitle
-            className={classes.card}
-            bodyClass={classes.fullHeightBody}
-          >
-            <div className={classes.serverOverviewElement}>
-              <Typography
-                color="text"
-                colorBrightness="secondary"
-                className={classes.serverOverviewElementText}
-                noWrap
-              >
-                60% / 37°С / 3.3 Ghz
-              </Typography>
-              <div className={classes.serverOverviewElementChartWrapper}>
-                <ResponsiveContainer height={50} width="99%">
-                  <AreaChart data={getRandomData(10)}>
-                    <Area
-                      type="natural"
-                      dataKey="value"
-                      stroke={theme.palette.secondary.main}
-                      fill={theme.palette.secondary.light}
-                      strokeWidth={2}
-                      fillOpacity="0.25"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <div className={classes.serverOverviewElement}>
-              <Typography
-                color="text"
-                colorBrightness="secondary"
-                className={classes.serverOverviewElementText}
-                noWrap
-              >
-                54% / 31°С / 3.3 Ghz
-              </Typography>
-              <div className={classes.serverOverviewElementChartWrapper}>
-                <ResponsiveContainer height={50} width="99%">
-                  <AreaChart data={getRandomData(10)}>
-                    <Area
-                      type="natural"
-                      dataKey="value"
-                      stroke={theme.palette.primary.main}
-                      fill={theme.palette.primary.light}
-                      strokeWidth={2}
-                      fillOpacity="0.25"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <div className={classes.serverOverviewElement}>
-              <Typography
-                color="text"
-                colorBrightness="secondary"
-                className={classes.serverOverviewElementText}
-                noWrap
-              >
-                57% / 21°С / 3.3 Ghz
-              </Typography>
-              <div className={classes.serverOverviewElementChartWrapper}>
-                <ResponsiveContainer height={50} width="99%">
-                  <AreaChart data={getRandomData(10)}>
-                    <Area
-                      type="natural"
-                      dataKey="value"
-                      stroke={theme.palette.warning.main}
-                      fill={theme.palette.warning.light}
-                      strokeWidth={2}
-                      fillOpacity="0.25"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </Widget>
-        </Grid>
-        <Grid item lg={3} md={4} sm={6} xs={12}>
-          <Widget title="Revenue Breakdown" upperTitle className={classes.card}>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <ResponsiveContainer width="100%" height={144}>
-                  <PieChart>
-                    <Pie
-                      data={PieChartData}
-                      innerRadius={30}
-                      outerRadius={40}
-                      dataKey="value"
-                    >
-                      {PieChartData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={theme.palette[entry.color].main}
-                        />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </Grid>
-              <Grid item xs={6}>
-                <div className={classes.pieChartLegendWrapper}>
-                  {PieChartData.map(({ name, value, color }, index) => (
-                    <div key={color} className={classes.legendItemContainer}>
-                      <Dot color={color} />
-                      <Typography style={{ whiteSpace: "nowrap", fontSize: 12 }} >
-                        &nbsp;{name}&nbsp;
-                      </Typography>
-                      <Typography color="text" colorBrightness="secondary">
-                        &nbsp;{value}
-                      </Typography>
-                    </div>
-                  ))}
-                </div>
-              </Grid>
             </Grid>
-          </Widget>
-        </Grid>
-        <Grid item xs={12}>
-          <Widget
-            bodyClass={classes.mainChartBody}
-            header={
-              <div className={classes.mainChartHeader}>
+            <div className={classes.serverOverviewElement}>
+              <Grid item xs={6}>
+                <Typography color="text" colorBrightness="secondary" noWrap>
+                  Records Processed
+                </Typography>
                 <Typography
-                  variant="h5"
                   color="text"
                   colorBrightness="secondary"
+                  className={classes.serverOverviewElementText}
+                  noWrap
                 >
-                  Daily Line Chart
+                  {processorStats.totalRecords}
                 </Typography>
-                <div className={classes.mainChartHeaderLabels}>
-                  <div className={classes.mainChartHeaderLabel}>
-                    <Dot color="warning" />
-                    <Typography className={classes.mainChartLegentElement}>
-                      Tablet
-                    </Typography>
-                  </div>
-                  <div className={classes.mainChartHeaderLabel}>
-                    <Dot color="primary" />
-                    <Typography className={classes.mainChartLegentElement}>
-                      Mobile
-                    </Typography>
-                  </div>
-                  <div className={classes.mainChartHeaderLabel}>
-                    <Dot color="secondary" />
-                    <Typography className={classes.mainChartLegentElement}>
-                      Desktop
-                    </Typography>
-                  </div>
-                </div>
-                <Select
-                  value={mainChartState}
-                  onChange={e => setMainChartState(e.target.value)}
-                  input={
-                    <OutlinedInput
-                      labelWidth={0}
-                      classes={{
-                        notchedOutline: classes.mainChartSelectRoot,
-                        input: classes.mainChartSelect,
-                      }}
+              </Grid>
+              <div className={classes.serverOverviewElementChartWrapper}>
+                <ResponsiveContainer height={50} width="99%">
+                  <AreaChart data={recordTable}>
+                    <Area
+                      type="natural"
+                      dataKey="value"
+                      stroke="#808080"
+                      fill="#808080"
+                      strokeWidth={2}
+                      fillOpacity="0.2"
                     />
-                  }
-                  autoWidth
-                >
-                  <MenuItem value="daily">Daily</MenuItem>
-                  <MenuItem value="weekly">Weekly</MenuItem>
-                  <MenuItem value="monthly">Monthly</MenuItem>
-                </Select>
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-            }
-          >
-            <ResponsiveContainer width="100%" minWidth={500} height={350}>
-              <ComposedChart
-                margin={{ top: 0, right: -15, left: -15, bottom: 0 }}
-                data={mainChartData}
-              >
-                <YAxis
-                  ticks={[0, 2500, 5000, 7500]}
-                  tick={{ fill: theme.palette.text.hint + "80", fontSize: 14 }}
-                  stroke={theme.palette.text.hint + "80"}
-                  tickLine={false}
-                />
-                <XAxis
-                  tickFormatter={i => i + 1}
-                  tick={{ fill: theme.palette.text.hint + "80", fontSize: 14 }}
-                  stroke={theme.palette.text.hint + "80"}
-                  tickLine={false}
-                />
-                <Area
-                  type="natural"
-                  dataKey="desktop"
-                  fill={theme.palette.background.light}
-                  strokeWidth={0}
-                  activeDot={false}
-                />
-                <Line
-                  type="natural"
-                  dataKey="mobile"
-                  stroke={theme.palette.primary.main}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={false}
-                />
-                <Line
-                  type="linear"
-                  dataKey="tablet"
-                  stroke={theme.palette.warning.main}
-                  strokeWidth={2}
-                  dot={{
-                    stroke: theme.palette.warning.dark,
-                    strokeWidth: 2,
-                    fill: theme.palette.warning.main,
-                  }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </Widget>
-        </Grid>
-        {mock.bigStat.map(stat => (
-          <Grid item md={4} sm={6} xs={12} key={stat.product}>
-            <BigStat {...stat} />
-          </Grid>
-        ))}
-        <Grid item xs={12}>
-          <Widget
-            title="Support Requests"
-            upperTitle
-            noBodyPadding
-            bodyClass={classes.tableWidget}
-          >
-            <Table data={mock.table} />
+            </div>
+            <div className={classes.serverOverviewElement}>
+              <Grid item xs={6}>
+                <Typography color="text" colorBrightness="secondary" noWrap>
+                  Detections
+                </Typography>
+                <Typography
+                  color="text"
+                  colorBrightness="secondary"
+                  className={classes.serverOverviewElementText}
+                  noWrap
+                >
+                  {processorStats.totalDetections}
+                </Typography>
+              </Grid>
+              <div className={classes.serverOverviewElementChartWrapper}>
+                <ResponsiveContainer height={50} width="99%">
+                  <AreaChart data={detectionTable}>
+                    <Area
+                      type="natural"
+                      dataKey="value"
+                      stroke="#ff0000"
+                      fill="#ff0000"
+                      strokeWidth={2}
+                      fillOpacity="0.2"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </Widget>
         </Grid>
       </Grid>
@@ -432,6 +299,8 @@ function getRandomData(length, min, max, multiplier = 10, maxDiff = 10) {
   var array = new Array(length).fill();
   let lastValue;
 
+  console.log("array: " + array);
+
   return array.map((item, index) => {
     let randomValue = Math.floor(Math.random() * multiplier + 1);
 
@@ -443,25 +312,10 @@ function getRandomData(length, min, max, multiplier = 10, maxDiff = 10) {
       randomValue = Math.floor(Math.random() * multiplier + 1);
     }
 
+    //console.log("index: " + index);
     lastValue = randomValue;
 
+ 
     return { value: randomValue };
   });
-}
-
-function getMainChartData() {
-  var resultArray = [];
-  var tablet = getRandomData(31, 3500, 6500, 7500, 1000);
-  var desktop = getRandomData(31, 1500, 7500, 7500, 1500);
-  var mobile = getRandomData(31, 1500, 7500, 7500, 1500);
-
-  for (let i = 0; i < tablet.length; i++) {
-    resultArray.push({
-      tablet: tablet[i].value,
-      desktop: desktop[i].value,
-      mobile: mobile[i].value,
-    });
-  }
-
-  return resultArray;
 }

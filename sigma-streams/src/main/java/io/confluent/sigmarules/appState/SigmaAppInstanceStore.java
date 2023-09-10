@@ -64,16 +64,7 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
             sigmaAppInstanceStateCache = new KafkaCache<>(
                 new KafkaCacheConfig(kcacheProps),
                 Serdes.String(),
-                SigmaAppInstanceState.getJsonSerde(),
-                new CacheUpdateHandler<String, SigmaAppInstanceState>(){
-
-                    @Override
-                    public void handleUpdate(String key, SigmaAppInstanceState value, SigmaAppInstanceState oldValue,
-                            TopicPartition tp, long offset, long ts) {
-                    }
-
-                },
-                null);
+                SigmaAppInstanceState.getJsonSerde());
 
             sigmaAppInstanceStateCache.init();
 

@@ -103,7 +103,6 @@ public class SubscriptionController {
 
                     currentTime = System.currentTimeMillis();
                     if ((currentTime - lastSend) >= 2000) {
-                        System.out.printf("sending buffered data\n");
                         lastSend = currentTime;
                         sendBufferedData();
                     }

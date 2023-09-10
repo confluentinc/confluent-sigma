@@ -18,6 +18,7 @@ import SigmaRules from "../pages/sigmarules";
 import SigmaRuleEditor from "../pages/sigmarules/SigmaRuleEditor";
 import Settings from "../pages/settings";
 import Detections from "../pages/detections";
+import Firewalls from "../pages/firewalls";
 import Processors from "../pages/processors";
 
 import useStyles from "../components/Layout/styles";
@@ -54,6 +55,7 @@ export default function App() {
                 <Route path="/app/sigmaruleeditor" element={<SigmaRuleEditor />} />
                 <Route path="/app/settings" element={<Settings />} />
                 <Route path="/app/detections" element={<Detections />} />
+                <Route path="/app/firewalls" element={<Firewalls />} />
                 <Route path="/app/ui" element={() => <Navigate to="/app/ui/icons" />} />
                 <Route path="/app/ui/maps" element={<Maps />} />
                 <Route path="/app/ui/icons" element={<Icons />} />

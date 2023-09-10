@@ -7,14 +7,11 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  LineChart,
-  Line,
   YAxis,
   XAxis,
   Tooltip,
 } from "recharts";
 import { useSubscription } from "react-stomp-hooks";
-import { Button } from "@material-ui/core";
 
 // components
 import PageTitle from "../../components/PageTitle/PageTitle";
