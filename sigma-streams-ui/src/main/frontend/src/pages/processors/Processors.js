@@ -17,7 +17,7 @@ var columns = [
   {label: "Last Update", name: "sampleTimestampHr"},
   {label: "Records Process", name: "recordsProcessed"},
   {label: "Detections", name: "numMatches"},
-  {label: "Status", name: "status"}
+  {label: "Status", name: "kafkaStreamsState"}
 ];
 
 export default function Processors(props) {

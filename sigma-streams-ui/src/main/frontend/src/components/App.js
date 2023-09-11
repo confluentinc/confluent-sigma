@@ -45,7 +45,7 @@ export default function App() {
               >
               <div className={classes.fakeToolbar} />
               <Routes>
-                <Route path="/" element={<SigmaRules />} />
+                <Route path="/" element={<Dashboard />} />
                 <Route path="/app/sigmarules" element={<SigmaRules />} />
                 <Route path="/app/dashboard" element={<Dashboard />} />
                 <Route path="/app/typography" element={<Typography />} />

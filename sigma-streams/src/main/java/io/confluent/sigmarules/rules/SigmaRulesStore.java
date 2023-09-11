@@ -59,7 +59,8 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
 
     public void initialize(Properties properties) {
         Properties kcacheProps = KcacheConfig.createConfig(properties, SigmaPropertyEnum.SIGMA_RULES_TOPIC);
-        
+        System.out.println("kcache properties: " + kcacheProps.toString());
+
         FieldMapper fieldMapFile = null;
         try {
             if (properties.containsKey("field.mapping.file"))

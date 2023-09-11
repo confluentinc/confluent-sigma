@@ -57,7 +57,7 @@ public class ComplexConditionsTest {
         Properties testProperties = new Properties();
         //TODO should be bootstrap.serverS -- use defined variable in place of string
         //testProperties.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
-        testProperties.setProperty("bootstrap.server", "foo:1234");
+        testProperties.setProperty("bootstrap.servers", "foo:1234");
         testProperties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "test-simple");
         testProperties.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         testProperties.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());

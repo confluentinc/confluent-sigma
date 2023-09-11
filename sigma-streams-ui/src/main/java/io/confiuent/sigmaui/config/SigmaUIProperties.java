@@ -19,6 +19,7 @@
 
 package io.confiuent.sigmaui.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -31,11 +32,32 @@ public class SigmaUIProperties {
 
     @PostConstruct
     private void initialize() {
-         try (InputStream is = getClass().getClassLoader().getResourceAsStream("application.properties")) {
-            properties.load(is);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (isDockerized()) {
+            System.out.println("Initialize from environment variables");
+            properties = getPropertiesFromEnv();
+        } else {
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+                properties.load(is);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    public boolean isDockerized() {
+        File f = new File("/.dockerenv");
+        return f.exists();
+    }
+
+    private Properties getPropertiesFromEnv() {
+        Properties props = new Properties();
+        System.getenv().forEach((k, v) -> {
+            String newKey = k.replace("_", ".");
+            System.out.println(newKey + ": " + v);
+            props.setProperty(newKey, v);
+        });
+
+        return props;
     }
 
     public Properties getProperties() {

@@ -253,6 +253,7 @@ export default function Dashboard(props) {
                       fill="#808080"
                       strokeWidth={2}
                       fillOpacity="0.2"
+                      isAnimationActive="false"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -282,6 +283,7 @@ export default function Dashboard(props) {
                       fill="#ff0000"
                       strokeWidth={2}
                       fillOpacity="0.2"
+                      isAnimationActive="false"
                     />
                   </AreaChart>
                 </ResponsiveContainer>

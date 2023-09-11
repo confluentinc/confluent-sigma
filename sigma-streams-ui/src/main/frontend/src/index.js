@@ -8,18 +8,18 @@ import App from "./components/App";
 import * as serviceWorker from "./serviceWorker";
 import { LayoutProvider } from "./context/LayoutContext";
 import { UserProvider } from "./context/UserContext";
-import { BrowserRouter } from "react-router-dom"
+import { HashRouter } from "react-router-dom"
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-    <BrowserRouter>
+    <HashRouter>
       <LayoutProvider>
           <ThemeProvider theme={Themes.default}>
             <CssBaseline />
               <App />
         </ThemeProvider>
       </LayoutProvider>
-    </BrowserRouter>
+    </HashRouter>
 );
 
 // If you want your app to work offline and load faster, you can change

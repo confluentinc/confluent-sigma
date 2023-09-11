@@ -2,9 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Drawer, IconButton, List } from "@material-ui/core";
 import {
   Home as HomeIcon,
-  NotificationsNone as NotificationsIcon,
-  FormatSize as TypographyIcon,
-  FilterNone as UIElementsIcon,
   BorderAll as TableIcon,
   ArrowBack as ArrowBackIcon,
   Settings as SettingsIcon,
@@ -41,26 +38,6 @@ const structure = [
   { id: 3, label: "Processors", link: "/app/processors", icon: <KafkaIcon />},
   { id: 9, type: "divider" },
   { id: 10, label: "Settings", link: "/app/settings", icon: <SettingsIcon /> },
-  { id: 12, label: "Tables", link: "/app/tables", icon: <TableIcon /> },
-  {
-    id: 13,
-    label: "Notifications",
-    link: "/app/notifications",
-    icon: <NotificationsIcon />,
-  },
-  {
-    id: 14,
-    label: "UI Elements",
-    link: "/app/ui",
-    icon: <UIElementsIcon />,
-    children: [
-      { label: "Icons", link: "/app/ui/icons" },
-      { label: "Charts", link: "/app/ui/charts" },
-      { label: "Maps", link: "/app/ui/maps" },
-    ],
-  },
-  
-
 ];
 
 function Sidebar() {
