@@ -37,7 +37,7 @@ public class SigmaDetection {
     private String sigmaName = "";
     private List<ModifierType> modifiers = new ArrayList<>(); //contains, beginswith, endswith
     private List<String> detectionValues = new ArrayList<>();
-    private Map<String, String> additionalFields = new HashMap<>(); //groups from regex or other fields
+    private Map<String, String> regexMappedFields = new HashMap<>(); //groups from regex or other fields
     private Boolean matchAll = false;
 
     public String getName() {
@@ -56,8 +56,8 @@ public class SigmaDetection {
         this.detectionValues.add(value);
     }
 
-    public Map<String, String> getAddtionalFields() {
-        return additionalFields;
+    public Map<String, String> getRegexMappedFields() {
+        return regexMappedFields;
     }
     /**
      * For the given recordValue see if this detection matches.
@@ -153,7 +153,7 @@ public class SigmaDetection {
             if ((names != null) && (m.groupCount() > 0)) {
                 for (int i = 0; i < names.length; i++) {
                     System.out.println(names[i] + ": " + m.group(names[i]));
-                    additionalFields.put(names[i], m.group(names[i]));
+                    regexMappedFields.put(names[i], m.group(names[i]));
                 }
             }
 

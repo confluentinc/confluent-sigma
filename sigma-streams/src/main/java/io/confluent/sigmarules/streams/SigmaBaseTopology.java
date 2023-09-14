@@ -35,7 +35,7 @@ public class SigmaBaseTopology {
             // if this is a regular expression, add the group fields
             for (Map.Entry<String,SigmaDetections> detections : rule.getDetectionsManager().getAllDetections().entrySet()) {
                 for (SigmaDetection detection : detections.getValue().getDetections()) {
-                    for (Map.Entry<String,String> field : detection.getAddtionalFields().entrySet()) {
+                    for (Map.Entry<String,String> field : detection.getRegexMappedFields().entrySet()) {
                         customFields.put(field.getKey(), field.getValue());
                     }
                 }
