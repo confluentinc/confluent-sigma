@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.Scanner;
 
-import io.confluent.sigmarules.SigmaPropertyEnum;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

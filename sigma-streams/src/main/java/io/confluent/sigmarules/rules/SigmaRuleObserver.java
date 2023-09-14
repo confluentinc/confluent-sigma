@@ -19,7 +19,6 @@
 
 package io.confluent.sigmarules.rules;
 
-import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 
 interface SigmaRuleObserver {

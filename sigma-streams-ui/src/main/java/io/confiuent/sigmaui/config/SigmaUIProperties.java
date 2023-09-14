@@ -19,47 +19,45 @@
 
 package io.confiuent.sigmaui.config;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SigmaUIProperties {
     private Properties properties = new Properties();
 
-    @Value("${bootstrap.server}")
-    private String bootstrapAddress;
-
-    @Value("${schema.registry}")
-    private String schemaRegistry;
-
-    @Value("${sigma.rules.topic}")
-    private String rulesTopic;
-
-    @Value("${security.protocol:}")
-    private String securityProtocol;
-
-    @Value("${sasl.mechanism:}")
-    private String saslMechanism;
-
-    @Value("${sasl.jaas.config:}")
-    private String saslJaasConfig;
-
     @PostConstruct
     private void initialize() {
-        properties.setProperty("bootstrap.server", bootstrapAddress);
-        properties.setProperty("schema.registry", schemaRegistry);
-        properties.setProperty("sigma.rules.topic", rulesTopic);
+        if (isDockerized()) {
+            System.out.println("Initialize from environment variables");
+            properties = getPropertiesFromEnv();
+        } else {
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+                properties.load(is);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-        if (!securityProtocol.isEmpty())
-            properties.setProperty("security.protocol", securityProtocol);
+    public boolean isDockerized() {
+        File f = new File("/.dockerenv");
+        return f.exists();
+    }
 
-        if (!saslMechanism.isEmpty())
-            properties.setProperty("sasl.mechanism", saslMechanism);
+    private Properties getPropertiesFromEnv() {
+        Properties props = new Properties();
+        System.getenv().forEach((k, v) -> {
+            String newKey = k.replace("_", ".");
+            System.out.println(newKey + ": " + v);
+            props.setProperty(newKey, v);
+        });
 
-        if (!saslJaasConfig.isEmpty())
-            properties.setProperty("sasl.jaas.config", saslJaasConfig);
+        return props;
     }
 
     public Properties getProperties() {

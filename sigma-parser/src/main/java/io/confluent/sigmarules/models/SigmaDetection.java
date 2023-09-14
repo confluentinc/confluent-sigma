@@ -19,9 +19,14 @@
 
 package io.confluent.sigmarules.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,6 +37,7 @@ public class SigmaDetection {
     private String sigmaName = "";
     private List<ModifierType> modifiers = new ArrayList<>(); //contains, beginswith, endswith
     private List<String> detectionValues = new ArrayList<>();
+    private Map<String, String> regexMappedFields = new HashMap<>(); //groups from regex or other fields
     private Boolean matchAll = false;
 
     public String getName() {
@@ -50,6 +56,9 @@ public class SigmaDetection {
         this.detectionValues.add(value);
     }
 
+    public Map<String, String> getRegexMappedFields() {
+        return regexMappedFields;
+    }
     /**
      * For the given recordValue see if this detection matches.
      * @param recordValue the record value to check against the detection patterns
@@ -94,8 +103,11 @@ public class SigmaDetection {
                             if (Long.parseLong(recordValue) < Long.parseLong(detectionValue))
                                 matchCount++;
                             break;
-                        //All these types have been converted into a regular expression by the parser.
                         case REGEX:
+                            if (checkRegexPattern(recordValue, detectionValue))
+                                matchCount++;
+                            break;
+                        //All these types have been converted into a regular expression by the parser.
                         case CONTAINS:
                         case BEGINS_WITH:
                         case STARTS_WITH:
@@ -128,6 +140,26 @@ public class SigmaDetection {
                 return true;
             }
         }
+        return false;
+    }
+
+    private Boolean checkRegexPattern(String recordValue, String detectionValue) {
+        String[] names = StringUtils.substringsBetween(detectionValue, "<", ">");
+        Pattern p = Pattern.compile(detectionValue);
+        Matcher m = p.matcher(recordValue);
+
+        if (m.find()) {
+            // ...then you can use group() methods.
+            if ((names != null) && (m.groupCount() > 0)) {
+                for (int i = 0; i < names.length; i++) {
+                    System.out.println(names[i] + ": " + m.group(names[i]));
+                    regexMappedFields.put(names[i], m.group(names[i]));
+                }
+            }
+
+            return true;
+        }
+
         return false;
     }
 

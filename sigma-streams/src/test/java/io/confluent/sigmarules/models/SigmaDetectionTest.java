@@ -89,7 +89,7 @@ class SigmaDetectionTest {
         assertFalse(detection2.matches("abbb", false));
         assertTrue(detection2.matches("abbbc", false));
         assertFalse(detection2.matches("ac", false));
-        assertFalse(detection2.matches("abbbcL", false));
+        assertTrue(detection2.matches("abbbcL", false));
     }
 
     @Test

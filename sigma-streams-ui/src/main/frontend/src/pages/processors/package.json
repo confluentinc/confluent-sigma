@@ -1,0 +1,6 @@
+{
+  "name": "Processors",
+  "version": "0.0.0",
+  "main": "Processors.js",
+  "private": true
+}

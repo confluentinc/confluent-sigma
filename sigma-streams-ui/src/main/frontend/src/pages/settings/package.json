@@ -1,0 +1,6 @@
+{
+  "name": "Settings",
+  "version": "0.0.0",
+  "main": "Settings.js",
+  "private": true
+}
