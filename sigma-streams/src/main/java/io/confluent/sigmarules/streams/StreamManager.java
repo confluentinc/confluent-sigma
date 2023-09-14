@@ -41,11 +41,13 @@ public class StreamManager {
 
     protected Properties properties = new Properties();
     private AdminClient client = null;
+    private Integer recordsProcessed = 0;
+    private Integer numMatches = 0;
 
     public StreamManager(Properties properties) {
         this.properties.putAll(properties);
         this.properties.put(StreamsConfig.APPLICATION_ID_CONFIG, properties.getProperty("application.id"));
-        this.properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getProperty("bootstrap.server"));
+        this.properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getProperty("bootstrap.servers"));
         this.properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         this.properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         this.properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
@@ -92,5 +94,19 @@ public class StreamManager {
         }
     }
 
+    public Integer getRecordsProcessed() {
+        return recordsProcessed;
+    }
 
+    public void setRecordsProcessed(Integer recordsProcessed) {
+        this.recordsProcessed = recordsProcessed;
+    }
+
+    public Integer getNumMatches() {
+        return numMatches;
+    }
+
+    public void setNumMatches(Integer numMatches) {
+        this.numMatches = numMatches;
+    }
 }

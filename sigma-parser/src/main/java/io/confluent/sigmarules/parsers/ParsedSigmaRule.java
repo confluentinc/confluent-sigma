@@ -43,7 +43,6 @@ public class ParsedSigmaRule {
     private List<String> references;
     private LogSource logsource;
     private Map<String, Object> detection;
-
     private KafkaRule kafka;
 
     public String getTitle() {

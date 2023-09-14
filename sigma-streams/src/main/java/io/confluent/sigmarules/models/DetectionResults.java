@@ -19,6 +19,9 @@
 
 package io.confluent.sigmarules.models;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,8 +34,10 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
+@JsonInclude(Include.NON_NULL)
 public class DetectionResults {
     private Long timeStamp = 0L;
+    @JsonUnwrapped
     private RuleResults sigmaMetaData = new RuleResults();
     private JsonNode sourceData;
 
@@ -56,6 +61,17 @@ public class DetectionResults {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public String toPrettyJSON() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

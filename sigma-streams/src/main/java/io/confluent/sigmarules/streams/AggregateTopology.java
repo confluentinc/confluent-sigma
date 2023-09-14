@@ -49,7 +49,7 @@ public class AggregateTopology extends SigmaBaseTopology {
     private final SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
     private SigmaRule currentRule = null;
 
-    public void createAggregateTopology(KStream<String, JsonNode> sigmaStream,
+    public void createAggregateTopology(StreamManager streamManager, KStream<String, JsonNode> sigmaStream,
         SigmaRulesFactory ruleFactory, String outputTopic, Configuration jsonPathConf) {
 
         final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
@@ -57,6 +57,7 @@ public class AggregateTopology extends SigmaBaseTopology {
         for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
             SigmaRule rule = entry.getValue();
             if (rule.getConditionsManager().hasAggregateCondition()) {
+                streamManager.setRecordsProcessed(streamManager.getRecordsProcessed() + 1);
                 Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
 
                 sigmaStream.flatMap((key, sourceData) -> {
@@ -91,8 +92,10 @@ public class AggregateTopology extends SigmaBaseTopology {
                 )
                 .toStream()
                 .filter((k, results) -> doStreamFiltering(results.getRule(), results))
-                .map((key, value) ->
-                    new KeyValue<>("", buildResults(value.getRule(), value.getSourceData())))
+                .map((key, value) -> {
+                    streamManager.setNumMatches(streamManager.getNumMatches() + 1);
+                    return new KeyValue<>("", buildResults(value.getRule(), value.getSourceData()));
+                })
                 .to(outputTopic,
                     Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 

@@ -19,12 +19,28 @@
 
 package io.confluent.sigmarules.models;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class RuleResults {
     private String title;
     private String id;
     private Boolean isAggregateCondition = false;
     private String outputTopic;
+    private Map<String, String> customFields = new HashMap<>();
 
+    public Boolean getIsAggregateCondition() {
+        return isAggregateCondition;
+    }
+    public void setIsAggregateCondition(Boolean isAggregateCondition) {
+        this.isAggregateCondition = isAggregateCondition;
+    }
     public String getTitle() {
         return title;
     }
@@ -53,4 +69,20 @@ public class RuleResults {
     public void setOutputTopic(String outputTopic) {
         this.outputTopic = outputTopic;
     }
+
+    @JsonAnyGetter 
+    public Map<String, String> getCustomFields() {
+        return customFields;
+    }
+
+    @JsonAnySetter 
+    public void addCustomField(String key, String value) {
+        this.customFields.put(key, value); 
+    }
+
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
+    }
+
+    
 }
