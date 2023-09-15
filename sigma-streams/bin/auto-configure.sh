@@ -29,15 +29,15 @@ SIGMA_PROPS=
 SIGMA_PROPS_DIR=
 SIGMA_CC_ADMIN=
 
-if [ -f ~/.config/sigma.properties ] ; then
+if [ -f ~/.sigma/sigma.properties ] ; then
+  export SIGMA_PROPS_DIR=~/.sigma/
+  export SIGMA_PROPS=~/.sigma/$SIGMA_PROPS_FILENAME
+elif [ -f ~/.config/sigma.properties ] ; then
   export SIGMA_PROPS_DIR=~/.config/
   export SIGMA_PROPS=~/.config/$SIGMA_PROPS_FILENAME
 elif [ -f ~/.confluent/sigma.properties ] ; then
   export SIGMA_PROPS_DIR=~/.confluent/
   export SIGMA_PROPS=~/.confluent/$SIGMA_PROPS_FILENAME
-elif [ -f ~/tmp/sigma.properties ] ; then
-  export SIGMA_PROPS_DIR=~/tmp/
-  export SIGMA_PROPS=~/tmp/$SIGMA_PROPS_FILENAME
 fi
 
 if [ -f ~/.config/sigma-cc-admin.properties ] ; then

@@ -84,23 +84,19 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
         this.observer = observer;
     }
 
-    public void addRule(String ruleName, String rule) {
+    public void addRule(String rule) {
         ObjectMapper mapper = new ObjectMapper((JsonFactory)new YAMLFactory());
         ParsedSigmaRule sigmaRule = null;
         try {
             if (rule != null) {
                 sigmaRule = (ParsedSigmaRule)mapper.readValue(rule, ParsedSigmaRule.class);
-                this.sigmaRulesCache.put(ruleName, sigmaRule);
+                this.sigmaRulesCache.put(sigmaRule.getTitle(), sigmaRule);
             }
         } catch (JsonMappingException e) {
-            e.printStackTrace();
+            logger.error("Error loading rule " + rule, e);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            logger.error("Error loading rule " + rule, e);
         }
-    }
-
-    public void removeRule(String ruleName) {
-        sigmaRulesCache.remove(ruleName);
     }
 
     public Set<String> getRuleNames() {

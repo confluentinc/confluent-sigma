@@ -21,12 +21,10 @@ package io.confluent.sigmarules.tools;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.rules.SigmaRulesStore;
 import io.confluent.sigmarules.config.SigmaOptions;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,8 +38,15 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+/**
+ * Application to load sigma rules from a filesystem and put it into the sigma rules topic.
+ */
 public class SigmaRuleLoader {
+    final static Logger logger = LogManager.getLogger(SigmaRuleLoader.class);
+
     private SigmaRulesStore sigmaRulesStore;
     private ObjectMapper mapper;
 
@@ -53,16 +58,9 @@ public class SigmaRuleLoader {
     public void loadSigmaFile(String filename) {
         try {
             String rule = Files.readString(Path.of(filename));
-            ParsedSigmaRule sigmaRule = mapper.readValue(rule, ParsedSigmaRule.class);
-            String key = sigmaRule.getTitle();
-
-            System.out.println("Adding sigma rule: " + key);
-            System.out.println(sigmaRule.toString());
-            sigmaRulesStore.addRule(key, rule);
+            sigmaRulesStore.addRule(rule);
         } catch (IOException e) {
-            System.out.println("Failed to load: " + filename);
-
-            e.printStackTrace();
+            logger.error("Failed to load: " + filename,e);
         }
     }
 
