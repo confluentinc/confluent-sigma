@@ -58,6 +58,9 @@ public class SigmaRulesStore implements CacheUpdateHandler<String, ParsedSigmaRu
     }
 
     public void initialize(Properties properties) {
+        if (properties == null)
+            throw new IllegalArgumentException("Cannot initialize SigmaRulesStore with null properties");
+
         Properties kcacheProps = KcacheConfig.createConfig(properties, SigmaPropertyEnum.SIGMA_RULES_TOPIC);
         System.out.println("kcache properties: " + kcacheProps.toString());
 
