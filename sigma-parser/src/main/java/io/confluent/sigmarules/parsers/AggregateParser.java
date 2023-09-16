@@ -81,17 +81,4 @@ public class AggregateParser {
 
         return values;
     }
-
-    public static void main(String[] args) {
-        AggregateParser parser = new AggregateParser();
-        AggregateValues values = parser.parseCondition("count() > 4");
-
-        System.out.println("Distinct Value: " + values.getDistinctValue());
-        System.out.println("GroupBy: " + values.getGroupBy());
-        System.out.println("Operation: " + values.getOperation());
-        System.out.println("Value: " + values.getOperationValue());
-
-
-
-    }
 }

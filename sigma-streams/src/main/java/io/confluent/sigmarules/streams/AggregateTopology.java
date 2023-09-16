@@ -194,7 +194,8 @@ public class AggregateTopology extends SigmaBaseTopology {
                 }
                 break;
             default:
-                System.out.println("Unhandled operation");
+                logger.warn("Unhandled operation: " + aggregateValues.getOperation() +
+                        ". For rule " + rule.getTitle());
                 break;
         }
 

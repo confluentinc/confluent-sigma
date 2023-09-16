@@ -60,11 +60,11 @@ public class ConditionParser {
                 String currentChar = Character.toString(it.current());
                 switch (currentChar) {
                     case OPEN_PAREN:
-                        System.out.println("OPEN");
+                        logger.debug("OPEN");
                         break;
                     case CLOSE_PAREN:
                         evaluateString(conditions, tempString);
-                        System.out.println("CLOSE");
+                        logger.debug("CLOSE");
                         break;
                     case SPACE:
                         if (!tempString.isBlank()) {
@@ -104,7 +104,7 @@ public class ConditionParser {
                     inConditionStatement = true;
                     break;
                 case NOT:
-                    System.out.println("this is a not statement");
+                    logger.debug("this is a not statement");
                     notCondition = true;
                     inConditionStatement = true;
                     break;
@@ -117,7 +117,7 @@ public class ConditionParser {
                     if (currentCondition != null && inConditionStatement == true) {
                         SigmaCondition newCondition = new SigmaCondition(eval);
                         if (notCondition) {
-                            System.out.println("setting not condition");
+                            logger.debug("setting not condition");
                             newCondition.setNotCondition(true);
                             notCondition = false;
                         }
@@ -129,7 +129,7 @@ public class ConditionParser {
                     } else {
                         currentCondition = new SigmaCondition(eval);
                         if (notCondition) {
-                            System.out.println("setting not condition");
+                            logger.debug("setting not condition");
                             currentCondition.setNotCondition(true);
                             notCondition = false;
                         }

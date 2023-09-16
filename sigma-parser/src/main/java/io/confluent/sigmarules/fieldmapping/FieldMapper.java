@@ -44,16 +44,4 @@ public class FieldMapper {
     public SigmaFields getSigmaFields() {
         return this.sigmaFields;
     }
-
-    public static void main(String[] args) throws IOException {
-        String fieldFile = "/Users/mpeacock/Development/KafkaSigma/sigma/tools/config/splunk-zeek.yml";
-
-        FieldMapper fieldMapper = new FieldMapper(fieldFile);
-        List<String> useragent = fieldMapper.getSigmaFields().getSigmaField("c-useragent");
-        System.out.println("c-useragent: " + useragent.toString());
-
-        List<String> dest = fieldMapper.getSigmaFields().getSigmaField("dest_domain");
-        System.out.println("dest_domain: " + dest.toString());
-
-    }
 }

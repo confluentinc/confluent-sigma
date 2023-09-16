@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.    
  */
-
 package io.confiuent.sigmaui.controllers;
 
 import io.confiuent.sigmaui.config.SigmaUIProperties;
@@ -76,7 +75,7 @@ public class SigmaRuleController {
             SigmaRule sigmaRule = parser.parseRule(rule);
             String key = sigmaRule.getTitle();
             System.out.println("Adding sigma rule: " + key);
-            rulesStore.addRule(key, rule);
+            rulesStore.addRule(rule);
         } catch (IOException | InvalidSigmaRuleException | SigmaRuleParserException e) {
             e.printStackTrace();
         }
