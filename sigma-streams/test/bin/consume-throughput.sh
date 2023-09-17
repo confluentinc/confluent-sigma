@@ -32,13 +32,13 @@ if [ ! -f $SIGMA_PROPS ] ; then
 fi
 
 
-bootstrap_key="bootstrap.server"
-bootstrap_value=$(grep "^$bootstrap_key=" "$SIGMA_PROPS" | cut -d'=' -f2-)
+bootstraps_key="bootstrap.servers"
+bootstraps_value=$(grep "^$bootstrap_keys=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 CGROUP="CONSUMER-PERF-$TOPIC-$RANDOM"
 
 # Consume 4 million records
 docker run -v ${SIGMA_PROPS_DIR}:/mnt/config --rm --network=host confluentinc/cp-server:latest \
-     kafka-consumer-perf-test --bootstrap-server ${bootstrap_value} --threads $NUM_THREADS \
+     kafka-consumer-perf-test --bootstrap-servers ${bootstraps_value} --threads $NUM_THREADS \
      --messages 40000000 --consumer.config /mnt/config/sigma.properties --topic $TOPIC --print-metrics --group $CGROUP
 
 
