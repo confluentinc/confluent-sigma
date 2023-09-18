@@ -5,7 +5,7 @@
 # This script takes one argument.  The topic to get a record count from
 #
 # Argument 1 is the topic to read from
-# Argument 2 is the number of threads.
+# Argument 2 true or false as to whether to be verbose
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -19,7 +19,7 @@ if [ ! -f $SIGMA_PROPS ] ; then
   exit -1
 fi
 
-BOOTSTRAP_KEY="bootstrap.server"
+BOOTSTRAP_KEY="bootstrap.servers"
 BOOTSTRAP=$(grep "^$BOOTSTRAP_KEY=" "$SIGMA_PROPS" | cut -d'=' -f2-)
 
 KAFKA_SASL_USERNAME=$(grep -Eo "username='(.*?)'" "$SIGMA_PROPS"  | sed -E "s/username='//g")
