@@ -3,6 +3,10 @@ Confluent Sigma provides a way to leverage Confluent to identify anomalies on so
 sending to SIEM applications. Users can create Sigma Rules that are compared to real-time source data. When an anomaly 
 is found, the source data and Sigma Rule metadata will be published to a user defined topic.
 
+## Release
+
+Latest release is 1.3.0.  Release notes [here](release-notes-1.3.0.md)
+
 ![alt text](images/overview.png "Overview")
 
 ## What is Sigma?
