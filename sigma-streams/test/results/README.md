@@ -51,19 +51,27 @@ Using the command
 
 ### Results
 
-Average bytes per second 16,679,009.05
-Max bytes per second 16,826,161.52
-Min bytes per second 16,368,011.65
-Bytes Standard deviation 8,695,252.30
-Bytes range delta 458,149.87
+- Average bytes per second 16,679,009.05
+- Max bytes per second 16,826,161.52
+- Min bytes per second 16,368,011.65
+- Bytes Standard deviation 8,695,252.30
+- Bytes range delta 458,149.87
 
-Average records per second 447,867.86
-Max records per second 449,962.18
-Min records per second 444,872.97
-Records Standard deviation 93,042.65
-Records range delta 5,089.22
+- Average records per second 447,867.86
+- Max records per second 449,962.18
+- Min records per second 444,872.97
+- Records Standard deviation 93,042.65
+- Records range delta 5,089.22
 
 - %Cpu 93.5, 0.0 wa, App 795% CPU
+
+Note that when we split this test across 2 seperate ec2 instances each with 25 threads records
+per second was 881k. 
+
+Spreading the load across 3 ec2 instances each with 17 threads each we saw 1.3M 
+records per second.  Also note that with three ec2 instances total machine CPU utilization was observed to be 
+hovering around 93% .
+
 
 ## Test Case 2 (Simple 10 partitions)
 
