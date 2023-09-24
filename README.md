@@ -5,7 +5,7 @@ is found, the source data and Sigma Rule metadata will be published to a user de
 
 ## Release
 
-Latest release is 1.3.0.  Release notes [here](release-notes-1.3.0.md)
+Latest release is 1.3.0.  Release notes [here](docs/release-notes-1.3.0.md)
 
 ![alt text](images/overview.png "Overview")
 
