@@ -99,7 +99,7 @@ seen here:
 ## Confluent Sigma UI redone
 
 The user interface provided by the sigma-streams-ui module has been completely re-done.  It should still be considered
-a tool for developing and testing but its is great improved from the previous demo orietned one.  it would take forever 
+a tool for developing and testing but its is great improved from the previous demo oriented one.  it would take forever 
 to go through the improvements so its better to just see it yourself.  Nuff said!
 
 ## Remove null values
