@@ -96,6 +96,13 @@ seen here:
 }
 ```
 
+## Stop after first match
+
+In some scenarios you may potentially have thousands of sigma rules used to route data.  In this case you may not care
+how many runes or which ones match but instead that any of them match.  To support this we have added the ability to 
+stop matching rules after the first matching sigma rule.  To turn this on use `sigma.rule.first.match=true` in the
+configuration
+
 ## Confluent Sigma UI redone
 
 The user interface provided by the sigma-streams-ui module has been completely re-done.  It should still be considered
