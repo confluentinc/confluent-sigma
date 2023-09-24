@@ -108,6 +108,6 @@ In earlier versions serialization of matches or sigma rules that had no value fo
 a string value of `null`.  In this version there are no `null` fields but they are instead absent from the serialized 
 output.
 
-# Matched metric
++# Matched metric
 
 SigmaStreams now tracks how many records has matched its rules.
