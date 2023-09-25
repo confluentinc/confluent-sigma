@@ -19,97 +19,37 @@ Sigma is for log files what Snort is for network traffic and YARA is for files.
 
 https://github.com/SigmaHQ/sigma
 
-## Sigma Rules
 ![alt text](images/sigma_rule.png "Sigma Rule")
 
-## Sigma Field Mappings
+For more specifics on how sigma rules are applied in Confluent Sigma see [Sigma Rules](docs/sigma-rules.md)
 
-Sigma field mappings accept both Strings and JSON fields for comparison. Consider the following examples:
+## Modules
 
-### String Support:
-
-Field Mapping:
-```
-title: Splunk Zeek sourcetype mappings
-order: 20
-backends:
-  - splunk
-  - splunkxml
-  - corelight_splunk
-fieldmappings:
-  dst_ip: id.resp_h
-  dst_port: id.resp_p
-  network_protocol: proto
-```
-
-The above field mapping will successfully compare dst_port to a Sigma rule concerned with port 53 when source data looks like this:
-```
-{
-    "id.resp_h": "192.168.1.1",
-    "id.resp_p": 53,
-    "proto": "udp"
-}
-```
-
-The above field mapping will NOT compare dst_port to a Sigma rule concerned with port 53 when source data looks like this:
-```
-{
-    "id": {
-        "resp_h": "192.168.1.1",
-        "resp_p": 53,
-    },
-    "proto": "udp"
-}
-```
-
-### JSON Support:
-
-For nested JSON field comparisons, you MUST include a $. at the beginning of the field mapping, otherwise it will compare as a String.
-
-Field Mapping:
-```
-title: Splunk Zeek sourcetype mappings
-order: 20
-backends:
-  - splunk
-  - splunkxml
-  - corelight_splunk
-fieldmappings:
-  dst_ip: $.id.resp_h
-  dst_port: $.id.resp_p
-  network_protocol: proto
-```
-
-The above field mapping will successfully compare dst_port to a Sigma rule concerned with port 53 when source data looks like this:
-
-```
-{
-    "id": {
-        "resp_h": "192.168.1.1",
-        "resp_p": 53,
-    },
-    "proto": "udp"
-}
-```
-
-The above field mapping will NOT compare dst_port to a Sigma rule concerned with port 53 when source data looks like this:
-```
-{
-    "id.resp_h": "192.168.1.1",
-    "id.resp_p": 53,
-    "proto": "udp"
-}
-```
+Confluent Sigma is composed of three modules.  [sigma-parser](sigma-parser) is a library used to parse and interact with
+sigma rules in Java.  [sigma-streams-ui](sigma-streams-ui) provides a development oriented UI for interacting with 
+the sigma streams process.  It enables you to see what rules have been published, add new rules, edit existing rules,
+observe the status of running processors, and get a visualization of detections. The main module of the project is
+[sigma-streams](sigma-streams) which contains the actual stream processor and associated command line scripts.  Commands
+discussed here are found in [sigma-streams/bin](sigma-streams/bin).
 
 ## Getting Started
 
-Sigma rules are published to a Kafka topic that the Sigma Stream processory is subscribed to.  These rules are then appied to a stream of data in another topic that the Sigma Streams is also subscribed to.  Matching records are then published to a new topic.  All three topics are provided in the configuration. 
+Sigma rules are published to a Kafka topic that the Sigma Stream processor is subscribed to.  These rules are then 
+applied to a stream of data in another topic that the Sigma Streams is also subscribed to.  Matching records are then 
+published to a new topic.  All three topics are provided in the configuration. The output topic cam be overidden by 
+sigma rules allowing you to route to different topics based on rule.
+
 
 ### Sigma Rule Loading
-Sigma Rules are persisted to a user-defined topic or topics. The key is the title of the rule and the value is a
-stringified version of the YAML file.  Newly published sigma rules WILL be picked up by the running Sigma Streams processor.  If a rule with the same name as a previous rule is published it will replace it.
+
+Sigma Rules are persisted to a user-defined topic. The kafka record key for each record should be type string and set to
+the title field of the rule.  Ideally we would use the ID field in the sigma specification but this is not a required 
+field by the spec.  Since Confluent Sigma allows you to update sigma rules or remove them this means you cannot have
+two seperate sigma rules with the same title. Newly published sigma rules WILL be picked up by the running Sigma Streams 
+processor. 
 
 ### Sigma Rule Topic
+
 Ensure the sigma topic is created prior to adding sigma rules.  Here is an example topic creation command but note that in production scenarios you will want a minimum replication-factor of 3.  Number of required partiions are unlikely to need to be more than 1 since rules are will be relatively low (compared to real event data)
 
 `kafka-topics --bootstrap-server localhost:9092 --topic sigma_rules --replication-factor 1 --partitions 1 
@@ -120,13 +60,16 @@ Rules can be loaded into Kafka by using the SigmaRuleLoader application or via c
 ### Sigma Rule Loader Application
 ![alt text](images/rule_loader.png "Sigma Rule Loader")
 
+If you wish to load just a single file you can use the `-file` option.  If you wish to load all files under a directory
+use the `-dir` option.
+
 Example: 
 
-`sigma-rule-loader -bootStrapServer localhost:9092 -topic sigma-rules -file zeek_sigma_rule.yml`
+`sigma-rule-loader.sh -bootStrapServer localhost:9092 -topic sigma-rules -file zeek_sigma_rule.yml`
 
 or
 
-`sigma-rule-loader -bootStrapServer localhost:9092 -topic sigma-rules -dir zeek_sigma_rules`
+`sigma-rule-loader.sh -bootStrapServer localhost:9092 -topic sigma-rules -dir zeek_sigma_rules`
 
 
 ### Adding/Updating Sigma Rules via CLI
