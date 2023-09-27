@@ -38,20 +38,26 @@ def get_sigma_config_variables():
     cc_admin_path = None
 
     # Check for sigma.properties file in default paths
-    if os.path.isfile(os.path.expanduser("~/.config/" + SIGMA_PROPS_FILENAME)):
+    if os.path.isfile(os.path.expanduser("~/.sigma/" + SIGMA_PROPS_FILENAME)):
+        sigma_props_path = os.path.expanduser("~/.sigma/" + SIGMA_PROPS_FILENAME)
+    elif os.path.isfile(os.path.expanduser("~/.config/" + SIGMA_PROPS_FILENAME)):
         sigma_props_path = os.path.expanduser("~/.config/" + SIGMA_PROPS_FILENAME)
     elif os.path.isfile(os.path.expanduser("~/.confluent/" + SIGMA_PROPS_FILENAME)):
         sigma_props_path = os.path.expanduser("~/.confluent/" + SIGMA_PROPS_FILENAME)
-    elif os.path.isfile(os.path.expanduser("~/tmp/" + SIGMA_PROPS_FILENAME)):
-        sigma_props_path = os.path.expanduser("~/tmp/" + SIGMA_PROPS_FILENAME)
 
     # Check for sigma-cc-admin.properties file in default paths
+    if os.path.isfile(os.path.expanduser("~/.sigma/" + SIGMA_CC_ADMIN_FILENAME)):
+        cc_admin_path = os.path.expanduser("~/.sigma/" + SIGMA_CC_ADMIN_FILENAME)
     if os.path.isfile(os.path.expanduser("~/.config/" + SIGMA_CC_ADMIN_FILENAME)):
         cc_admin_path = os.path.expanduser("~/.config/" + SIGMA_CC_ADMIN_FILENAME)
     elif os.path.isfile(os.path.expanduser("~/.confluent/" + SIGMA_CC_ADMIN_FILENAME)):
         cc_admin_path = os.path.expanduser("~/.confluent/" + SIGMA_CC_ADMIN_FILENAME)
-    elif os.path.isfile(os.path.expanduser("~/tmp/" + SIGMA_CC_ADMIN_FILENAME)):
-        cc_admin_path = os.path.expanduser("~/tmp/" + SIGMA_CC_ADMIN_FILENAME)
+
+    if sigma_props_path == None:
+        raise Exception("Unable to find sigma properties")
+
+    if cc_admin_path == None:
+        raise Exception("Unable to find confluent cloud admin properties")
 
     return sigma_props_path, cc_admin_path
 
@@ -94,7 +100,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="retrieve bytes and record send data")
 
     # Required parameters
-    parser.add_argument("resourceId", help="topic you want a record count for")
+    parser.add_argument("resourceId", help="resource for the confluent cluster")
     parser.add_argument("topic", help="topic you want a record count for")
 
     args = parser.parse_args()
@@ -102,7 +108,7 @@ if __name__ == "__main__":
     config_paths = get_sigma_config_variables()
     sigma_cc_admin = config_paths[1]
 
-    if not os.path.isfile(sigma_cc_admin):
+    if sigma_cc_admin is None or not os.path.isfile(sigma_cc_admin):
         print("sigma cc admin properties not found.")
         exit(-1)
 
@@ -112,6 +118,8 @@ if __name__ == "__main__":
                 auth_token = line.split("=")[1].strip()
                 break
 
+    if auth_token is None:
+        raise Exception("Can't find rest.auth.token in file " + sigma_cc_admin)
 
     current_datetime = datetime.now(pytz.timezone("America/New_York"))
     offset = current_datetime.strftime("%z")
