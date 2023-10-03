@@ -35,14 +35,14 @@ public class SimpleTopologyViewer {
   public static void main(String[] args)
       throws IOException, InvalidSigmaRuleException, SigmaRuleParserException {
     Properties testProperties = new Properties();
-    testProperties.setProperty("bootstrap.server", "localhost:9092");
+    testProperties.setProperty("bootstrap.servers", "localhost:9092");
     testProperties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "test-simple");
     testProperties.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
     testProperties.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
     testProperties.setProperty("sigma.rules.topic", "rules");
     testProperties.setProperty("schema.registry", "localhost:8888");
-    testProperties.setProperty("output.topic", "test-output");
-    testProperties.setProperty("data.topic", "test-input");
+    testProperties.setProperty("output.topic", "output-topic");
+    testProperties.setProperty("data.topic", "input-topic");
 
 
     String testRule = "title: Simple Http\n"

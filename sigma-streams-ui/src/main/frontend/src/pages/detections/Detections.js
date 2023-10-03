@@ -41,6 +41,7 @@ export default function Detections(props) {
   var classes = useStyles();
   var theme = useTheme();
   //const [dnsData, setDnsData] = useState([]);
+  const SERVER_ENDPOINT = process.env.REACT_APP_SERVER_ENDPOINT;
   const [time, setTime] = useState((new Date().toLocaleTimeString()));
 
   const initializeChartData = () => {
@@ -61,11 +62,25 @@ export default function Detections(props) {
   useSubscription("/topic/dns", (dnsTopic) => {
     const newDNSData = JSON.parse(dnsTopic.body);
     
-    newDNSData.forEach(dns => {
-      dnsData.unshift(createData(formatTime(new Date()), JSON.stringify(dns)));
-    });
+    //newDNSData.forEach(dns => {
+    //  dnsData.unshift(createData(formatTime(new Date()), JSON.stringify(dns)));
+    // });
+    console.log("received dns data: " + newDNSData.length);
     dnsCounter += newDNSData.length;
   });
+
+  // const getDNSData = async () => {
+  //   try {
+  //       const newDNSData = await ((await fetch(SERVER_ENDPOINT +  `topicData/dns`)).json());
+        
+  //       newDNSData.forEach(dns => {
+  //         dnsData.unshift(createData(formatTime(new Date()), JSON.stringify(dns)));
+  //       });
+  //       dnsCounter += newDNSData.length;
+  //   } catch (err) {
+  //       console.log(err.message)
+  //   }
+  // }
 
   useSubscription("/topic/dns-detection", (dnsDetectionTopic) => {
     const newDNSDetectionData = JSON.parse(dnsDetectionTopic.body);
@@ -75,6 +90,20 @@ export default function Detections(props) {
     });
     dnsDetectionCounter += newDNSDetectionData.length;
   });
+
+  // const getDNSDetectionData = async () => {
+  //   try {
+  //       const newDNSDetectionData = await (await fetch(SERVER_ENDPOINT +  `topicData/dns-detection`)).json()
+            
+  //       newDNSDetectionData.forEach(detection => {
+  //         dnsDetectionData.unshift(createData(formatTime(new Date()), JSON.stringify(detection)));
+  //       });
+  //       dnsDetectionCounter += newDNSDetectionData.length;
+  //   } catch (err) {
+  //       console.log(err.message)
+  //   }
+  // }
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -86,6 +115,9 @@ export default function Detections(props) {
   }, []);
 
   useEffect(() => {
+    //getDNSData();
+    //getDNSDetectionData();
+
     var tableData = mainChartData;
     tableData.shift();
     console.log("current count:" + dnsCounter);

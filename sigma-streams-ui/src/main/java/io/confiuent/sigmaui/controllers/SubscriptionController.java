@@ -37,6 +37,9 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -47,6 +50,7 @@ import io.confiuent.sigmaui.config.SigmaUIProperties;
 import nonapi.io.github.classgraph.utils.StringUtils;
 
 @Controller
+@RestController
 public class SubscriptionController {
     private Map<String, List<JsonNode>> subscriptionData = Collections.synchronizedMap(new HashMap<>());
     private KafkaConsumer<String, String> consumer;
@@ -67,7 +71,6 @@ public class SubscriptionController {
  
         // create the containers for each subscription
         for (String topic : topicList) {
-            System.out.println("adding topic: " + topic);
             subscriptionData.put(topic, new ArrayList<>());
         }
 
@@ -78,19 +81,21 @@ public class SubscriptionController {
                 long lastSend = currentTime;
 
                 while (true) {
-                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(20));
+                    //System.out.println("num records: " + records.count());
                     for (ConsumerRecord<String, String> record : records) {
-                        System.out.printf("partition = %d, topic = %s, timestamp = %d, offset = %d, key = %s, value = %s\n",
-                                record.partition(), record.topic(), record.timestamp(), record.offset(), record.key(), record.value());
 
                         if (record.value() != null) {
                             try {
+                                
                                 List<JsonNode> dataList = subscriptionData.get(record.topic());
                                 dataList.add(mapper.readTree(record.value()));
                             
                                 // if the list is larger, send it right away
-                                if (dataList.size() > 100)
+                                //System.out.println("data list size: " + dataList.size());
+                                if (dataList.size() > 500) {
                                     sendBufferedData();
+                                }
                             } catch (JsonMappingException e) {
                                 e.printStackTrace();
                             } catch (JsonProcessingException e) {
@@ -102,7 +107,7 @@ public class SubscriptionController {
                     }
 
                     currentTime = System.currentTimeMillis();
-                    if ((currentTime - lastSend) >= 2000) {
+                    if ((currentTime - lastSend) >= 1000) {
                         lastSend = currentTime;
                         sendBufferedData();
                     }
@@ -110,15 +115,27 @@ public class SubscriptionController {
             }
         };
         thread.start();
-     }
+    }
+
+    @GetMapping({"topicData/{topic}"})
+    public List<JsonNode> getTopicData(@PathVariable String topic) {
+        List<JsonNode> dataList = new ArrayList<>();
+        synchronized (subscriptionData) {
+            dataList.addAll(subscriptionData.get(topic));
+            subscriptionData.get(topic).clear();
+        }
+
+        System.out.println("getTopicData topic : " + topic + " size: " + dataList.size());
+        return dataList;
+
+    }
 
     private void sendBufferedData() {
-        synchronized (subscriptionData) {
-            subscriptionData.forEach((topic, list) -> {
-                if (list.size() > 0)
-                    this.template.convertAndSend("/topic/" + topic, list);
-                    list.clear();
-            });
-        }
+        //System.out.println("sending buffered data");
+        subscriptionData.forEach((topic, list) -> {
+            if (list.size() > 0)
+               this.template.convertAndSend("/topic/" + topic, list);
+               list.clear();
+        });
     }
 }
