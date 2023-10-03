@@ -63,15 +63,14 @@ services:
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
       CONTROL_CENTER_MODE_ENABLE: "management"
 
-
-  sigma-streams:
+  sigma-zeek-dns-streams:
     image: streamingblocks/confluent-sigma:1.3.0
-    container_name: sigma-streams
+    container_name: sigma-zeek-dns-streams
     depends_on:
       - broker
-    hostname: sigma-streams
+    hostname: sigma-zeek-dns-streams
     environment:
-      application_id: 'sigma-streams-app'
+      application_id: 'zeek-dns-rules-streams-app'
       bootstrap_servers: 'broker:29092'
       schema_registry: 'http://schema-registry:8081'
       data_topic: 'dns'
@@ -80,6 +79,25 @@ services:
       sigma_rules_topic: 'sigma-rules'
       sigma_rule_filter_product: 'zeek'
       sigma_rule_filter_service: 'dns'
+    volumes:
+      - ./sigma:/tmp/config
+
+  sigma-splunk-cisco-asa-streams:
+    image: streamingblocks/confluent-sigma:1.3.0
+    container_name: sigma-splunk-cisco-asa-streams
+    depends_on:
+      - broker
+    hostname: sigma-splunk-cisco-asa-streams
+    environment:
+      application_id: 'splunk-cisco-asa-rules-streams-app'
+      bootstrap_servers: 'broker:29092'
+      schema_registry: 'http://schema-registry:8081'
+      data_topic: 'splunk-s2s-events'
+      output_topic: 'splunk-cisco-asa-detection'
+      field_mapping_file: '/tmp/config/splunk-zeek.yml'
+      sigma_rules_topic: 'sigma-rules'
+      sigma_rule_filter_product: 'splunk'
+      sigma_rule_filter_service: 'cisco:asa'
     volumes:
       - ./sigma:/tmp/config
 
@@ -96,6 +114,8 @@ services:
       schema_registry: 'http://schema-registry:8081'
       group_id: 'sigma-streams-ui'
       auto_offset.reset: 'latest'
+      enable.auto.commit: 'true'
+      max.poll.records: 5000
       key_deserializer: 'org.apache.kafka.common.serialization.StringDeserializer'
       value_deserializer: 'org.apache.kafka.common.serialization.StringDeserializer'
       topic_list: 'dns, dns-detection, splunk-s2s-events, firewalls'
@@ -112,4 +132,17 @@ services:
       - ./demo/data:/tmp/data
     command:
       - -c
-      - "trap 'exit 0' SIGTERM; while true; do kcat -P -b broker:29092 -t dns -l /tmp/data/dns.txt; usleep 200000; done"
+      - "trap 'exit 0' SIGTERM; while true; do kcat -P -b broker:29092 -t dns -l /tmp/data/dns_demo.txt; usleep 200000; done"
+ 
+  generate-splunk-data:
+    image: edenhill/kcat:1.7.1
+    container_name: generate-splunk-data
+    hostname: generate-splunk-data
+    entrypoint: bin/sh
+    depends_on:
+      - broker
+    volumes:
+      - ./demo/data:/tmp/data
+    command:
+      - -c
+      - "trap 'exit 0' SIGTERM; while true; do kcat -P -b broker:29092 -t splunk-s2s-events -l /tmp/data/splunk-s2s-demo.txt; usleep 200000; done"      

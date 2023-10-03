@@ -44,7 +44,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.confiuent.sigmaui.config.SigmaUIProperties;
-import nonapi.io.github.classgraph.utils.StringUtils;
 
 @Controller
 public class SubscriptionController {
@@ -80,17 +79,16 @@ public class SubscriptionController {
                 while (true) {
                     ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                     for (ConsumerRecord<String, String> record : records) {
-                        System.out.printf("partition = %d, topic = %s, timestamp = %d, offset = %d, key = %s, value = %s\n",
-                                record.partition(), record.topic(), record.timestamp(), record.offset(), record.key(), record.value());
-
                         if (record.value() != null) {
                             try {
                                 List<JsonNode> dataList = subscriptionData.get(record.topic());
                                 dataList.add(mapper.readTree(record.value()));
                             
                                 // if the list is larger, send it right away
-                                if (dataList.size() > 100)
+                                //System.out.println("data list size: " + dataList.size());
+                                if (dataList.size() > 500) {
                                     sendBufferedData();
+                                }
                             } catch (JsonMappingException e) {
                                 e.printStackTrace();
                             } catch (JsonProcessingException e) {
@@ -102,7 +100,7 @@ public class SubscriptionController {
                     }
 
                     currentTime = System.currentTimeMillis();
-                    if ((currentTime - lastSend) >= 2000) {
+                    if ((currentTime - lastSend) >= 1000) {
                         lastSend = currentTime;
                         sendBufferedData();
                     }

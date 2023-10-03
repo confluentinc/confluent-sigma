@@ -52,13 +52,18 @@ public class SimpleTopology extends SigmaBaseTopology {
 
     sigmaStream.flatMapValues(sourceData -> {
           List<DetectionResults> results = new ArrayList<>();
+
+          // iterate through all of the rules for this processor
           for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
             SigmaRule rule = entry.getValue();
 
             if (false == rule.getConditionsManager().hasAggregateCondition()) {
               logger.debug("check rule " + rule.getTitle());
+              
+              // metric for records processed
               streamManager.setRecordsProcessed(streamManager.getRecordsProcessed() + 1);
 
+              // validate the stream data against the rule
               if (ruleCheck.isValid(rule, sourceData, jsonPathConf)) {
                 results.add(buildResults(rule, sourceData));
 
@@ -71,8 +76,10 @@ public class SimpleTopology extends SigmaBaseTopology {
                     }
                 }
 
+                // metric for rule matches
                 streamManager.setNumMatches(streamManager.getNumMatches() + 1);
 
+                // return on first match or add all matches found
                 if (firstMatch)
                   break;
               }
@@ -80,7 +87,8 @@ public class SimpleTopology extends SigmaBaseTopology {
           }
           return results;
         })
-        .to(detectionTopicNameExtractor, Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+        .to(detectionTopicNameExtractor, 
+            Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
   }
 

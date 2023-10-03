@@ -29,7 +29,6 @@ import io.confluent.sigmarules.streams.StreamManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,7 +46,6 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     private Map<String, SigmaRule> sigmaRules = new HashMap<>();
     private SigmaRulesStore sigmaRulesStore;
     private SigmaRuleParser rulesParser;
-    private Properties properties;
     private StreamManager streamManager;
     private SigmaRuleFactoryObserver observer = null;
 
@@ -65,9 +63,7 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
     }
 
     private void initialize(Properties properties) {
-        this.properties = properties;
-
-        FieldMapper fieldMapFile = null;
+         FieldMapper fieldMapFile = null;
         try {
             if (properties.containsKey("field.mapping.file"))
                 fieldMapFile = new FieldMapper(properties.getProperty("field.mapping.file"));
@@ -260,9 +256,4 @@ public class SigmaRulesFactory implements SigmaRuleObserver {
 
     public String getRuleAsYaml(String title) { return sigmaRulesStore.getRuleAsYaml(title); }
 
-    private class InvalidRulesException extends RuntimeException {
-        public InvalidRulesException(String s) {
-            super(s);
-        }
-    }
 }

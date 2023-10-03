@@ -61,9 +61,9 @@ export default function Detections(props) {
   useSubscription("/topic/dns", (dnsTopic) => {
     const newDNSData = JSON.parse(dnsTopic.body);
     
-    newDNSData.forEach(dns => {
-      dnsData.unshift(createData(formatTime(new Date()), JSON.stringify(dns)));
-    });
+//    newDNSData.forEach(dns => {
+//      dnsData.unshift(createData(formatTime(new Date()), JSON.stringify(dns)));
+//    });
     dnsCounter += newDNSData.length;
   });
 
@@ -157,8 +157,8 @@ export default function Detections(props) {
                     dy={20}
                   />
                   <Tooltip />
-                  <Area type="monotone" dataKey="dnsCounter" stroke="#808080" strokeOpacity={0.2} fillOpacity={0.2} fill="#808080" />
-                  <Area type="monotone" dataKey="dnsDetectionCounter" stroke="#ff0000" strokeOpacity={0.2} fillOpacity={0.2} fill="#ff0000" />
+                  <Area type="monotone" dataKey="dnsCounter" name="Raw Counter" stroke="#808080" strokeOpacity={0.2} fillOpacity={0.2} fill="#808080" />
+                  <Area type="monotone" dataKey="dnsDetectionCounter" name="Detection Counter" stroke="#ff0000" strokeOpacity={0.2} fillOpacity={0.2} fill="#ff0000" />
                 </AreaChart>
               </ResponsiveContainer>
             </Widget>
@@ -167,9 +167,9 @@ export default function Detections(props) {
             <DataTable title="DNS Detection Data" topicData={dnsDetectionData}/>
           </Grid>
         </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
             <DataTable title="DNS Raw Data" topicData={dnsData}/>
-          </Grid>
+        </Grid> */}
      </>
   );
 }

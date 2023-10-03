@@ -21,11 +21,9 @@ package io.confluent.sigmarules.appState;
 
 import io.confluent.sigmarules.config.KcacheConfig;
 import io.confluent.sigmarules.config.SigmaPropertyEnum;
-import io.confluent.sigmarules.parsers.ParsedSigmaRule;
 import io.confluent.sigmarules.streams.SigmaStream;
 import io.kcache.*;
 
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.logging.log4j.LogManager;

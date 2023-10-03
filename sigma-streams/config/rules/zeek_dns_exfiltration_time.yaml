@@ -10,3 +10,6 @@ detection:
     query|re: ^.{60}.*$
   condition: query_length | count() > 10
   timeframe: 10s
+
+
+  

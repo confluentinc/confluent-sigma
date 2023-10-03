@@ -86,6 +86,10 @@ target/*
 logs
 **/*.backup.*
 **/*.back.*
+<<<<<<< HEAD
+=======
+**/static
+>>>>>>> sigma-ui-update
 
 node_modules
 bower_components
@@ -98,4 +102,6 @@ sketch
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+*.pcap
 

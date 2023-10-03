@@ -120,6 +120,7 @@ public class SigmaStream extends StreamManager {
         sigmaStream = builder.stream(inputTopic,
             Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
 
+            
         // simple rules
         SimpleTopology simpleTopology = new SimpleTopology();
         simpleTopology.createSimpleTopology(this, sigmaStream, ruleFactory, outputTopic,

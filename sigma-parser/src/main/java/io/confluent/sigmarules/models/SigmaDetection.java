@@ -70,9 +70,7 @@ public class SigmaDetection {
             return matchDetectionPattern(recordValue);
         } else {
             // this is a not condition, need to verify all values do not match
-            for (String detectionValue : detectionValues) {
-                if (matchDetectionPattern(recordValue)) return false;
-            }
+            if (matchDetectionPattern(recordValue)) return false;
         }
         return false;
     }
