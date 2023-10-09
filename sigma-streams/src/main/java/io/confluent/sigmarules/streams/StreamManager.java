@@ -45,6 +45,10 @@ public class StreamManager {
     private Integer numMatches = 0;
 
     public StreamManager(Properties properties) {
+        if (properties == null) {
+            throw new IllegalArgumentException("null properties not allowed");
+        }
+
         this.properties.putAll(properties);
         this.properties.put(StreamsConfig.APPLICATION_ID_CONFIG, properties.getProperty("application.id"));
         this.properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getProperty("bootstrap.servers"));
@@ -84,9 +88,7 @@ public class StreamManager {
             try {
                 if (future != null)
                     future.get();
-            } catch (InterruptedException e) {
-                logger.error(e);
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 logger.error(e);
             }
         } else {

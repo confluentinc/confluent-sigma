@@ -61,9 +61,7 @@ public class SigmaRulesFactoryTest  {
      * Load the test rules for this unit test
      */
     private void loadTestRules() {
-        SigmaOptions options = new SigmaOptions();
-        options.setProperties(getProperties());
-
+        SigmaOptions options = new SigmaOptions(getProperties());
         SigmaRuleLoader sigma = new SigmaRuleLoader(options);
         sigma.loadSigmaDirectory("config/rules");
     }
