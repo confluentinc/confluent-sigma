@@ -40,6 +40,12 @@ public class SigmaStreamsApp {
     // this will initialize using environment variable (i.e. from Docker)
     private void initializeWithEnv() {
         Properties properties = getPropertiesFromEnv();
+        SigmaOptions sigmaOptions = new SigmaOptions(properties);
+        if (!sigmaOptions.hasAllRequiredProperties(true))
+        {
+            logger.error("Missing required properties.  Exiting");
+            System.exit(-1);
+        }
         initializeWithProps(properties);
     }
 
@@ -73,8 +79,7 @@ public class SigmaStreamsApp {
         if (logger.getLevel().isLessSpecificThan(Level.INFO))
         {
             String message = "Passed in arguments: ";
-            for (int i = 0; i < args.length; i++)
-                message = message + args[i] + " ";
+            for (String arg : args) message = message + arg + " ";
             logger.log(Level.INFO, message);
         }
 

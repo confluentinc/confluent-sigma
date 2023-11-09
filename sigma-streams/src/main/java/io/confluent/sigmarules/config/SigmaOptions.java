@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package io.confluent.sigmarules.config;
 
 import java.io.FileInputStream;
@@ -34,39 +33,42 @@ public class SigmaOptions {
 
     private Properties properties = new Properties();
 
-    public SigmaOptions() {
+    /**
+     * Initialize SigmaOptions based on a pre-existing properties.
+     * @param properties already created properties for SigmaOptios
+     */
+    public SigmaOptions(Properties properties) {
+        setProperties(properties);
     }
 
     public SigmaOptions(String[] args) {
         parseArgs(args);
     }
 
-    private void setOptions(Options options) {
-        options.addOption("c", "config", true, "Path to properties file");
-        options.addOption("f", "file", true, "Path to sigma rule file.");
-        options.addOption("d", "dir", true, "Path to directory contain sigma rules.");
-        options.addOption("h", "headless", false,"If set then all required properties " +
+    private void setOptions(Options cmdLineOptions) {
+        cmdLineOptions.addOption("c", "config", true, "Path to properties file");
+        cmdLineOptions.addOption("f", "file", true, "Path to sigma rule file.");
+        cmdLineOptions.addOption("d", "dir", true, "Path to directory contain sigma rules.");
+        cmdLineOptions.addOption("h", "headless", false,"If set then all required properties " +
                 "must be available or else the application will exit with a help message.  In the absence of this " +
                 "option the application will interactively prompt for any required properties that are not present.");
-        options.addOption("?", "help", false, "Command line help");
+        cmdLineOptions.addOption("?", "help", false, "Command line help");
     }
 
-    public void parseArgs(String[] args) {
-        Options options = new Options();
-        setOptions(options);
+    private void parseArgs(String[] args) {
+        Options cmdLineOptions = new Options();
+        setOptions(cmdLineOptions);
 
         CommandLineParser parser = new DefaultParser();
         try {
-            CommandLine cmd = parser.parse(options, args);
+            CommandLine cmd = parser.parse(cmdLineOptions, args);
             if (cmd.hasOption("c")) {
                 InputStream input = new FileInputStream(cmd.getOptionValue("c"));
                 properties.load(input);
             }
-            if (!hasAllRequiredProperties()) {
+            if (!hasAllRequiredProperties(false)) {
                 if (cmd.hasOption("h")) {
-                    HelpFormatter formatter = new HelpFormatter();
-                    formatter.printHelp("sigma_app", options, true);
-                    System.exit(0);
+                    printHelpAndExit(cmdLineOptions);
                 } else interrogateProperties();
             }
         } catch (Exception e) {
@@ -75,11 +77,29 @@ public class SigmaOptions {
         }
     }
 
-    private boolean hasAllRequiredProperties()
+    private void printHelpAndExit(Options options) {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("sigma_app", options, true);
+        System.exit(0);
+    }
+
+    /**
+     * Check to see if all required properties are present.
+     * @param logMissingRequirements if true then log missing requirements
+     * @return true if all required properies are present in properties object
+     */
+    public boolean hasAllRequiredProperties(boolean logMissingRequirements)
     {
         for (SigmaPropertyEnum sigmaProp: SigmaPropertyEnum.values())
             if (sigmaProp.isRequired())
-                if (properties.getProperty(sigmaProp.getName()) == null) return false;
+                if (properties.getProperty(sigmaProp.getName()) == null)
+                {
+                    if (logMissingRequirements)
+                    {
+                        logger.error("Missing required property " + sigmaProp.getName());
+                    }
+                    return false;
+                }
 
         return true;
     }
@@ -114,16 +134,8 @@ public class SigmaOptions {
 
     public String getProperty(String property) throws IllegalArgumentException {
         if (!properties.containsKey(property)) {
-            logger.fatal("Properties file does not contain " + property);
-            throw new IllegalArgumentException(property + " not in properties file");
+            logger.warn("Properties file does not contain " + property);
         }
-
         return properties.getProperty(property);
-    }
-
-    public static void main(String[] args)
-    {
-        SigmaOptions options = new SigmaOptions();
-        options.parseArgs(args);
     }
 }

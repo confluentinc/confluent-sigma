@@ -98,8 +98,7 @@ public class SigmaRuleLoader {
                 Properties properties = new Properties();
                 properties.load(input);
 
-                SigmaOptions sigmaOptions = new SigmaOptions();
-                sigmaOptions.setProperties(properties);
+                SigmaOptions sigmaOptions = new SigmaOptions(properties);
 
                 SigmaRuleLoader sigma = new SigmaRuleLoader(sigmaOptions);
                 if(cmd.hasOption("f")) {
