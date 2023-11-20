@@ -1,4 +1,4 @@
-# Confluent Sigma
+<img style="center;" src="images/confluent-sigma-logo.png">
 Confluent Sigma provides a way to leverage Confluent to identify anomalies on source data with Kafka Streams prior to 
 sending to SIEM applications. Users can create Sigma Rules that are compared to real-time source data. When an anomaly 
 is found, the source data and Sigma Rule metadata will be published to a user defined topic.
@@ -39,6 +39,10 @@ applied to a stream of data in another topic that the Sigma Streams is also subs
 published to a new topic.  All three topics are provided in the configuration. The output topic cam be overidden by 
 sigma rules allowing you to route to different topics based on rule.
 
+![alt text](images/topologies.png "Topologies")
+![alt text](images/simple-topology.png "Simple Topology")
+![alt text](images/aggregate-topology.png "Aggregate Topology")
+![alt text](images/detection-results.png "Detection Results")
 
 ### Sigma Rule Loading
 
