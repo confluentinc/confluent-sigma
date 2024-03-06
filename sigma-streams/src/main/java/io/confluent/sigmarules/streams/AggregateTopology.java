@@ -51,6 +51,7 @@ public class AggregateTopology extends SigmaBaseTopology {
         SigmaRulesFactory ruleFactory, String outputTopic, Configuration jsonPathConf) {
 
         final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
+        setDefaultOutputTopic(outputTopic);
 
         // iterate through all of the rules for this processor
         for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
@@ -99,7 +100,7 @@ public class AggregateTopology extends SigmaBaseTopology {
                     streamManager.setNumMatches(streamManager.getNumMatches() + 1);
                     return new KeyValue<>("", buildResults(value.getRule(), value.getSourceData()));
                 })
-                .to(outputTopic,
+                .to(detectionTopicNameExtractor,
                     Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
             }
