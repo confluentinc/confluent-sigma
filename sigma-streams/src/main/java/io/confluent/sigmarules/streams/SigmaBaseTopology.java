@@ -1,6 +1,9 @@
 package io.confluent.sigmarules.streams;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaDetection;
 import io.confluent.sigmarules.models.SigmaDetections;
@@ -9,8 +12,6 @@ import io.confluent.sigmarules.models.SigmaRule;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.kafka.streams.processor.TopicNameExtractor;
 
 public class SigmaBaseTopology {
 
@@ -22,15 +23,22 @@ public class SigmaBaseTopology {
 
     protected DetectionResults buildResults(SigmaRule rule, JsonNode sourceData) {
         DetectionResults results = new DetectionResults();
-        results.setSourceData(sourceData);
-        Map<String, String> customFields = new HashMap<>();
 
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            results.setSourceData(mapper.writeValueAsString(sourceData));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        
+        Map<String, String> customFields = new HashMap<>();
+        
         // check rule factory conditions manager for aggregate condition
         // and set it metadata
         if (rule != null) {
-            results.getSigmaMetaData().setId(rule.getId());
-            results.getSigmaMetaData().setTitle(rule.getTitle());
-            results.getSigmaMetaData().setOutputTopic(defaultOutputTopic);
+            results.setId(rule.getId());
+            results.setTitle(rule.getTitle());
+            results.setOutputTopic(defaultOutputTopic);
 
             // if this is a regular expression, add the group fields
             for (Map.Entry<String,SigmaDetections> detections : rule.getDetectionsManager().getAllDetections().entrySet()) {
@@ -45,7 +53,7 @@ public class SigmaBaseTopology {
             // add any custom fields
             if (rule.getKafkaRule() != null) {
                 if (rule.getKafkaRule().getOutputTopic() != null) {
-                    results.getSigmaMetaData().setOutputTopic(rule.getKafkaRule().getOutputTopic());
+                    results.setOutputTopic(rule.getKafkaRule().getOutputTopic());
                 }
 
                 for (Map.Entry<String,String> field : rule.getKafkaRule().getCustomFields().entrySet()) {
@@ -54,7 +62,7 @@ public class SigmaBaseTopology {
             }
 
             if (customFields.size() > 0) {
-                results.getSigmaMetaData().setCustomFields(customFields);
+                results.setCustomFields(customFields);
             }
         }
 
@@ -64,6 +72,4 @@ public class SigmaBaseTopology {
         return results;
     }
 
-    final TopicNameExtractor<String, DetectionResults> detectionTopicNameExtractor =
-        (key, results, recordContext) -> results.getSigmaMetaData().getOutputTopic();
 }

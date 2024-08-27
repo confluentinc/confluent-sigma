@@ -17,7 +17,7 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.streams;
+package io.confluent.sigmarules.streams.aggregate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;

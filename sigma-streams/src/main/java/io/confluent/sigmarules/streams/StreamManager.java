@@ -36,6 +36,12 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde;
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
+import io.confluent.sigmarules.config.SigmaPropertyEnum;
+import io.confluent.sigmarules.config.TopicFormatEnum;
+
 public class StreamManager {
     final static Logger logger = LogManager.getLogger(StreamManager.class.getName());
 
@@ -43,6 +49,11 @@ public class StreamManager {
     private AdminClient client = null;
     private Integer recordsProcessed = 0;
     private Integer numMatches = 0;
+    protected String inputTopic;
+    protected String outputTopic;
+    protected TopicFormatEnum inputFormat = TopicFormatEnum.JSON;
+    protected TopicFormatEnum outputFormat = TopicFormatEnum.JSON;
+    protected Boolean firstMatch;
 
     public StreamManager(Properties properties) {
         if (properties == null) {
@@ -53,14 +64,58 @@ public class StreamManager {
         this.properties.put(StreamsConfig.APPLICATION_ID_CONFIG, properties.getProperty("application.id"));
         this.properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getProperty("bootstrap.servers"));
         this.properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        this.properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
-        this.properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+        this.properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
+        this.properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, GenericAvroSerde.class);
         this.properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
+
+        this.firstMatch = Boolean.valueOf(
+            properties.getProperty(SigmaPropertyEnum.SIGMA_RULE_FIRST_MATCH.toString()));
+
+        setTopicProperties();
 
         try {
             client = AdminClient.create(this.properties);
         } catch (KafkaException e) {
             logger.error(e);
+        }
+
+    }
+
+    public String getInputTopic() {
+        return inputTopic;
+    }
+
+    public String getOutputTopic() {
+        return outputTopic;
+    }
+
+    public TopicFormatEnum getInputFormat() {
+        return inputFormat;
+    }
+
+    public TopicFormatEnum getOutputFormat() {
+        return outputFormat;
+    }
+
+    public Boolean getFirstMatch() {
+        return firstMatch;
+    }
+
+    private void setTopicProperties() {
+        this.outputTopic = properties.getProperty(SigmaPropertyEnum.OUTPUT_TOPIC.toString());
+        this.inputTopic = properties.getProperty(SigmaPropertyEnum.DATA_TOPIC.toString());
+
+        if (properties.getProperty("data.topic.format").toUpperCase().matches("AVRO")) {
+            inputFormat = TopicFormatEnum.AVRO;
+        }
+
+        if (properties.getProperty("output.topic.format").toUpperCase().matches("AVRO")) {
+            outputFormat = TopicFormatEnum.AVRO;
+        }
+
+        if ((inputFormat == TopicFormatEnum.AVRO) || (outputFormat == TopicFormatEnum.AVRO)) {
+            // TODO: throw exception if schema.registry.url is not set    
+            this.properties.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, properties.getProperty("schema.registry"));
         }
 
     }

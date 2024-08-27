@@ -1,0 +1,13 @@
+{
+  "namespace": "io.confluent.sigmarules.models",
+  "type": "record",
+  "name": "DetectionResultsAvro",
+  "fields": [
+    {"name": "timeStamp", "type": "long"},
+    {"name": "title", "type": "string"},
+    {"name": "id", "type": ["null", "string"]},
+    {"name": "outputTopic", "type": "string"},
+    {"name": "sourceData", "type": "string"},
+    {"name": "customFields", "type": ["null", {"type": "map", "values": "string", "default": {}}], "default": null}
+  ]
+}

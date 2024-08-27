@@ -17,7 +17,7 @@
  * under the License.    
  */
 
-package io.confluent.sigmarules.streams;
+package io.confluent.sigmarules.streams.aggregate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.Configuration;
@@ -27,6 +27,9 @@ import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.AggregateParser;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
+import io.confluent.sigmarules.streams.SigmaBaseTopology;
+import io.confluent.sigmarules.streams.StreamManager;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,9 +101,9 @@ public class AggregateTopology extends SigmaBaseTopology {
                     // metric for rule matches
                     streamManager.setNumMatches(streamManager.getNumMatches() + 1);
                     return new KeyValue<>("", buildResults(value.getRule(), value.getSourceData()));
-                })
-                .to(outputTopic,
-                    Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
+                });
+//                .to(outputTopic,
+ //                   Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
 
             }
         }
