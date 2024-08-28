@@ -110,7 +110,7 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"foo\" : \"abc\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"bc\"}");
@@ -150,12 +150,12 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"foo\" : \"abcdef123456\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"fooabcdef123456foo\"}");
         results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"ab123\"}");
@@ -196,17 +196,17 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"foo\" : \"abcd\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"abc123\"}");
         results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"1234\"}");
         results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"empty\"}");
@@ -244,7 +244,7 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"EventLog\" : \"Security\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"abc123\"}");
@@ -284,7 +284,7 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"EventLog\" : \"Security\", \"EventID\" : \"517\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
     }
@@ -330,14 +330,14 @@ public class SimpleStreamTest {
         // Should be 2 matches (titles)
         inputTopic.pipeInput("{\"foo\" : \"abc\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        logger.info("title: " + results.getSigmaMetaData().getTitle());
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        logger.info("title: " + results.getTitle());
+        assertTrue(results.getTitle().equals("Another Simple Http") ||
+            results.getTitle().equals("Simple Http"));
 
         results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        logger.info("title: " + results.getSigmaMetaData().getTitle());
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        logger.info("title: " + results.getTitle());
+        assertTrue(results.getTitle().equals("Another Simple Http") ||
+            results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         // Should be empty
@@ -390,9 +390,9 @@ public class SimpleStreamTest {
         // Should be 1 matche (titles)
         inputTopic.pipeInput("{\"foo\" : \"abc\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        logger.info("title: " + results.getSigmaMetaData().getTitle());
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        logger.info("title: " + results.getTitle());
+        assertTrue(results.getTitle().equals("Another Simple Http") ||
+            results.getTitle().equals("Simple Http"));
 
         // Should not contain other rules with first match set
         assertTrue(outputTopic.isEmpty());
@@ -437,7 +437,7 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"Event\": {\"System\": {\"EventLog\" : \"Security\", \"EventID\" : \"517\"}}}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
     }
 
@@ -475,7 +475,7 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"Event.System.EventLog\" : \"Security\", \"Event.System.EventID\" : \"517\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
     }
 
@@ -513,7 +513,7 @@ public class SimpleStreamTest {
 
         inputTopic.pipeInput("{\"Event\": {\"System\": {\"EventLog\" : \"Security\"}}}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
     }
 
@@ -559,7 +559,7 @@ public class SimpleStreamTest {
                 "  \"resp\": \"192.168.1.1\"\n" +
                 "}\n");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple DNS"));
+        assertTrue(results.getTitle().equals("Simple DNS"));
         assertTrue(outputTopic.isEmpty());
     }
 
@@ -605,7 +605,7 @@ public class SimpleStreamTest {
                 "  \"resp\": \"192.168.1.1\"\n" +
                 "}\n");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple DNS"));
+        assertTrue(results.getTitle().equals("Simple DNS"));
         assertTrue(outputTopic.isEmpty());
     }
 }

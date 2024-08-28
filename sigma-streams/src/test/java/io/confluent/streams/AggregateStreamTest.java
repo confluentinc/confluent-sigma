@@ -113,7 +113,7 @@ public class AggregateStreamTest {
         inputTopic.pipeInput("{\"foo\" : \"abcde\"}");
         inputTopic.pipeInput("{\"foo\" : \"abcde\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
 
         assertTrue(outputTopic.isEmpty());
 
@@ -171,17 +171,17 @@ public class AggregateStreamTest {
 
         // Should be 1 match (titles)
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         inputTopic.pipeInput("{\"foo\" : \"abcde\"}");
         // Should be 2 matches
         results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Another Simple Http") ||
+            results.getTitle().equals("Simple Http"));
         results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Another Simple Http") ||
-            results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Another Simple Http") ||
+            results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         // Should be empty

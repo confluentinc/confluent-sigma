@@ -28,6 +28,7 @@ import io.confluent.sigmarules.appState.SigmaAppInstanceStore;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleFactoryObserver;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
+import io.confluent.sigmarules.streams.aggregate.AggregateTopology;
 import io.confluent.sigmarules.streams.simple.SimpleTopology;
 import java.util.*;
 
@@ -107,13 +108,9 @@ public class SigmaStream extends StreamManager {
         SimpleTopology simpleTopology = new SimpleTopology(this, ruleFactory, jsonPathConf);
         simpleTopology.createSimpleTopology(builder);
 
-
-/*        
         // aggregate rules
-        AggregateTopology aggregateTopology = new AggregateTopology();
-        aggregateTopology.createAggregateTopology(this, sigmaStream, ruleFactory, outputTopic,
-            jsonPathConf);
-*/
+        AggregateTopology aggregateTopology = new AggregateTopology(this, ruleFactory, jsonPathConf);
+        aggregateTopology.createTopology(builder);
 
         return builder.build();
     }

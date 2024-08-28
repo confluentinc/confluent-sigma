@@ -25,6 +25,7 @@ import io.confluent.sigmarules.models.AggregateValues;
 import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.parsers.AggregateParser;
+import io.confluent.sigmarules.processor.SigmaProcessorManager;
 import io.confluent.sigmarules.rules.SigmaRuleCheck;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
 import io.confluent.sigmarules.streams.SigmaBaseTopology;
@@ -37,10 +38,10 @@ import java.util.Map;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.SlidingWindows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,65 +49,89 @@ import org.apache.logging.log4j.Logger;
 public class AggregateTopology extends SigmaBaseTopology {
     final static Logger logger = LogManager.getLogger(AggregateTopology.class);
 
-    private final SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
+    private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
+    private StreamManager streamManager;
+    private SigmaRulesFactory ruleFactory;
+    private Configuration jsonPathConf;
+    private final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
 
-    public void createAggregateTopology(StreamManager streamManager, KStream<String, JsonNode> sigmaStream,
-        SigmaRulesFactory ruleFactory, String outputTopic, Configuration jsonPathConf) {
+    public AggregateTopology(StreamManager streamManager, SigmaRulesFactory ruleFactory, 
+    Configuration jsonPathConf) {
+      this.streamManager = streamManager;
+      this.ruleFactory = ruleFactory;
+      this.jsonPathConf = jsonPathConf;
+  
+      setDefaultOutputTopic(streamManager.getOutputTopic());
+    }
+  
+    public void createTopology(StreamsBuilder builder) {
+        SigmaProcessorManager processorManager = new SigmaProcessorManager(streamManager);
 
-        final Serde<AggregateResults> aggregateSerde = AggregateResults.getJsonSerde();
+        // add the source processor
+        KStream<String, JsonNode> sigmaStream = processorManager.addSourceProcessor(builder);
 
         // iterate through all of the rules for this processor
         for (Map.Entry<String, SigmaRule> entry : ruleFactory.getSigmaRules().entrySet()) {
             SigmaRule rule = entry.getValue();
+
             if (rule.getConditionsManager().hasAggregateCondition()) {
-                // metric for records processed
-                streamManager.setRecordsProcessed(streamManager.getRecordsProcessed() + 1);
-                Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
+                // process the data as JSON
+                KStream<String, DetectionResults> detectionStream = 
+                    processSourceData(sigmaStream, rule);
 
-                sigmaStream.flatMap((key, sourceData) -> {
-                    List<KeyValue<String, AggregateResults>> results = new ArrayList<>();
-                    logger.debug("check rule " + rule.getTitle());
-                    SigmaRule currentRule = ruleFactory.getRule(rule.getTitle());
-                    
-                    // validate the stream data against the rule
-                    if (ruleCheck.isValid(currentRule, sourceData, jsonPathConf)) {
-                        AggregateResults aggResults = new AggregateResults();
-                        aggResults.setRule(currentRule);
-                        aggResults.setSourceData(sourceData);
-                        results.add(new KeyValue<>(updateKey(currentRule, sourceData), aggResults));
-                    }
-                    return results;
-                })
-                .selectKey((k, sourceData) -> updateKey(sourceData.getRule(),
-                    sourceData.getSourceData()))
-                .groupByKey(Grouped.with(
-                    Serdes.String(), /* key */
-                    aggregateSerde))
-                .windowedBy(
-                    SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(windowTimeMS),
-                        Duration.ofMillis(windowTimeMS)))
-                .aggregate(
-                    () -> new AggregateResults(),
-                    (key, source, aggregate) -> {
-                        aggregate.setRule(source.getRule());
-                        aggregate.setSourceData(source.getSourceData());
-                        aggregate.setCount(aggregate.getCount() + 1);
-                        return aggregate;
-                    },
-                    Materialized.with(Serdes.String(), aggregateSerde)
-                )
-                .toStream()
-                .filter((k, results) -> doStreamFiltering(results.getRule(), results))
-                .map((key, value) -> {
-                    // metric for rule matches
-                    streamManager.setNumMatches(streamManager.getNumMatches() + 1);
-                    return new KeyValue<>("", buildResults(value.getRule(), value.getSourceData()));
-                });
-//                .to(outputTopic,
- //                   Produced.with(Serdes.String(), DetectionResults.getJsonSerde()));
-
+                // add the sink processor
+                processorManager.addSinkProcessor(detectionStream);
             }
         }
+    }
+
+    public KStream<String, DetectionResults> processSourceData(KStream<String, JsonNode> sigmaStream, SigmaRule rule) {
+        Long windowTimeMS = rule.getDetectionsManager().getWindowTimeMS();
+
+        KStream<String, DetectionResults> detectionStream = sigmaStream.flatMap((key, sourceData) -> {
+                // metric for records processed
+                streamManager.setRecordsProcessed(streamManager.getRecordsProcessed() + 1);
+
+                List<KeyValue<String, AggregateResults>> results = new ArrayList<>();
+                logger.debug("check rule " + rule.getTitle());
+                SigmaRule currentRule = ruleFactory.getRule(rule.getTitle());
+                
+                // validate the stream data against the rule
+                if (ruleCheck.isValid(currentRule, sourceData, jsonPathConf)) {
+                    AggregateResults aggResults = new AggregateResults();
+                    aggResults.setRule(currentRule);
+                    aggResults.setSourceData(sourceData);
+                    results.add(new KeyValue<>(updateKey(currentRule, sourceData), aggResults));
+                }
+                return results;
+            })
+            .selectKey((k, sourceData) -> updateKey(sourceData.getRule(),
+                sourceData.getSourceData()))
+            .groupByKey(Grouped.with(
+                Serdes.String(), /* key */
+                aggregateSerde))
+            .windowedBy(
+                SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMillis(windowTimeMS),
+                    Duration.ofMillis(windowTimeMS)))
+            .aggregate(
+                () -> new AggregateResults(),
+                (key, source, aggregate) -> {
+                    aggregate.setRule(source.getRule());
+                    aggregate.setSourceData(source.getSourceData());
+                    aggregate.setCount(aggregate.getCount() + 1);
+                    return aggregate;
+                },
+                Materialized.with(Serdes.String(), aggregateSerde)
+            )
+            .toStream()
+            .filter((k, results) -> doStreamFiltering(results.getRule(), results))
+            .map((key, value) -> {
+                // metric for rule matches
+                streamManager.setNumMatches(streamManager.getNumMatches() + 1);
+                return new KeyValue<>("", buildResults(value.getRule(), value.getSourceData()));
+            });
+
+        return detectionStream;
     }
 
     public AggregateResults updateValues(AggregateResults results) {

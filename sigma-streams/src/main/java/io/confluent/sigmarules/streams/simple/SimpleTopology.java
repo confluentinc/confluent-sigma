@@ -44,11 +44,10 @@ import org.apache.logging.log4j.Logger;
 public class SimpleTopology extends SigmaBaseTopology {
     private static final long MINUTE_IN_MILLIS = 60 * 1000;
     final static Logger logger = LogManager.getLogger(SimpleTopology.class);
-
-    private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
     private long matches = 0;
     private long lastCallTime = 0;
   
+    private SigmaRuleCheck ruleCheck = new SigmaRuleCheck();
     private StreamManager streamManager;
     private SigmaRulesFactory ruleFactory;
     private Configuration jsonPathConf;
@@ -65,17 +64,15 @@ public class SimpleTopology extends SigmaBaseTopology {
     public void createSimpleTopology(StreamsBuilder builder) {
       SigmaProcessorManager processorManager = new SigmaProcessorManager(streamManager);
 
-      // create the source processor
-      SourceProcessor sourceProcessor = processorManager.getSourceProcessor();
-      KStream<String, JsonNode> sigmaStream = sourceProcessor.createSourceProcessor(builder, streamManager.getInputTopic());
+      // add the source processor
+      KStream<String, JsonNode> sigmaStream = processorManager.addSourceProcessor(builder);
 
       // process the data as JSON
       KStream<String, DetectionResults> detectionStream = 
         sigmaStream.flatMapValues(sourceData -> processSourceData(sourceData));
 
-      // create the sink processor
-      SinkProcessor sinkProcessor = processorManager.getSinkProcessor();
-      sinkProcessor.addSinkProcessor(detectionStream);
+      // add the sink processor
+      processorManager.addSinkProcessor(detectionStream);
   
     }
 

@@ -1,6 +1,12 @@
 package io.confluent.sigmarules.processor;
 
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.KStream;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
 import io.confluent.sigmarules.config.TopicFormatEnum;
+import io.confluent.sigmarules.models.DetectionResults;
 import io.confluent.sigmarules.processor.avro.AvroSinkProcessor;
 import io.confluent.sigmarules.processor.avro.AvroSourceProcessor;
 import io.confluent.sigmarules.processor.json.JsonSinkProcessor;
@@ -30,5 +36,13 @@ public class SigmaProcessorManager {
         } else {
             return new JsonSinkProcessor();
         }
+    }
+
+    public KStream<String, JsonNode> addSourceProcessor(StreamsBuilder builder) {
+        return getSourceProcessor().createSourceProcessor(builder, streamManager.getInputTopic());
+    }
+
+    public void addSinkProcessor(KStream<String, DetectionResults> detectionStream) {
+        getSinkProcessor().addSinkProcessor(detectionStream);
     }
 }
