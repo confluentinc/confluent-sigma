@@ -105,12 +105,14 @@ public class StreamManager {
         this.outputTopic = properties.getProperty(SigmaPropertyEnum.OUTPUT_TOPIC.toString());
         this.inputTopic = properties.getProperty(SigmaPropertyEnum.DATA_TOPIC.toString());
 
-        if (properties.getProperty("data.topic.format").toUpperCase().matches("AVRO")) {
-            inputFormat = TopicFormatEnum.AVRO;
+        if (null != properties.getProperty("data.topic.format") &&
+            properties.getProperty("data.topic.format").toUpperCase().matches("AVRO")) {
+            this.inputFormat = TopicFormatEnum.AVRO;
         }
 
-        if (properties.getProperty("output.topic.format").toUpperCase().matches("AVRO")) {
-            outputFormat = TopicFormatEnum.AVRO;
+        if (null != properties.getProperty("output.topic.format") &&
+            properties.getProperty("output.topic.format").toUpperCase().matches("AVRO")) {
+            this.outputFormat = TopicFormatEnum.AVRO;
         }
 
         if ((inputFormat == TopicFormatEnum.AVRO) || (outputFormat == TopicFormatEnum.AVRO)) {
