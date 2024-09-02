@@ -52,8 +52,6 @@ public class SimpleStreamTest {
     private TestOutputTopic<String, String> outputTopic;
     private ObjectMapper objectMapper = new ObjectMapper();
 
-
-
     Properties getProperties() {
         Properties testProperties = new Properties();
         //TODO should be bootstrap.serverS -- use defined variable in place of string
