@@ -17,18 +17,27 @@
  * under the License.    
  */
 
+
+// NOTE: Any changes to this class, should also be reflected in the
+// AVRO file located in the resources folder
+
 package io.confluent.sigmarules.models;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
+import io.confluent.kafka.streams.serdes.avro.GenericAvroDeserializer;
+import io.confluent.kafka.streams.serdes.avro.GenericAvroSerializer;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
@@ -37,23 +46,52 @@ import org.apache.kafka.common.serialization.Serializer;
 @JsonInclude(Include.NON_NULL)
 public class DetectionResults {
     private Long timeStamp = 0L;
-    @JsonUnwrapped
-    private RuleResults sigmaMetaData = new RuleResults();
-    private JsonNode sourceData;
+    private String title;
+    private String id;
+    private String outputTopic;
+    private Map<String, String> customFields = new HashMap<>();
+    private String sourceData;
 
-    public RuleResults getSigmaMetaData() {
-        return sigmaMetaData;
+    public String getTitle() {
+        return title;
+    }
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public void setSigmaMetaData(RuleResults sigmaMetaData) {
-        this.sigmaMetaData = sigmaMetaData;
+    public String getOutputTopic() {
+        return outputTopic;
     }
 
-    public JsonNode getSourceData() {
+    public void setOutputTopic(String outputTopic) {
+        this.outputTopic = outputTopic;
+    }
+
+    @JsonAnyGetter 
+    public Map<String, String> getCustomFields() {
+        return customFields;
+    }
+
+    @JsonAnySetter 
+    public void addCustomField(String key, String value) {
+        this.customFields.put(key, value); 
+    }
+
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
+    }
+
+    public String getSourceData() {
         return sourceData;
     }
 
-    public void setSourceData(JsonNode sourceData) {
+    public void setSourceData(String sourceData) {
         this.sourceData = sourceData;
     }
 
@@ -97,5 +135,17 @@ public class DetectionResults {
         detectionDes.configure(serdeProps, false);
         return Serdes.serdeFrom(detectionSer, detectionDes);
     }
+
+    public static Serde<GenericRecord> getAvroSerde(){
+        Map<String, Object> serdeProps = new HashMap<>();
+        serdeProps.put("schema.registry.url", "http://localhost:8081");
+        final Serializer<GenericRecord> detectionSer = new GenericAvroSerializer();
+        detectionSer.configure(serdeProps, false);
+
+        final Deserializer<GenericRecord> detectionDes = new GenericAvroDeserializer();
+        detectionDes.configure(serdeProps, false);
+        return Serdes.serdeFrom(detectionSer, detectionDes);
+    }
+
 
 }

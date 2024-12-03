@@ -126,11 +126,11 @@ public class KafkaRuleTest {
 
         inputTopic.pipeInput("{\"foo\" : \"abc\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http"));
+        assertTrue(results.getTitle().equals("Simple Http"));
         assertTrue(outputTopic.isEmpty());
 
         DetectionResults kafkaResults = objectMapper.readValue(outputKafkaTopic.readValue(), DetectionResults.class);
-        assertTrue(kafkaResults.getSigmaMetaData().getTitle().equals("Simple Http Kafka"));
+        assertTrue(kafkaResults.getTitle().equals("Simple Http Kafka"));
         assertTrue(outputKafkaTopic.isEmpty());
 
     }

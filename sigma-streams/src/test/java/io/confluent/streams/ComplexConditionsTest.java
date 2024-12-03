@@ -115,7 +115,7 @@ public class ComplexConditionsTest {
 
         inputTopic.pipeInput("{\"text\" : \"abc\", \"number\" : \"123\"}");
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http Kafka"));
+        assertTrue(results.getTitle().equals("Simple Http Kafka"));
         assertTrue(outputTopic.isEmpty());
 
     }
@@ -165,7 +165,7 @@ public class ComplexConditionsTest {
         // add some valid data
         inputTopic.pipeInput(dataInput);
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http Kafka"));
+        assertTrue(results.getTitle().equals("Simple Http Kafka"));
         assertTrue(outputTopic.isEmpty());
 
         // add some invalid data
@@ -224,8 +224,8 @@ public class ComplexConditionsTest {
         // add some valid data
         inputTopic.pipeInput(dataInput);
         DetectionResults results = objectMapper.readValue(outputTopic.readValue(), DetectionResults.class);
-        assertTrue(results.getSigmaMetaData().getTitle().equals("Simple Http Kafka"));
-        assertTrue(results.getSigmaMetaData().getCustomFields().containsKey("timestamp"));
+        assertTrue(results.getTitle().equals("Simple Http Kafka"));
+        assertTrue(results.getCustomFields().containsKey("timestamp"));
         System.out.println(results.toPrettyJSON());
         assertTrue(outputTopic.isEmpty());
 

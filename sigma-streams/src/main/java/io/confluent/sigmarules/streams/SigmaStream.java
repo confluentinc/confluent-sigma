@@ -19,27 +19,22 @@
 
 package io.confluent.sigmarules.streams;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 
 import io.confluent.sigmarules.appState.SigmaAppInstanceStore;
-import io.confluent.sigmarules.config.SigmaPropertyEnum;
 import io.confluent.sigmarules.models.SigmaRule;
 import io.confluent.sigmarules.rules.SigmaRuleFactoryObserver;
 import io.confluent.sigmarules.rules.SigmaRulesFactory;
-import io.confluent.sigmarules.utilities.JsonUtils;
-
+import io.confluent.sigmarules.streams.aggregate.AggregateTopology;
+import io.confluent.sigmarules.streams.simple.SimpleTopology;
 import java.util.*;
 
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.KStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,22 +44,14 @@ public class SigmaStream extends StreamManager {
 
     private KafkaStreams streams;
     private SigmaRulesFactory ruleFactory;
-    private String inputTopic;
-    private String outputTopic;
-    private Boolean firstMatch;
     private SigmaAppInstanceStore instanceStore;
     private final Configuration jsonPathConf = createJsonPathConfig();
-    KStream<String, JsonNode> sigmaStream = null;
 
     public SigmaStream(Properties properties, SigmaRulesFactory ruleFactory) {
         super(properties);
 
         this.ruleFactory = ruleFactory;
         this.instanceStore = new SigmaAppInstanceStore(properties,this);
-        this.outputTopic = properties.getProperty(SigmaPropertyEnum.OUTPUT_TOPIC.toString());
-        this.inputTopic = properties.getProperty(SigmaPropertyEnum.DATA_TOPIC.toString());
-        this.firstMatch = Boolean.valueOf(
-            properties.getProperty(SigmaPropertyEnum.SIGMA_RULE_FIRST_MATCH.toString()));
 
         // if the new or updated rule has an aggregate condition, we must either add a new
         // substream (for a new rule) or restart the topology if a rule has been changed
@@ -104,7 +91,6 @@ public class SigmaStream extends StreamManager {
         streams.cleanUp();
         streams.start();
 
-
         // shutdown hook to correctly close the streams application
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
     }
@@ -117,19 +103,14 @@ public class SigmaStream extends StreamManager {
     // each rule that is a match
     public Topology createTopology() {
         StreamsBuilder builder = new StreamsBuilder();
-        sigmaStream = builder.stream(inputTopic,
-            Consumed.with(Serdes.String(), JsonUtils.getJsonSerde()));
-
             
         // simple rules
-        SimpleTopology simpleTopology = new SimpleTopology();
-        simpleTopology.createSimpleTopology(this, sigmaStream, ruleFactory, outputTopic,
-            jsonPathConf, firstMatch);
+        SimpleTopology simpleTopology = new SimpleTopology(this, ruleFactory, jsonPathConf);
+        simpleTopology.createSimpleTopology(builder);
 
         // aggregate rules
-        AggregateTopology aggregateTopology = new AggregateTopology();
-        aggregateTopology.createAggregateTopology(this, sigmaStream, ruleFactory, outputTopic,
-            jsonPathConf);
+        AggregateTopology aggregateTopology = new AggregateTopology(this, ruleFactory, jsonPathConf);
+        aggregateTopology.createTopology(builder);
 
         return builder.build();
     }
