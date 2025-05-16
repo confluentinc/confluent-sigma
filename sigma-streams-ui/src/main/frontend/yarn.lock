@@ -2059,10 +2059,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@stomp/stompjs@^6.1.2":
-  version "6.1.2"
-  resolved "https://registry.yarnpkg.com/@stomp/stompjs/-/stompjs-6.1.2.tgz#4ac3c380e8d1de1da94a3623d404e67de69dd01e"
-  integrity sha512-FHDTrIFM5Ospi4L3Xhj6v2+NzCVAeNDcBe95YjUWhWiRMrBF6uN3I7AUOlRgT6jU/2WQvvYK8ZaIxFfxFp+uHQ==
+"@stomp/stompjs@^7.0.0":
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/@stomp/stompjs/-/stompjs-7.1.1.tgz#9a836da33bed5b76c72a8f17f0594de98120f6d6"
+  integrity sha512-chcDs6YkAnKp1FqzwhGvh3i7v0+/ytzqWdKYw6XzINEKAzke/iD00dNgFPWSZEqktHOK+C1gSzXhLkLbARIaZw==
 
 "@surma/rollup-plugin-off-main-thread@^2.2.3":
   version "2.2.3"
@@ -2517,6 +2517,11 @@
     "@types/http-errors" "*"
     "@types/mime" "*"
     "@types/node" "*"
+
+"@types/sockjs-client@^1.5.1":
+  version "1.5.4"
+  resolved "https://registry.yarnpkg.com/@types/sockjs-client/-/sockjs-client-1.5.4.tgz#2c0b6aadf0cfeb49cd210e4c59995a6608fbd8ea"
+  integrity sha512-zk+uFZeWyvJ5ZFkLIwoGA/DfJ+pYzcZ8eH4H/EILCm2OBZyHH6Hkdna1/UWL/CFruh5wj6ES7g75SvUB0VsH5w==
 
 "@types/sockjs@^0.3.33":
   version "0.3.33"
@@ -8495,12 +8500,13 @@ react-sortable-tree-patch-react-17@^2.9.0:
     react-lifecycles-compat "^3.0.4"
     react-virtualized "^9.21.2"
 
-react-stomp-hooks@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/react-stomp-hooks/-/react-stomp-hooks-2.1.0.tgz#40568d81e410eb53886ef4c8155729af8dba2208"
-  integrity sha512-VWVA7FCmuQRPLdhk7mcO8rVnQOgcoHh3+wXukvRc3XM9/gqZe+gHEI1N923WjgoPBf5teTTkztwby+EKacZKYw==
+react-stomp-hooks@^3.0.0:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/react-stomp-hooks/-/react-stomp-hooks-3.0.1.tgz#64baf786ed875df926a7eabe1f3d4356965b8f15"
+  integrity sha512-/zCEazDQScvIGTbAcREPsHm1HOjY0nH1m2kK/x0xpt+gCDfUrCrhwd1C8NoB87joR0NTOHRp73g5D7NSpx5IWA==
   dependencies:
-    "@stomp/stompjs" "^6.1.2"
+    "@stomp/stompjs" "^7.0.0"
+    "@types/sockjs-client" "^1.5.1"
     sockjs-client "^1.6.0"
 
 react-syntax-highlighter@^15.5.0:

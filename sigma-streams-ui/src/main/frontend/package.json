@@ -34,7 +34,7 @@
     "react-router-dom": "^6.14.1",
     "react-scripts": "^5.0.1",
     "react-sliding-pane": "^7.3.0",
-    "react-stomp-hooks": "^2.1.0",
+    "react-stomp-hooks": "^3.0.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-toastify": "^9.1.3",
     "recharts": "^2.7.2",
