@@ -31,7 +31,7 @@
     "react-apexcharts": "^1.4.0",
     "react-dom": "^18.2.0",
     "react-google-maps": "^9.4.5",
-    "react-router-dom": "^6.14.1",
+    "react-router-dom": "^7.0.0",
     "react-scripts": "^5.0.1",
     "react-sliding-pane": "^7.3.0",
     "react-stomp-hooks": "^2.1.0",
