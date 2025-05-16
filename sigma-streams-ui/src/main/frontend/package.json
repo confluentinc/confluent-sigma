@@ -6,7 +6,7 @@
   "resolutions": {
     "websocket-extensions": "^0.1.4",
     "node-forge": "^0.10.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^3.0.0"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
