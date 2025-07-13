@@ -21,7 +21,7 @@
     "@mui/icons-material": "^5.13.7",
     "@mui/material": "^5.13.7",
     "ace-builds": "^1.23.2",
-    "apexcharts": "^3.41.0",
+    "apexcharts": "^5.0.0",
     "classnames": "^2.3.2",
     "env-cmd": "^10.1.0",
     "font-awesome": "^4.7.0",
