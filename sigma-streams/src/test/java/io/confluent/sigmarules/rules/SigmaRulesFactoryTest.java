@@ -37,8 +37,9 @@ import org.testcontainers.utility.DockerImageName;
 public class SigmaRulesFactoryTest  {
 
     @ClassRule
-    //public static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.1.1"));
-    public static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka"));
+    public static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.1.1"));
+    //public static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka"));
+    // Latest version of cp-kafka not compatible with TestContainers
 
     @BeforeAll
     void setUp() {
@@ -68,7 +69,7 @@ public class SigmaRulesFactoryTest  {
 
     @AfterAll
     public void tearDown() {
-        kafka.stop();
+        kafka.close();
     }
 
     @Test
