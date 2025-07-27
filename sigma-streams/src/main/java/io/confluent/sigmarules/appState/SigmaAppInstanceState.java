@@ -77,12 +77,18 @@ public class SigmaAppInstanceState {
             logger.warn("Unable to retrieve local host name for KafkaStreams app", e);
         }
 
-
-        KafkaStreams kStreams = sigmaStreamApp.getStreams();
         setApplicationId(sigmaStreamApp.getApplicationId());
         setApplicationInstanceId(getApplicationId() + sigmaStreamApp.getInstanceId());
-        KafkaStreams.State streamsState = kStreams.state();
-        setKafkaStreamsState(streamsState.toString());
+        
+        KafkaStreams kStreams = sigmaStreamApp.getStreams();
+        if (kStreams != null)
+        {
+            KafkaStreams.State streamsState = kStreams.state();
+            setKafkaStreamsState(streamsState.toString());
+        } else {
+            logger.info("null KafkaStreams instance for " + sigmaStreamApp.getApplicationId() +
+               ". Cannot retrieve state for KafkaStreams.  Likely this SigmaStream instance was never started");
+        }
 
         setNumRules(sigmaStreamApp.getRuleFactory().getSigmaRules().size());
         setNumMatches(sigmaStreamApp.getNumMatches());
