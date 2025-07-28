@@ -70,4 +70,25 @@ if [ ! -f "$SIGMA_JAR" ] ; then
   done
 fi
 
+# Extract and export Kafka connection variables if properties file is found
+if [ -n "$SIGMA_PROPS" ] && [ -f "$SIGMA_PROPS" ]; then
+  export BOOTSTRAP_SERVER=$(grep '^bootstrap.server=' "$SIGMA_PROPS" | cut -d'=' -f2-)
+  export KAFKA_SASL_USERNAME=$(grep "^sasl.jaas.config=" "$SIGMA_PROPS" | sed -n "s/.*username='\\([^']*\\)'.*/\\1/p")
+  export KAFKA_SASL_PASSWORD=$(grep "^sasl.jaas.config=" "$SIGMA_PROPS" | sed -n "s/.*password='\\([^']*\\)'.*/\\1/p")
+
+  # Error checking for required variables
+  if [ -z "$BOOTSTRAP_SERVER" ]; then
+    echo "[auto-configure.sh] Error: BOOTSTRAP_SERVER is not set. Check your properties file ($SIGMA_PROPS)." >&2
+    return 1
+  fi
+  if [ -z "$KAFKA_SASL_USERNAME" ]; then
+    echo "[auto-configure.sh] Error: KAFKA_SASL_USERNAME is not set. Check your properties file ($SIGMA_PROPS)." >&2
+    return 1
+  fi
+  if [ -z "$KAFKA_SASL_PASSWORD" ]; then
+    echo "[auto-configure.sh] Error: KAFKA_SASL_PASSWORD is not set. Check your properties file ($SIGMA_PROPS)." >&2
+    return 1
+  fi
+fi
+
 shopt -u nullglob
