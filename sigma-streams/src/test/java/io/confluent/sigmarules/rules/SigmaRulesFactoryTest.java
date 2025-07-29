@@ -64,7 +64,9 @@ public class SigmaRulesFactoryTest  {
     private void loadTestRules() {
         SigmaOptions options = new SigmaOptions(getProperties());
         SigmaRuleLoader sigma = new SigmaRuleLoader(options);
-        sigma.loadSigmaDirectory("config/rules");
+        // Use the test resources path instead of relative path
+        String testRulesPath = getClass().getClassLoader().getResource("config/rules").getPath();
+        sigma.loadSigmaDirectory(testRulesPath);
     }
 
     @AfterAll

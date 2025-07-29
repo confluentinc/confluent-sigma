@@ -1,0 +1,66 @@
+title: RDP Suspicious Keyboard Layout
+description: 'Detects suspicious languages of an RDP keyboard layout. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+references:
+  - https://github.com/zeek/zeek/blob/8a4ccabc3e9bd6fdbd91cd6df5e7c5f620070c0b/scripts/base/protocols/rdp/consts.zeek#L83
+tags:
+  - attack.t1071
+  - attack.lateral_movement
+  - attack.t1021
+  - attack.t1021.001
+logsource:
+  product: zeek
+  service: rdp
+detection:
+  arabic_and_farsi_dialects:
+    keyboard_layout:
+      - '*Arabic*'
+      - 'Armenian - Armenia'
+      - 'Farsi'
+      - 'Pashto'
+      - 'Swahili'
+      - 'Syriac'
+  chinese_dialects:
+    keyboard_layout:
+      - 'Chinese *'
+      - 'Mongolian (Mongolian)'
+      - 'Mongolian *'
+      - 'Tibetan *'
+      - 'Uighur - China'
+  india_and_dialects:
+    keyboard_layout:
+      - 'Assamese'
+      - 'Kannada'
+      - '* India'
+      - 'Sanskrit'
+      - 'Telugu'
+  korean:
+    keyboard_layout: 'Korean'
+  nigerian_dialects:
+    keyboard_layout:
+      - '* Nigeria'
+      - 'Wolof'
+      - 'Yoruba'
+  odd_dialects:
+    keyboard_layout:
+      - 'Catalan'
+      - 'Rhaeto-Romanic'
+  russian_dialects:
+    keyboard_layout:
+      - 'Albanian - Albania'
+      - '*Cyrillic*'
+      - 'FYRO Macedonian'
+      - 'Russian *'
+      - 'Sorbian'
+      - 'Uzbek (Cyrillic)'
+      - 'Uzbek (Latin)'
+      - 'Yakut'
+      - 'Serbian *'
+      - 'Slovak'
+      - 'Slovenian'
+  vietnamese:
+    keyboard_layout: 'Vietnamese'
+  condition: arabic_and_farsi_dialects or chinese_dialects or india_and_dialects or korean or nigerian_dialects or odd_dialects or russian_dialects or vietnamese
+falsepositives:
+- 'Users with native speaking language'
+level: 'medium'

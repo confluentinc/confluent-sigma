@@ -1,0 +1,32 @@
+title: Self Signed TLS SSL Certificate (Overview Query)
+description: 'Detects a TLS/SSL certificate that is self signed. Normally a certificate would be signed by a trusted Certificate Authority. This could be an indication of a) malicious activity where attacker is creating and using own infrastructure or b) unauhtorized or incorrectly configured webserver. Sometimes Corelight/Zeek appliance/software does not have the same certificates installed as something like Chrome or Firefox or other browser. You can filter false positives of this scenario using the subject_issuer field. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.defense_evasion
+  - attack.t1553.004
+logsource:
+  product: zeek
+  service: ssl
+detection:
+  self_signed:
+    validation_status: 'self signed certificate'
+  condition: self_signed
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - client_issuer
+  - client_subject
+  - ja3
+  - ja3s
+  - issuer
+  - subject
+  - established
+  - cipher
+  - version
+  - uid
+level: low
+falsepositive:
+  - 'Legitimate certificate authority but is unknown at the time or (see description for additional scenario).'

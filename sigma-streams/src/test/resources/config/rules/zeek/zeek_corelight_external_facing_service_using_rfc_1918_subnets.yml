@@ -1,0 +1,45 @@
+title: External Facing Service Using RFC 1918 Subnets
+status: stable
+description: 'Identify external facing services. Exclude documented external facing services to help discover new/existing services on your network. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.t1133
+- attack.persistence
+- attack.initial_access
+logsource:
+  product: zeek
+  service: conn
+detection:
+  selection:
+    dst_port: '*'
+    history|startswith: 'Sh'
+  filter_private_ipv4:
+    src_ip|startswith:
+    - '10.'
+    - '192.168.'
+    - '172.16.'
+    - '172.17.'
+    - '172.18.'
+    - '172.19.'
+    - '172.20.'
+    - '172.21.'
+    - '172.22.'
+    - '172.23.'
+    - '172.24.'
+    - '172.25.'
+    - '172.26.'
+    - '172.27.'
+    - '172.28.'
+    - '172.29.'
+    - '172.30.'
+    - '172.31.'
+    - '127.'
+    - '169.254.'
+  filter_private_ipv6:
+  - src_ip: '::1'
+  - src_ip|startswith:
+    - 'fe80::'
+    - 'fc00::'
+  condition: selection AND NOT (filter_private_ipv4 OR filter_private_ipv6)
+falsepositive: You must add known services and any routable IP addresses to filter
+level: low

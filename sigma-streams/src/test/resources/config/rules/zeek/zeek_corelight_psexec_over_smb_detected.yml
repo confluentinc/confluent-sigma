@@ -1,0 +1,36 @@
+title: PSEXEC Over SMB Detected
+description: 'PSEXEC a tool commonly used for lateral movement uses the default named pipe "psexecsvc". This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.t1035
+  - attack.t1077
+  - attack.execution
+  - attack.lateral_movement
+  - attack.t1021
+  - attack.t1021.002
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    name: 'PSEXESVC*'
+  condition: selection
+falsepositive:
+  - 'Legitimate administrative activity'
+level: medium
+fields:
+- ts
+- id.orig_h
+- id.orig_p
+- id.resp_h
+- id.resp_p
+- name
+- path
+- prev_name
+- size
+- times_accessed
+- times_changed
+- times_created
+- times_modified
+- fuid
+- uid

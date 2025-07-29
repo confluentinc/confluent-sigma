@@ -1,0 +1,32 @@
+title: SMB single file created then deleted successively
+description: 'Detects if a single file is created, then deleted, then created again. This is a common scenario when replacing a legimate file temporarily to do malicious activities. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs' 
+author: SOC Prime Team
+tags:
+  - attack.command_and_control
+  - attack.t1105
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  name_exists:
+    name: '*'
+  pre_filter:
+    name: '<share_root>'
+  timeframe: 1m
+  condition: name_exists AND NOT pre_filter | count(times_modified) by name > 5
+fields:
+  - ts
+  - id_orig_h
+  - id_orig_p
+  - id_resp_h
+  - id_resp_p
+  - name
+  - path
+  - prev_name
+  - size
+  - times_accessed
+  - times_changed
+  - times_created
+  - times_modified
+  - fuid
+  - uid

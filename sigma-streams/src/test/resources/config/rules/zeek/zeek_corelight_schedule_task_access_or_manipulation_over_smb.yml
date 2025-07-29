@@ -1,0 +1,38 @@
+title: Schedule Task Access or Manipulation over SMB
+status: stable
+description: 'Detects scheduled task access or manipulation on a remote computer over SMB. Determine if the server should be hosting shceduled tasks and if the client has modified them if it is allowed server. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+references:
+  - 'https://github.com/Neo23x0/sigma/blob/master/rules/windows/builtin/win_GPO_scheduledtasks.yml'
+tags:
+  - attack.persistence
+  - attack.t1053
+falsepositive:
+  - 'Group policy objects from domain controller'
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    path|contains: '\\*\SYSVOL'
+    name: '*ScheduledTasks.xml'
+  filter:
+    action: 'SMB::FILE_OPEN'
+  condition: selection AND NOT filter
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - name
+  - path
+  - prev_name
+  - size
+  - times_accessed
+  - times_changed
+  - times_created
+  - times_modified
+  - fuid
+  - uid
+level: medium

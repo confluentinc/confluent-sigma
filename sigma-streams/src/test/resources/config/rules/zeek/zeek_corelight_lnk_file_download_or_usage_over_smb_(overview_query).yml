@@ -1,0 +1,20 @@
+title: LNK File Download or Usage over SMB (Overview Query)
+description: 'This should be used to give an over of link files can be used as way to automate certain actions or passing of credentials in windows. Determine if these are LNK files used on a legitmate file share or network share. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - t1059 # Command and Scripting Interpreter
+  - t1059.001 # Command and Scripting Interpreter: PowerShell
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  link_extension:
+    name|endswith:
+    - '.lnk'
+    - '.LNK'
+    - '.inf'
+    - '.INF'
+  condition: link_extension
+falsepositive:
+  - 'Often. This should be used to filter from the top down. Start to exclude known file shares and so on.'
+level: low

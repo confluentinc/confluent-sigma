@@ -1,0 +1,34 @@
+title: Remote Creation of temp file in System32 folder
+status: stable
+description: 'Detects scenario where a file with a ".tmp" (temporary) file extension is created remotely in the System32 folder. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.command_and_control
+  - attack.t1105
+falsepositives:
+  - 'Unknown'
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    name|contains: 'SYSTEM32\\*.tmp'
+  filter:
+    action: 'SMB::FILE_OPEN'
+  condition: selection AND NOT filter
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - name
+  - path
+  - prev_name
+  - size
+  - times_accessed
+  - times_changed
+  - times_created
+  - times_modified
+  - fuid
+  - uid
