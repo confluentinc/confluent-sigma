@@ -117,9 +117,11 @@ public class SigmaAppInstanceStore implements KafkaStreams.StateListener  {
 
     private void cleanState() {
         logger.info("Cleaning up sigma app instance state");
-        SigmaAppInstanceState state = createSigmaAppInstanceState();
-        sigmaAppInstanceStateCache.remove(state.getKey());
-        sigmaAppInstanceStateCache.flush();
+        if (sigmaAppInstanceStateCache != null) {
+            SigmaAppInstanceState state = createSigmaAppInstanceState();
+            sigmaAppInstanceStateCache.remove(state.getKey());
+            sigmaAppInstanceStateCache.flush();
+        }
     }
 
     public void register()
