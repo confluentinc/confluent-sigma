@@ -1,4 +1,5 @@
-<img style="center;" src="images/confluent-sigma-logo.png">
+[![Try Confluent Cloud - The Data Streaming Platform](https://images.ctfassets.net/8vofjvai1hpv/10bgcSfn5MzmvS4nNqr94J/af43dd2336e3f9e0c0ca4feef4398f6f/confluent-banner-v2.svg)](https://confluent.cloud/signup?utm_source=github&utm_medium=banner&utm_campaign=oss-repos&utm_term=confluent-sigma)
+
 Confluent Sigma provides a way to leverage Confluent to identify anomalies on source data with Kafka Streams prior to 
 sending to SIEM applications. Users can create Sigma Rules that are compared to real-time source data. When an anomaly 
 is found, the source data and Sigma Rule metadata will be published to a user defined topic.
