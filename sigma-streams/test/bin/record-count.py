@@ -1,4 +1,30 @@
-#!python3
+#!python3   
+#
+# This script is used to count the number of records in a Kafka topic.
+#
+# USAGE:
+#   python3 record-count.py <bootstrap_servers> <sasl_username> <sasl_password> <topic> [options]
+#
+# PARAMETERS:
+#   bootstrap_servers  - Kafka cluster bootstrap servers (e.g., "pkc-abc123.us-east-1.aws.confluent.cloud:9092")
+#   sasl_username     - SASL username for authentication
+#   sasl_password     - SASL password for authentication  
+#   topic             - Name of the Kafka topic to count records in
+#
+# OPTIONS:
+#   -v, --verbose     - Enable verbose output showing detailed partition information
+#   -p, --poll_time   - Poll timeout in seconds to fetch the first message (default: 10)
+#
+# EXAMPLES:
+#   python3 record-count.py "pkc-abc123.us-east-1.aws.confluent.cloud:9092" "myuser" "mypass" "my-topic"
+#   python3 record-count.py "localhost:9092" "user" "pass" "test-topic" -v -p 5
+#
+# NOTES:
+#   - Designed for Confluent Cloud with SASL_SSL authentication
+#   - Provides approximate record count based on watermark offsets
+#   - Creates a unique consumer group for each run
+#   - Handles SIGINT gracefully for clean exit
+
 
 import datetime
 import argparse

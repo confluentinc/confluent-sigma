@@ -38,8 +38,8 @@ fi
 
 # Check if the second argument is true
 if [[ "$2" = true ]]; then
-  exec python3 "$SCRIPT_DIR"/record-count.py -v "$BOOTSTRAP_SERVER" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
+  exec python3 "$SCRIPT_DIR"/record-count.py -v "$BOOTSTRAP_SERVERS" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
 else
-  exec python3 "$SCRIPT_DIR"/record-count.py "$BOOTSTRAP_SERVER" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
+  exec python3 "$SCRIPT_DIR"/record-count.py "$BOOTSTRAP_SERVERS" "$KAFKA_SASL_USERNAME" "$KAFKA_SASL_PASSWORD" $1
 fi
 

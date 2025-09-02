@@ -44,7 +44,7 @@ fi
 
 docker run --name sigma-create-topic -v ${SIGMA_PROPS_DIR}:/mnt/config --rm --network=host confluentinc/cp-server:latest \
   kafka-topics \
-  --bootstrap-server ${BOOTSTRAP_SERVER} \
+  --bootstrap-server ${BOOTSTRAP_SERVERS} \
   --command-config /mnt/config/${SIGMA_PROPS_FILENAME} \
   --topic $2 \
   --create \
@@ -55,7 +55,7 @@ docker run --name sigma-create-topic -v ${SIGMA_PROPS_DIR}:/mnt/config --rm --ne
 while true
 do
   docker run --name sigma-produce-data -v "$DATA_FILE_DIR":/mnt/data --rm --network=host edenhill/kafkacat:1.5.0 \
-    kafkacat -b ${BOOTSTRAP_SERVER} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
+    kafkacat -b ${BOOTSTRAP_SERVERS} -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
     -X sasl.username=${KAFKA_SASL_USERNAME} -X sasl.password=${KAFKA_SASL_PASSWORD} -z snappy -t $2 -l /mnt/data/"$DATA_FILE_BASE" || break
 done
 
