@@ -1,0 +1,19 @@
+title: Cisco Firewalls Extraction
+description: This rule is the regex rule test
+author: Mike Peacock
+logsource:
+  product: splunk
+  service: cisco:asa
+detection:
+  filter_field:
+    sourcetype: cisco:asa
+  event_match:
+    event|re: '^(?<timestamp>\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2})\s(?<hostname>[^\s]+)\s\%ASA-\d-(?<messageID>[^:]+):\s(?<action>[^\s]+)\s(?<protocol>[^\s]+)\ssrc\sinside:(?<src>[0-9\.]+)\/(?<srcport>[0-9]+)\sdst\soutside:(?<dest>[0-9\.]+)\/(?<destport>[0-9]+)'
+  condition: filter_field AND event_match
+kafka: 
+  outputTopic: firewalls
+  customFields:
+    location: edge
+    sourcetype: cisco:asa
+    index: main
+

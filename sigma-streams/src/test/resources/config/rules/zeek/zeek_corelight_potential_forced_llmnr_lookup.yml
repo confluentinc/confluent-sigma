@@ -1,0 +1,65 @@
+title: Potential Forced LLMNR Lookup
+description: 'Detects LLMNR traffic originating internally and communicating with an external IP address. LLMNR traffic should typically occur internally. Outbound requests could be a sign of forced authentication. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+status: stable
+author: SOC Prime Team
+tags:
+  - attack.t1187
+  - attack.credential_access
+logsource:
+  product: zeek
+  service: dns
+detection:
+  llmnr:
+    id.resp_p: '5355'
+  answer_exists:
+    answers: '*'
+  query_has_dot:
+    query|contains: '.'
+  filter_private_ipv4:
+    dst_ip|startswith:
+      - '10.' 
+      - '192.168.' 
+      - '172.16.' 
+      - '172.17.'
+      - '172.18.'
+      - '172.19.'
+      - '172.20.'
+      - '172.21.'
+      - '172.22.'
+      - '172.23.'
+      - '172.24.'
+      - '172.25.'
+      - '172.26.'
+      - '172.27.'
+      - '172.28.'
+      - '172.29.'
+      - '172.30.'
+      - '172.31.'
+      - '127.' 
+      - '169.254.' 
+  filter_private_ipv6:
+    - dst_ip: '::1' 
+    - dst_ip|startswith:
+      - 'fe80::' 
+      - 'fc00::' 
+  timeframe: 1m
+  condition: llmnr and answer_exists and query_has_dot and not (filter_private_ipv4 OR filter_private_ipv6) | count(query) by id_orig_h > 2
+level: low
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - proto
+  - qtype_name
+  - qtype
+  - query
+  - answers
+  - rcode
+  - rcode_name
+  - trans_id
+  - qtype
+  - ttl
+  - AA
+  - uid

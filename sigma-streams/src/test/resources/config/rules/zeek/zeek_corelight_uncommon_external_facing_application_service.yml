@@ -1,0 +1,34 @@
+title: Uncommon External Facing Application Service
+description: 'Identify external facing services that are commonly internal applications (ie: Kerberos or SMB). This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.initial_access
+  - attack.t1133 # Initial Access: External Remote Services
+logsource:
+ product: zeek
+ service: conn
+detection:
+  selection:
+    service:
+      - 'dce_rpc'
+      - 'dnp3'
+      - 'gssapi'
+      - 'krb_tcp'
+      - 'krb_udp'
+      - 'krb'
+      - 'modbus'
+      - 'ntlm'
+      - 'radius'
+      - 'rdp'
+      - 'rdpeudp'
+      - 'rpc'
+      - 'smb'
+      - 'snmp'
+      - 'syslog'
+    history|startswith: 'Sh'
+  from_external:
+    local_orig: 'false'
+    local_resp: 'true'
+  condition: selection AND from_external
+falsepositive: 'Services that are exposed to the internet for a legitimate reason. Important as a defender to know these systems exist.'
+level: medium

@@ -1,0 +1,45 @@
+title: Possible Directory Traversal Web Server Attack
+description: 'This rule looks for many variations of a directory traversal attack on a webserver. It includes character encodings that make common queries/detections bypassed. Additionally, it includes characters valid for windows and linux webservers. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+references: 
+  - https://owasp.org/www-community/attacks/Path_Traversal
+  - https://www.infosecmatter.com/bug-bounty-tips-6-sep-07/
+tags:
+  - attack.persistence
+  - attack.t1100
+  - attack.t1505.003
+logsource:
+  product: zeek
+  service: http
+detection:
+  pre_filter1:
+    response_body_len: '0'
+  pre_filter2:
+    uri: '/'
+  server_3xx_and_4xx_response:
+    sc-status|startswith:
+      - '3'
+      - '4'    
+  selection:
+    - uri|re: '^.*\.\.((%[25f])|;).*$'
+    - uri|re: '^.*%((2([fF]|55[fFcC]))|(5[cC]))\.\..*$'
+    - uri|re: '^.*%2([eE5][5|2]?)+%2.*$'
+    - uri|re: '^.*%[cC]1%[aA][fF].*$'
+  condition: not 1 of pre_filter* and not server_3xx_and_4xx_response AND selection 
+  fields:
+    - uri
+    - host
+    - user_agent
+    - id.orig_h
+    - id.resp_h
+    - id.resp_p
+    - id.orig_p
+    - referrer
+    - status_code
+    - request_body_len
+    - response_body_len
+    - method
+falsepositive:
+  - 'Rare web application with odd encodings. This should not happen often if at all, but with HTTP there is always a possibility of odd applications/coding.'
+  - 'Web Application Firewall or Load Balancing Proxy returns 200 server response codes even for blocked/bad requests.'
+level: high

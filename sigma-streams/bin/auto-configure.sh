@@ -16,7 +16,8 @@
 # limitations under the License.
 
 # This is the auto-configure script.  It will attempt to find the sigma.properties file in the default paths as well
-# as finding a sigma jar file to use.  The end result should be exporting
+# as finding a sigma jar file to use.  From the properties file it will extract broker and auth information
+# and expoert the following variables:
 
 # SIGMA_PROPS_FILENAME (the default name of the sigma properties file this script is looking for)
 # SIGMA_PROPS (path to the properties file)
@@ -27,7 +28,6 @@ export SIGMA_PROPS_FILENAME="sigma.properties"
 
 SIGMA_PROPS=
 SIGMA_PROPS_DIR=
-SIGMA_CC_ADMIN=
 
 if [ -f ~/.sigma/sigma.properties ] ; then
   export SIGMA_PROPS_DIR=~/.sigma/
@@ -38,14 +38,6 @@ elif [ -f ~/.config/sigma.properties ] ; then
 elif [ -f ~/.confluent/sigma.properties ] ; then
   export SIGMA_PROPS_DIR=~/.confluent/
   export SIGMA_PROPS=~/.confluent/$SIGMA_PROPS_FILENAME
-fi
-
-if [ -f ~/.config/sigma-cc-admin.properties ] ; then
-  export SIGMA_CC_ADMIN=~/.config/sigma-cc-admin.properties
-elif [ -f ~/.confluent/sigma-cc-admin.properties ] ; then
-  export SIGMA_CC_ADMIN=~/.confluent/sigma-cc-admin.properties
-elif [ -f ~/tmp/sigma-cc-admin.properties ] ; then
-  export SIGMA_CC_ADMIN=~/tmp/sigma-cc-admin.properties
 fi
 
 shopt -s nullglob
@@ -68,6 +60,27 @@ if [ ! -f "$SIGMA_JAR" ] ; then
   do
     export SIGMA_JAR=$TEST_FILE
   done
+fi
+
+# Extract and export Kafka connection variables if properties file is found
+if [ -n "$SIGMA_PROPS" ] && [ -f "$SIGMA_PROPS" ]; then
+  export BOOTSTRAP_SERVERS=$(grep '^bootstrap.servers=' "$SIGMA_PROPS" | cut -d'=' -f2-)
+  export KAFKA_SASL_USERNAME=$(grep "^sasl.jaas.config=" "$SIGMA_PROPS" | sed -n "s/.*username='\\([^']*\\)'.*/\\1/p")
+  export KAFKA_SASL_PASSWORD=$(grep "^sasl.jaas.config=" "$SIGMA_PROPS" | sed -n "s/.*password='\\([^']*\\)'.*/\\1/p")
+
+  # Error checking for required variables
+  if [ -z "$BOOTSTRAP_SERVERS" ]; then
+    echo "[auto-configure.sh] Error: BOOTSTRAP_SERVERS is not set. Check your properties file ($SIGMA_PROPS)." >&2
+    return 1
+  fi
+  if [ -z "$KAFKA_SASL_USERNAME" ]; then
+    echo "[auto-configure.sh] Error: KAFKA_SASL_USERNAME is not set. Check your properties file ($SIGMA_PROPS)." >&2
+    return 1
+  fi
+  if [ -z "$KAFKA_SASL_PASSWORD" ]; then
+    echo "[auto-configure.sh] Error: KAFKA_SASL_PASSWORD is not set. Check your properties file ($SIGMA_PROPS)." >&2
+    return 1
+  fi
 fi
 
 shopt -u nullglob

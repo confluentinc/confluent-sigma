@@ -77,19 +77,38 @@ public class SigmaAppInstanceState {
             logger.warn("Unable to retrieve local host name for KafkaStreams app", e);
         }
 
-
-        KafkaStreams kStreams = sigmaStreamApp.getStreams();
         setApplicationId(sigmaStreamApp.getApplicationId());
         setApplicationInstanceId(getApplicationId() + sigmaStreamApp.getInstanceId());
-        KafkaStreams.State streamsState = kStreams.state();
-        setKafkaStreamsState(streamsState.toString());
+        
+        KafkaStreams kStreams = sigmaStreamApp.getStreams();
+        if (kStreams != null)
+        {
+            KafkaStreams.State streamsState = kStreams.state();
+            setKafkaStreamsState(streamsState.toString());
+
+            List<Map<String, String>> tmList = new ArrayList<>();
+            Set<ThreadMetadata> threadMedataSet = kStreams.metadataForLocalThreads();
+            for (ThreadMetadata tm : threadMedataSet)
+            {
+                Map<String, String> map = new HashMap<>();
+                map.put("clientId", tm.consumerClientId());
+                map.put("threadState", tm.threadState());
+                map.put("numTasks", String.valueOf(tm.activeTasks().size()));
+                map.put("threadName", tm.threadName());
+    
+                tmList.add(map);
+            }
+    
+            setThreadMetadata(tmList);
+    
+        } else {
+            logger.info("null KafkaStreams instance for " + sigmaStreamApp.getApplicationId() +
+               ". Cannot retrieve state for KafkaStreams.  Likely this SigmaStream instance was never started");
+        }
 
         setNumRules(sigmaStreamApp.getRuleFactory().getSigmaRules().size());
         setNumMatches(sigmaStreamApp.getNumMatches());
         setRecordsProcessed(sigmaStreamApp.getRecordsProcessed());
-        
-        Set<ThreadMetadata> threadMedataSet = kStreams.metadataForLocalThreads();
-        List<Map<String, String>> tmList = new ArrayList<>();
 
         Properties props = (Properties) sigmaStreamApp.getStreamProperties().clone();
 
@@ -106,18 +125,6 @@ public class SigmaAppInstanceState {
         });
         appProperties = updateProps;
 
-        for (ThreadMetadata tm : threadMedataSet)
-        {
-            Map<String, String> map = new HashMap<>();
-            map.put("clientId", tm.consumerClientId());
-            map.put("threadState", tm.threadState());
-            map.put("numTasks", String.valueOf(tm.activeTasks().size()));
-            map.put("threadName", tm.threadName());
-
-            tmList.add(map);
-        }
-
-        setThreadMetadata(tmList);
     }
 
     /**

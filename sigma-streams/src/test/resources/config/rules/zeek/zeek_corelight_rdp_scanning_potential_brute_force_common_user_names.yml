@@ -1,0 +1,63 @@
+title: RDP Scanning Potential Brute Force Common User Names
+status: stable
+description: 'Identify common user names being attempted against a server in a short period of time. Normally a device will only have one or two local accounts, this detects if 3 or more local accounts are being attempted against a device then normally should be which could indicate an RDP brute force attempt. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.t1133
+- attack.persistence
+- attack.initial_access
+logsource:
+  product: zeek
+  service: rdp
+detection:
+  selection:
+    cookie:
+    - 'Root'
+    - 'root'
+    - 'Administr'
+    - 'administr'
+    - 'Admin'
+    - 'admin'
+    - 'Guest'
+    - 'guest'
+    - 'Info'
+    - 'info'
+    - 'Test'
+    - 'test'
+    - 'Adm'
+    - 'adm'
+    - 'User'
+    - 'user'
+    - 'DA'
+    - 'da'
+    - 'Local'
+    - 'local'
+    - 'Letmein'
+    - 'letmein'
+    - 'Service'
+    - 'service'
+    - '.'
+    - 'Computer'
+    - 'computer'
+    - 'xxx'
+    - '/'
+    - '\'
+  timeframe: 1m
+  condition: selection | count(cookie) by id_orig_h > 3
+fields:
+- id.orig_h
+- id.resp_p
+- id.resp_h
+- cookie
+- result
+- security_protocol
+- ssl
+- encryption_method
+- encryption_level
+- client_name
+- client_build
+- desktop_width
+- keyboard_layout
+- cert_type
+falsepositive: 'Device has multiple different local accounts that are used for RDP and used within a short amount of time at that.'
+level: high

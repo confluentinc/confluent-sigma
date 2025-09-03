@@ -1,0 +1,81 @@
+title: Possible Webshell - Rare PUT or POST by IP
+description: 'This rule looks for post requests to a single webserver location from less than 3 IPs over 24 hours. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+references:
+  - https://github.com/tennc/webshell
+tags:
+  - attack.persistence
+  - attack.t1100
+  - attack.t1505.003
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection:
+    uri|endswith:
+      - '.aspx'
+      - '.asp'
+      - '.php'
+      - '.jsp'
+      - '.jspx'
+      - '.war'
+      - '.ashx'
+      - '.asmx'
+      - '.ascx'
+      - '.asx'
+      - '.cshtml'
+      - '.cfm'
+      - '.cfc'
+      - '.cfml'
+      - '.wss'
+      - '.do'
+      - '.action'
+      - '.pl'
+      - '.plx'
+      - '.pm'
+      - '.xs'
+      - '.t'
+      - '.pod'
+      - '.php-s'
+      - '.pht'
+      - '.phar'
+      - '.phps'
+      - '.php7'
+      - '.php5'
+      - '.php4'
+      - '.php3'
+      - '.phtml'
+      - '.py'
+      - '.rb'
+      - '.rhtml'
+      - '.cgi'
+      - '.dll'
+      - '.ayws'
+      - '.cgi'
+      - '.erb'
+      - '.rjs'
+      - '.hta'
+      - '.htc'
+      - '.cs'
+      - '.kt'
+      - '.lua'
+      - '.vbhtml'
+    method:
+      - POST
+      - PUT
+  filter:
+    status_code|startswith: '4'
+  timeframe: 24h
+  condition: selection AND NOT filter | count(id_orig_h) by uri < 3
+fields:
+  - uri
+  - host
+  - user_agent
+  - id.orig_h
+  - id.resp_h
+  - id.orig_p
+  - id.resp_p
+  - referrer
+falsepositive:
+  - 'Additional filtering will be required to ensure this works on your webserver logs and not just web traffic otherwise false positives will be likely'
+level: medium

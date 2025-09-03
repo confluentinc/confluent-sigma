@@ -105,3 +105,6 @@ hs_err_pid*
 
 *.pcap
 
+.vscode/settings.json
+.vscode
+.vscode

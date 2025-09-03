@@ -1,0 +1,40 @@
+title: Potential Forced External Outbound SMB
+description: 'Detects SMB requests that originate internally and communicate with an external IP address. Attackers can use tools such as metasploit to listen for inbound SMB requets and capture NTLM hashes this way. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.t1187
+  - attack.credential_access
+logsource:
+  product: zeek
+  service: conn
+detection:
+  selection:
+    service|startswith: 'smb'
+    history|startswith: 'Sh'
+  to_external:
+    local_orig: 'true'
+    local_resp: 'false'
+  condition: selection AND to_external
+falsepositive: 
+  - 'Connections to cloud services that are use for authentication. Verify they are legitimately used within your network or organization.'
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - proto
+  - community_id
+  - duration
+  - conn_state
+  - history
+  - orig_pkts
+  - resp_pkts
+  - orig_bytes
+  - resp_bytes
+  - service
+  - orig_ip_bytes
+  - resp_ip_bytes
+  - local_orig
+  - local_resp
+  - uid

@@ -1,0 +1,44 @@
+title: Possible Typo Squatting or Punycode Phishing HTTP Request
+status: stable
+description: 'Detects when an HTTP request was made to a domain that was using unicode/punycode. Normally a domain is in regular ASCII especially if there is no referrer or if the refferer is an email client. Unicode/punycode is used in the scenario where a domain can be displayed to a client in one way, but when it crosses the wire the unicode is actually an entirely different domain. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.initial_access
+  - attack.t1566 # Initial Access: Phishing
+falsepositive:
+  - 'Unknown'
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection:
+    host|contains: "xn--"
+  referrer_exists:
+    referrer: '*'
+  get_method:
+    method: 'GET'
+  condition: get_method AND NOT referrer_exists AND selection
+level: low
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - host
+  - method
+  # - version
+  - user_agent
+  - status_code
+  # - status_msg
+  - uri
+  - referrer
+  - request_body_len
+  - response_body_len
+  - orig_mime_types
+  - resp_mime_types
+  - proxied
+  - origin
+  - orig_fuids
+  - resp_fuids
+  - uid

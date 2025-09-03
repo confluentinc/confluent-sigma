@@ -1,0 +1,40 @@
+title: C2 DGA Detected Via Repetitive Failures
+description: 'This rule identifies large a mounts of DNS resolution failures (domain does not exist and server failures). Some DGA algorithms generate hundreds/thousands of bad DNS names before hitting one that an attacker has registered. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+- attack.t1094
+- attack.t1043
+- attack.command_and_control
+logsource:
+  product: zeek
+  service: dns
+detection:
+  response_codes:
+    rcode_name:
+    - 'NXDOMAIN'
+    - 'SERVFAIL'
+    - 'nxdomain'
+    - 'servfail'
+  timeframe: 5m
+  condition: response_codes | count(query) by id_orig_h > 25
+falsepositive:
+- 'Unlikely. However, there could be scenarios of misconfigured netbios or where a DNS server is temporarily not responding or responding incorrectly.'
+level: medium
+fields:
+- ts
+- id.orig_h
+- id.orig_p
+- id.resp_h
+- id.resp_p
+- proto
+- qtype_name
+- qtype
+- query
+- answers
+- rcode
+- rcode_name
+- trans_id
+- qtype
+- ttl
+- AA
+- uid

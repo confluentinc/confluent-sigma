@@ -145,8 +145,16 @@ public class StreamManager {
             try {
                 if (future != null)
                     future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                logger.error(e);
+            } catch (InterruptedException e) {
+                logger.error("Topic creation was interrupted: " + e.getMessage());
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                // Check if the topic already exists
+                if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("TopicExists")) {
+                    logger.info("Topic '{}' already exists, skipping creation", topicName);
+                } else {
+                    logger.error("Failed to create topic '{}': {}", topicName, e.getMessage());
+                }
             }
         } else {
             logger.error("No admin client initialized");

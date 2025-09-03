@@ -1,0 +1,120 @@
+title: Possible Webshell - Dirty Word List
+description: "Some cybercriminals use curse words in their webshells, this rule detects those common words or curse words that wouldn't typcially be found"
+author: SOC Prime Team
+references:
+    - https://github.com/tennc/webshell
+tags:
+    - attack.persistence
+    - attack.t1100
+    - attack.t1505.003
+logsource:
+    product: zeek
+    service: http
+detection:
+  selection:
+    uri|contains:
+      - 'pwned'
+      - 'owned'
+      - 'backdoor'
+      - 'spy'
+      - 'bypass'
+      - 'root'
+      - 'r00t'
+      - 'p0wn'
+      - 'robots'
+      - 'hidden'
+      - 'shell'
+      - 'cunt'
+      - 'nigg'
+      - 'shit'
+      - 'crap'
+      - 'fuck'
+      - 'bitch'
+      - 'telnet'
+      - 'hidden'
+      - 'predator'
+      - 'safe_mode'
+      - 'cfexec'
+      - 'botp'
+      - 'zer0'
+      - 'mysql_'
+      - 'oracle_'
+      - 'perlbot'
+    uri|endswith:
+      - '.aspx'
+      - '.asp'
+      - '.php'
+      - '.jsp'
+      - '.jspx'
+      - '.war'
+      - '.ashx'
+      - '.asmx'
+      - '.ascx'
+      - '.asx'
+      - '.cshtml'
+      - '.cfm'
+      - '.cfc'
+      - '.cfml'
+      - '.wss'
+      - '.do'
+      - '.action'
+      - '.pl'
+      - '.plx'
+      - '.pm'
+      - '.xs'
+      - '.t'
+      - '.pod'
+      - '.php-s'
+      - '.pht'
+      - '.phar'
+      - '.phps'
+      - '.php7'
+      - '.php5'
+      - '.php4'
+      - '.php3'
+      - '.phtml'
+      - '.py'
+      - '.rb'
+      - '.rhtml'
+      - '.cgi'
+      - '.dll'
+      - '.ayws'
+      - '.cgi'
+      - '.erb'
+      - '.rjs'
+      - '.hta'
+      - '.htc'
+      - '.cs'
+      - '.kt'
+      - '.lua'
+      - '.vbhtml'
+    method:
+        - POST
+        - PUT
+  filter:
+    status_code|startswith: '4'
+  condition: NOT filter AND selection
+fields:
+  - ts
+  - id_orig_h
+  - id_orig_p
+  - id_resp_h
+  - id_resp_p
+  - host
+  - method
+  - user_agent
+  - status_code
+  - uri
+  - referrer
+  - request_body_len
+  - response_body_len
+  - orig_mime_types
+  - resp_mime_types
+  - proxied
+  - origin
+  - orig_fuids
+  - resp_fuids
+  - uid
+falsepositives:
+  - Additional filtering will be required to ensure this works on your webserver logs and not just web traffic otherwise false positives will be likely
+level: medium

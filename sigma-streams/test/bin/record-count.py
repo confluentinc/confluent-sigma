@@ -1,7 +1,35 @@
-#!python3
+#!python3   
+#
+# This script is used to count the number of records in a Kafka topic.
+#
+# USAGE:
+#   python3 record-count.py <bootstrap_servers> <sasl_username> <sasl_password> <topic> [options]
+#
+# PARAMETERS:
+#   bootstrap_servers  - Kafka cluster bootstrap servers (e.g., "pkc-abc123.us-east-1.aws.confluent.cloud:9092")
+#   sasl_username     - SASL username for authentication
+#   sasl_password     - SASL password for authentication  
+#   topic             - Name of the Kafka topic to count records in
+#
+# OPTIONS:
+#   -v, --verbose     - Enable verbose output showing detailed partition information
+#   -p, --poll_time   - Poll timeout in seconds to fetch the first message (default: 10)
+#
+# EXAMPLES:
+#   python3 record-count.py "pkc-abc123.us-east-1.aws.confluent.cloud:9092" "myuser" "mypass" "my-topic"
+#   python3 record-count.py "localhost:9092" "user" "pass" "test-topic" -v -p 5
+#
+# NOTES:
+#   - Designed for Confluent Cloud with SASL_SSL authentication
+#   - Provides approximate record count based on watermark offsets
+#   - Creates a unique consumer group for each run
+#   - Handles SIGINT gracefully for clean exit
+
 
 import datetime
 import argparse
+import signal
+import sys
 
 from confluent_kafka import Consumer, TopicPartition, KafkaException
 from confluent_kafka.admin import AdminClient
@@ -9,10 +37,22 @@ from confluent_kafka.admin import AdminClient
 TIMEOUT = 10
 
 
+def signal_handler(sig, frame):
+    """Handle SIGINT (Ctrl-C) gracefully"""
+    print("\nInterrupted by user. Exiting...")
+    # Force exit even if cleanup doesn't work
+    import os
+    os._exit(130)
+
+
 def count_records(bootstrap_servers, sasl_username, sasl_password, topic):
     consumer = None
 
     try:
+        # Validate bootstrap servers
+        if not bootstrap_servers or bootstrap_servers.strip() == '':
+            raise ValueError("Bootstrap servers cannot be empty")
+            
         # Create an AdminClient to fetch partition information
         admin_client = AdminClient({
             'bootstrap.servers': bootstrap_servers,
@@ -22,8 +62,8 @@ def count_records(bootstrap_servers, sasl_username, sasl_password, topic):
             'sasl.password': sasl_password
         })
 
-        # Fetch partition information for the topic
-        topic_metadata = admin_client.list_topics(topic)
+        # Fetch partition information for the topic with timeout
+        topic_metadata = admin_client.list_topics(topic, timeout=10)
         if args.verbose:
             print("Retrieved metadata for topic " + str(topic_metadata))
 
@@ -109,6 +149,9 @@ def count_records(bootstrap_servers, sasl_username, sasl_password, topic):
 
 
 if __name__ == "__main__":
+    # Register signal handler for graceful interruption
+    signal.signal(signal.SIGINT, signal_handler)
+    
     parser = argparse.ArgumentParser(description="Provide an estimated record count for messages in a topic based " +
                                      "on minimum offset and water marks.  Currently built to work on Confluent Cloud " +
                                      "based on SASL_SSL authentication but could easily be adapted for other auths")

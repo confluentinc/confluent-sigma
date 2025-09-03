@@ -1,0 +1,54 @@
+title: Possible Webshell PUT or POST to unusual extensions
+description: 'This rule looks for post requests to unusual extensions (e.g. .jpg). This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+references:
+- https://github.com/tennc/webshell
+tags:
+- attack.persistence
+- attack.t1100
+- attack.t1505.003
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection:
+    c-uri|endswith:
+    - '.jpg'
+    - '.jpeg'
+    - '.gif'
+    - '.png'
+    - '.icon'
+    - '.ico'
+    - '.xml'
+    - '.swf'
+    - '.svg'
+    - '.ppt'
+    - '.pttx'
+    - '.doc'
+    - '.docx'
+    - '.rtf'
+    - '.pdf'
+    - '.tif'
+    - '.zip'
+    - '.mov'
+    method:
+    - POST
+    - PUT
+    status_code|startswith: '2'
+  filter1:
+    request_body_len: 0
+  filter2:
+    response_body_len: 0
+  condition: selection and not 1 of filter*
+fields:
+- uri
+- host
+- user_agent
+- id.orig_h
+- id.resp_h
+- id.resp_p
+- id.orig_p
+- referrer
+falsepositive:
+- 'Additional filtering will be required to ensure this works on your webserver logs and not just outbound web traffic otherwise false positives will be likely'
+level: medium

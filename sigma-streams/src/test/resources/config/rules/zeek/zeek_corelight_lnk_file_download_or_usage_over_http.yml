@@ -1,0 +1,24 @@
+title: LNK File Download or Usage over HTTP
+description: 'Link files are typically not downloaded or shared over the internet. Link files can be used as way to automate certain actions or passing of credentials in windows. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.t1059
+  - attack.t1059.001
+logsource:
+ product: zeek
+ service: http
+detection:
+  link_extension:
+    uri|endswith:
+    - '.lnk'
+    - '.LNK'
+    - '.inf'
+    - '.INF'
+  referrer_exists:
+    referrer: '*'
+  get_method:
+    method: 'GET'
+  condition: get_method AND link_extension AND NOT referrer_exists
+level: low
+falsepositive:
+  - 'Legitimate link files or inf that. Although should be rare or easy to filter the legitimate domains where this is used.'

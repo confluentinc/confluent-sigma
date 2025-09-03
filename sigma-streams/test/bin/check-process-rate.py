@@ -1,4 +1,4 @@
-#!python3
+#!/usr/bin/python3
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,60 +15,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script is used to check the process rate of the Confluent Sigma application.  It expects as arguments 
+# 1 the path to an confluent cloud API Key text file. 
+# 2 the resource ID for the Kafka cluster like lkc-1234567890
+# 3 the topic name for the Kafka topic to check the process rate for
+
+# USAGE:
+# python3 check-process-rate.py <confluent cloud API Key text file> <resource ID> <topic name>
+
 import json
 import requests
 import pytz
 import statistics
 import argparse
+import base64
 
 from datetime import datetime, timedelta
 
 import os
 
-SIGMA_PROPS_FILENAME = "sigma.properties"
-SIGMA_CC_ADMIN_FILENAME = "sigma-cc-admin.properties"
-
-
-# This function is the equivalent of the auto-configure bash shell script.  We may want to rework that script to use
-# this python routine, so we maintain the location searching in one place.
-def get_sigma_config_variables():
-    # Set variables
-
-    sigma_props_path = None
-    cc_admin_path = None
-
-    # Check for sigma.properties file in default paths
-    if os.path.isfile(os.path.expanduser("~/.sigma/" + SIGMA_PROPS_FILENAME)):
-        sigma_props_path = os.path.expanduser("~/.sigma/" + SIGMA_PROPS_FILENAME)
-    elif os.path.isfile(os.path.expanduser("~/.config/" + SIGMA_PROPS_FILENAME)):
-        sigma_props_path = os.path.expanduser("~/.config/" + SIGMA_PROPS_FILENAME)
-    elif os.path.isfile(os.path.expanduser("~/.confluent/" + SIGMA_PROPS_FILENAME)):
-        sigma_props_path = os.path.expanduser("~/.confluent/" + SIGMA_PROPS_FILENAME)
-
-    # Check for sigma-cc-admin.properties file in default paths
-    if os.path.isfile(os.path.expanduser("~/.sigma/" + SIGMA_CC_ADMIN_FILENAME)):
-        cc_admin_path = os.path.expanduser("~/.sigma/" + SIGMA_CC_ADMIN_FILENAME)
-    if os.path.isfile(os.path.expanduser("~/.config/" + SIGMA_CC_ADMIN_FILENAME)):
-        cc_admin_path = os.path.expanduser("~/.config/" + SIGMA_CC_ADMIN_FILENAME)
-    elif os.path.isfile(os.path.expanduser("~/.confluent/" + SIGMA_CC_ADMIN_FILENAME)):
-        cc_admin_path = os.path.expanduser("~/.confluent/" + SIGMA_CC_ADMIN_FILENAME)
-
-    if sigma_props_path == None:
-        raise Exception("Unable to find sigma properties")
-
-    if cc_admin_path == None:
-        raise Exception("Unable to find confluent cloud admin properties")
-
-    return sigma_props_path, cc_admin_path
-
-
 def calculate_values(json_metrics):
 
-    values = [item['value'] for item in json_metrics['data']]
+    if 'data' not in json_metrics or not json_metrics['data']:
+        values = []
+    else:
+        values = [item['value'] for item in json_metrics['data']]
 
-    if values is None or len(values) < 3:
-        print("Error: Either metrics API returned no data points or there was less than three. Most likely cause is "
-              "that Confluent Sigma is not running")
+    if values is None or len(values) == 0:
+        print("Error: Metrics API returned no data points. Most likely cause is that Confluent Sigma is not running.")
+        exit()
+    elif len(values) < 3:
+        print("Error: Not enough data points returned (less than three). Please wait for more data to accumulate.")
         exit()
 
     # Calculate the maximum, minimum, and average per second
@@ -95,32 +72,62 @@ def build_human_summary(bytes_result, records_results):
         "Records range delta " + format(records_results["range"], ",.2f")
     return human_summary
 
+def get_auth_token_from_file(api_key_file):
+        """
+        Reads the API key and secret from the given file and returns a base64-encoded auth token.
+        Expects the file to be in the format:
+        === Confluent Cloud API key ===
+        API key:
+        <your-api-key>
+        API secret:
+        <your-api-secret>
+        """
+        with open(api_key_file, 'r') as f:
+            content = f.read()
+
+        key = None
+        secret = None
+
+        lines = content.split('\n')
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if line == "API key:" and i + 1 < len(lines):
+                key = lines[i + 1].strip()
+            elif line == "API secret:" and i + 1 < len(lines):
+                secret = lines[i + 1].strip()
+
+        if not key or not secret:
+            print("Error: Could not find API key and secret in the expected format.")
+            print("Expected format:")
+            print("=== Confluent Cloud API key ===")
+            print("API key:")
+            print("<your-api-key>")
+            print("API secret:")
+            print("<your-api-secret>")
+            exit(1)
+
+        key_secret = f"{key}:{secret}"
+        auth_token = base64.b64encode(key_secret.encode('utf-8')).decode('utf-8')
+        return auth_token
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="retrieve bytes and record send data")
 
     # Required parameters
+    parser.add_argument("apiKeyFile", help="path to the confluent cloud API Key text file")
     parser.add_argument("resourceId", help="resource for the confluent cluster")
     parser.add_argument("topic", help="topic you want a record count for")
 
     args = parser.parse_args()
+    # Check that the apiKeyFile exists
+    if not os.path.isfile(args.apiKeyFile):
+        print(f"Error: API key file '{args.apiKeyFile}' does not exist.")
+        exit(1)
 
-    config_paths = get_sigma_config_variables()
-    sigma_cc_admin = config_paths[1]
 
-    if sigma_cc_admin is None or not os.path.isfile(sigma_cc_admin):
-        print("sigma cc admin properties not found.")
-        exit(-1)
-
-    with open(sigma_cc_admin) as f:
-        for line in f:
-            if line.startswith("rest.auth.token="):
-                auth_token = line.split("=")[1].strip()
-                break
-
-    if auth_token is None:
-        raise Exception("Can't find rest.auth.token in file " + sigma_cc_admin)
-
+    auth_token = get_auth_token_from_file(args.apiKeyFile)
+    
     current_datetime = datetime.now(pytz.timezone("America/New_York"))
     offset = current_datetime.strftime("%z")
     offset_formatted = f"{offset[:-2]}:{offset[-2:]}"
@@ -171,10 +178,50 @@ if __name__ == "__main__":
     recordsResponse = requests.post("https://api.telemetry.confluent.cloud/v2/metrics/cloud/query",
                                     data=json.dumps(requestRecordsJson), headers=headers)
 
+    # Check for HTTP errors and handle appropriately
+    if bytesResponse.status_code == 401:
+        print("Error: Authorization failed (401 Unauthorized). Please check your API key and secret.")
+        print("The API key file may be invalid, expired, or you may not have permission to access this resource.")
+        exit(1)
+    elif bytesResponse.status_code == 403:
+        print("Error: Access forbidden (403 Forbidden). You don't have permission to access this resource.")
+        exit(1)
+    elif bytesResponse.status_code == 404:
+        print("Error: Resource not found (404 Not Found). Please check your resource ID and topic name.")
+        exit(1)
+    elif bytesResponse.status_code >= 400:
+        print(f"Error: HTTP {bytesResponse.status_code} - {bytesResponse.reason}")
+        print(f"Response: {bytesResponse.text}")
+        exit(1)
+
+    if recordsResponse.status_code == 401:
+        print("Error: Authorization failed (401 Unauthorized). Please check your API key and secret.")
+        print("The API key file may be invalid, expired, or you may not have permission to access this resource.")
+        exit(1)
+    elif recordsResponse.status_code == 403:
+        print("Error: Access forbidden (403 Forbidden). You don't have permission to access this resource.")
+        exit(1)
+    elif recordsResponse.status_code == 404:
+        print("Error: Resource not found (404 Not Found). Please check your resource ID and topic name.")
+        exit(1)
+    elif recordsResponse.status_code >= 400:
+        print(f"Error: HTTP {recordsResponse.status_code} - {recordsResponse.reason}")
+        print(f"Response: {recordsResponse.text}")
+        exit(1)
+
+    # Check if responses are successful
+    bytesResponse.raise_for_status()
+    recordsResponse.raise_for_status()
 
     # Parse the JSON data
-    bytesJson = json.loads(bytesResponse.text)
-    recordsJson = json.loads(recordsResponse.text)
+    try:
+        bytesJson = json.loads(bytesResponse.text)
+        recordsJson = json.loads(recordsResponse.text)
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to parse JSON response: {e}")
+        print(f"Bytes response text: {bytesResponse.text}")
+        print(f"Records response text: {recordsResponse.text}")
+        exit(1)
 
     bytes_result = calculate_values(bytesJson)
     records_results = calculate_values(recordsJson)

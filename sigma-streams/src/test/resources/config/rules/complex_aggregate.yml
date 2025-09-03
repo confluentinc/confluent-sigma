@@ -1,0 +1,38 @@
+title: Complex Http Aggregate
+description: 'Domain user and group enumeration via network reconnaissance. Seen in APT 29 and other common tactics and actors. Detects a set of RPC (remote procedure calls) used to enumerate a domain controller. This is a supported version of the public rule that was created by Nate Guagenti and Roberto Rodriguez from his Open Threat Research (OTR) community.'
+author: 'Nate Guagenti (@neu5ron), Open Threat Research (OTR), SOC Prime Team'
+references:
+  - 'https://github.com/OTRF/detection-hackathon-apt29/issues/37'
+  - 'https://github.com/OTRF/detection-hackathon-apt29'
+  - 'https://github.com/Neo23x0/sigma/blob/11c216629b98ed3da323532d27a13934d4e6a8fa/rules/network/zeek/zeek-dce_rpc_domain_user_enumeration.yml#L1'
+tags:
+  - attack.discovery
+  - attack.t1135
+logsource:
+  product: zeek
+  service: http
+detection:
+  selection:
+    operation:
+      - LsarLookupNames3 #method translates a batch of security principal names to their SID form
+      - LsarLookupSids3 #translates a batch of security principal SIDs to their name forms
+      - SamrGetGroupsForUser #obtains a listing of groups that a user is a member of
+      - SamrLookupIdsInDomain #method translates a set of RIDs into account names
+      - SamrLookupNamesInDomain #method translates a set of account names into a set of RIDs
+      - SamrQuerySecurityObject #method queries the access control on a server, domain, user, group, or alias object
+      - SamrQueryInformationGroup #obtains attributes from a group object
+  timeframe: 1m
+  condition: selection | count(operation) by id_orig_h > 6
+falsepositive:
+  - 'Devices that may do authentication like a VPN or a firewall that looksup IPs to username'
+  - 'False positives depend on scripts and administrative tools used in the monitored environment'
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - endpoint
+  - named_pipe
+  - operation
+  - uid

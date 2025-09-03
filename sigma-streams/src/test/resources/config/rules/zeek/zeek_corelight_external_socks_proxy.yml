@@ -1,0 +1,21 @@
+title: External SOCKS Proxy
+status: stable
+description: 'Identifies a SOCKS proxy being outside of the network as defined by local_orig, local_resp. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.t1090.001 # Proxy: Internal Proxy
+  - attack.t1090.002 # Proxy: External Proxy
+  - attack.command_and_control
+  - attack.defense_evasion
+logsource:
+  product: zeek
+  service: conn
+detection:
+  socks_service: 
+    service|contains: socks
+    history|startswith: 'Sh'
+  to_external:
+    local_orig: 'true'
+    local_resp: 'false'
+  condition: socks_service AND to_external
+level: high

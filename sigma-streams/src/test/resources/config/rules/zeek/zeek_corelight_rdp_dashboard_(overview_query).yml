@@ -1,0 +1,24 @@
+title: RDP Dashboard (Overview Query)
+description: 'This should be used as a guide to filter for known and unknown RDP on your network being used. Display RDP connections with fields applicable to determine if an authorize RDP session should be occuring. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+author: SOC Prime Team
+tags:
+  - attack.lateral_movement
+  - attack.t1021
+  - attack.t1021.001
+logsource:
+  product: zeek
+  service: rdp
+detection:
+  selection:
+    id.orig_h: '*'
+  condition: selection
+fields:
+  - id.orig_h
+  - id.resp_h
+  - id.resp_p
+  - cookie
+  - keyboard_layout
+falsepositive:
+  - 'Authorized RDP User'
+  - 'Authorized RDP Server'
+level: low

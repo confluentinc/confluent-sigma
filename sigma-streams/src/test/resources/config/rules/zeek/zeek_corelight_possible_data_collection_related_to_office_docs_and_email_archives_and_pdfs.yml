@@ -1,0 +1,46 @@
+title: Possible Data Collection related to Office Docs and Email Archives and PDFs
+description: 'Multiple different office docs, email archives, and PDFs were accessed or transfered over SMB. This Sigma query is designed to accompany the Corelight Threat Hunting Guide, which can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+logsource:
+  product: zeek
+  service: smb_files
+author: SOC Prime Team
+tags:
+  - attack.collection
+  - attack.t1039  
+detection:
+  name_exists:
+    name: '*'
+  exclusion:
+    name: '<share_root>'
+  selection:
+    name|endswith:
+      - '.doc'
+      - '.xls' 
+      - '.ost'
+      - '.pst'
+      - '.pst1'
+      - '.pdf'
+      - '.vss'
+      - '.viz'
+  timeframe: 1m 
+  condition: name_exists AND NOT exclusion AND selection | count(name) by id_orig_h > 30
+falsepositive:
+  - 'Network or file backups.'
+  - 'User opening an entire directory at one time.'
+level: medium
+fields:
+  - ts
+  - id.orig_h
+  - id.orig_p
+  - id.resp_h
+  - id.resp_p
+  - path
+  - prev_name
+  - name
+  - size
+  - times_accessed
+  - times_changed
+  - times_created
+  - times_modified
+  - fuid
+  - uid
