@@ -8135,7 +8135,7 @@ prompts@^2.0.1, prompts@^2.4.2:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.5.9, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2, prop-types@^15.8.1:
+prop-types@^15.5.8, prop-types@^15.5.9, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
@@ -8231,12 +8231,12 @@ react-ace@^10.1.0:
     lodash.isequal "^4.5.0"
     prop-types "^15.7.2"
 
-react-apexcharts@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/react-apexcharts/-/react-apexcharts-1.4.0.tgz#e3619104b34750da67a2ca80289dc87085c2aa27"
-  integrity sha512-DrcMV4aAMrUG+n6412yzyATWEyCDWlpPBBhVbpzBC4PDeuYU6iF84SmExbck+jx5MUm4U5PM3/T307Mc3kzc9Q==
+react-apexcharts@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/react-apexcharts/-/react-apexcharts-2.0.1.tgz#547ab44bd3f19579ed5c488f4238d85281092225"
+  integrity sha512-AN9u5C0kDAkQyMyJP6yXORexiuiaTa0GaxR5dOaF075vWLTTbQxxtYF/kXyvUo4jjtBEIe4lLoCZTo/kB3bRoA==
   dependencies:
-    prop-types "^15.5.7"
+    prop-types "^15.8.1"
 
 react-app-polyfill@^3.0.0:
   version "3.0.0"
