@@ -18,7 +18,7 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <kafka.version>3.9.0</kafka.version>
+        <kafka.version>3.9.2</kafka.version>
         <dockerfile-maven-version>1.4.13</dockerfile-maven-version>
         <jackson.version>2.18.3</jackson.version>
     </properties>
