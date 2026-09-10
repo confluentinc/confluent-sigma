@@ -18,7 +18,7 @@
         <frontend-src-dir>${project.basedir}/src/main/frontend</frontend-src-dir>
         <node.version>v20.3.1</node.version>
         <yarn.version>v1.16.0</yarn.version>
-        <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+        <frontend-maven-plugin.version>1.15.4</frontend-maven-plugin.version>
     </properties>
 
     <repositories>
@@ -33,7 +33,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>4.0.0-M1</version>
+                <version>4.1.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.18.0</version>
+            <version>3.20.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -74,7 +74,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>4.0.0-M1</version>
+            <version>4.1.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
@@ -95,13 +95,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>4.0.0-M1</version>
+            <version>4.1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.kcache</groupId>
             <artifactId>kcache</artifactId>
-            <version>5.2.1</version>
+            <version>5.2.4</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
@@ -111,7 +111,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
-            <version>4.0.0-M1</version>
+            <version>4.1.1</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
@@ -136,7 +136,7 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>bootstrap</artifactId>
-            <version>5.3.7</version>
+            <version>5.3.8</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
@@ -164,7 +164,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>2.4</version>
+            <version>2.7</version>
         </dependency>
 
     </dependencies>
@@ -208,7 +208,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.8.0</version>
                 <configuration>
                 </configuration>
                 <executions>
@@ -272,7 +272,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <id>position-react-build</id>
