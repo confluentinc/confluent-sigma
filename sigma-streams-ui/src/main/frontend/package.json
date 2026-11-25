@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "./",
   "resolutions": {
-    "websocket-extensions": "^0.1.4",
+    "websocket-extensions": "^0.2.0",
     "node-forge": "^1.0.0",
     "node-fetch": "^2.6.1"
   },
